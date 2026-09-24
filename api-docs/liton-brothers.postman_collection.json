@@ -1,0 +1,211 @@
+{
+  "info": {
+    "name": "Liton Brothers E-Commerce API Collection",
+    "description": "Comprehensive Postman Collection for Liton Brothers API testing.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:4000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "ACCESS_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "REFRESH_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ADMIN_ACCESS_TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Customer Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Rahim Uddin\",\n  \"phone\": \"01712345678\",\n  \"password\": \"Customer@123\",\n  \"confirmPassword\": \"Customer@123\",\n  \"address\": \"House 12, Road 4, Sector 7, Uttara, Dhaka\",\n  \"email\": \"rahim@example.com\"\n}"
+            },
+            "url": "{{BASE_URL}}/auth/register"
+          }
+        },
+        {
+          "name": "Customer Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.accessToken) {",
+                  "  pm.collectionVariables.set('ACCESS_TOKEN', json.data.accessToken);",
+                  "  pm.collectionVariables.set('REFRESH_TOKEN', json.data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"01712345678\",\n  \"password\": \"Customer@123\",\n  \"rememberMe\": true\n}"
+            },
+            "url": "{{BASE_URL}}/auth/login"
+          }
+        },
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.accessToken) {",
+                  "  pm.collectionVariables.set('ADMIN_ACCESS_TOKEN', json.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"01700000000\",\n  \"password\": \"Admin@123456\"\n}"
+            },
+            "url": "{{BASE_URL}}/auth/login"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{REFRESH_TOKEN}}\"\n}"
+            },
+            "url": "{{BASE_URL}}/auth/refresh"
+          }
+        },
+        {
+          "name": "Current User Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "Check Shopping Approval Eligibility",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/customers/shopping-check"
+          }
+        },
+        {
+          "name": "List Addresses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/customers/addresses"
+          }
+        },
+        {
+          "name": "Add Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Rahim Uddin (Office)\",\n  \"phone\": \"01712345678\",\n  \"address\": \"Floor 4, Plot 10, Gulshan 1, Dhaka\",\n  \"division\": \"Dhaka\",\n  \"district\": \"Dhaka\",\n  \"addressType\": \"OFFICE\",\n  \"isDefault\": false\n}"
+            },
+            "url": "{{BASE_URL}}/customers/addresses"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "List Pending Customers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/admin/customers?status=PENDING_APPROVAL"
+          }
+        },
+        {
+          "name": "Approve Customer Account",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"reason\": \"Customer phone and delivery address verified.\"\n}"
+            },
+            "url": "{{BASE_URL}}/admin/customers/:id/status"
+          }
+        },
+        {
+          "name": "View Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/admin/audit-logs"
+          }
+        },
+        {
+          "name": "List Roles & Permissions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/admin/roles"
+          }
+        }
+      ]
+    }
+  ]
+}
