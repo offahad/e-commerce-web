@@ -58,3 +58,5 @@ export function requireApprovedCustomer(req: Request, res: Response, next: NextF
 
   next();
 }
+
+export const customerApprovalGuard = requireApprovedCustomer;

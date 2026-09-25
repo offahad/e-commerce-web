@@ -21,6 +21,26 @@ export class ApiResponse {
     });
   }
 
+  static paginated<T>(
+    res: Response,
+    data: T,
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    },
+    message = 'Data retrieved successfully',
+    statusCode = 200
+  ): Response {
+    return res.status(statusCode).json({
+      success: true,
+      message,
+      data,
+      pagination,
+    });
+  }
+
   static error(
     res: Response,
     message: string,
@@ -36,3 +56,5 @@ export class ApiResponse {
     });
   }
 }
+
+export const ApiResponseHelper = ApiResponse;

@@ -33,6 +33,10 @@ export function getDatabase(): Knex {
 
 export const db = getDatabase();
 
+export function getDb(): Knex {
+  return getDatabase();
+}
+
 export async function initDatabase(): Promise<void> {
   const database = getDatabase();
 
@@ -290,6 +294,126 @@ export async function initDatabase(): Promise<void> {
       table.string('reference_id', 100).nullable();
       table.uuid('performed_by').references('id').inTable('users').onDelete('SET NULL').nullable();
       table.timestamp('created_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 17. Carts Table (Customer active shopping session)
+  const hasCarts = await database.schema.hasTable('carts');
+  if (!hasCarts) {
+    await database.schema.createTable('carts', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').nullable();
+      table.string('session_id', 100).nullable();
+      table.timestamp('created_at').defaultTo(database.fn.now());
+      table.timestamp('updated_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 18. Cart Items Table
+  const hasCartItems = await database.schema.hasTable('cart_items');
+  if (!hasCartItems) {
+    await database.schema.createTable('cart_items', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('cart_id').references('id').inTable('carts').onDelete('CASCADE').notNullable();
+      table.uuid('product_variant_id').references('id').inTable('product_variants').onDelete('CASCADE').notNullable();
+      table.integer('quantity').notNullable().defaultTo(1);
+      table.timestamp('created_at').defaultTo(database.fn.now());
+      table.timestamp('updated_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 19. Wishlist Table
+  const hasWishlists = await database.schema.hasTable('wishlists');
+  if (!hasWishlists) {
+    await database.schema.createTable('wishlists', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
+      table.uuid('product_id').references('id').inTable('products').onDelete('CASCADE').notNullable();
+      table.timestamp('created_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 20. Coupons Table
+  const hasCoupons = await database.schema.hasTable('coupons');
+  if (!hasCoupons) {
+    await database.schema.createTable('coupons', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.string('code', 50).unique().notNullable();
+      table.string('title', 150).notNullable();
+      table.text('description').nullable();
+      table.string('discount_type', 30).notNullable(); // PERCENTAGE, FIXED_AMOUNT, FREE_SHIPPING
+      table.double('discount_value').notNullable();
+      table.double('min_order_amount').notNullable().defaultTo(0);
+      table.double('max_discount_amount').nullable();
+      table.timestamp('start_date').notNullable();
+      table.timestamp('end_date').notNullable();
+      table.integer('usage_limit_total').nullable();
+      table.integer('usage_limit_per_user').notNullable().defaultTo(1);
+      table.integer('used_count').notNullable().defaultTo(0);
+      table.boolean('is_active').notNullable().defaultTo(true);
+      table.timestamp('created_at').defaultTo(database.fn.now());
+      table.timestamp('updated_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 21. Coupon Usages Table
+  const hasCouponUsages = await database.schema.hasTable('coupon_usages');
+  if (!hasCouponUsages) {
+    await database.schema.createTable('coupon_usages', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('coupon_id').references('id').inTable('coupons').onDelete('CASCADE').notNullable();
+      table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
+      table.uuid('order_id').nullable();
+      table.double('discount_amount').notNullable();
+      table.timestamp('used_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 22. Flash Deals Table
+  const hasFlashDeals = await database.schema.hasTable('flash_deals');
+  if (!hasFlashDeals) {
+    await database.schema.createTable('flash_deals', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.string('title', 150).notNullable();
+      table.string('slug', 150).unique().notNullable();
+      table.text('description').nullable();
+      table.string('banner_image', 255).nullable();
+      table.timestamp('start_time').notNullable();
+      table.timestamp('end_time').notNullable();
+      table.string('status', 30).notNullable().defaultTo('ACTIVE'); // UPCOMING, ACTIVE, EXPIRED, DISABLED
+      table.boolean('is_active').notNullable().defaultTo(true);
+      table.timestamp('created_at').defaultTo(database.fn.now());
+      table.timestamp('updated_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 23. Flash Deal Items Table
+  const hasFlashDealItems = await database.schema.hasTable('flash_deal_items');
+  if (!hasFlashDealItems) {
+    await database.schema.createTable('flash_deal_items', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('flash_deal_id').references('id').inTable('flash_deals').onDelete('CASCADE').notNullable();
+      table.uuid('product_id').references('id').inTable('products').onDelete('CASCADE').notNullable();
+      table.uuid('variant_id').references('id').inTable('product_variants').onDelete('CASCADE').notNullable();
+      table.double('deal_price').notNullable();
+      table.integer('allocated_stock').notNullable();
+      table.integer('sold_stock').notNullable().defaultTo(0);
+      table.integer('max_per_customer').notNullable().defaultTo(2);
+      table.timestamp('created_at').defaultTo(database.fn.now());
+      table.timestamp('updated_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 24. Business Settings Table
+  const hasBusinessSettings = await database.schema.hasTable('business_settings');
+  if (!hasBusinessSettings) {
+    await database.schema.createTable('business_settings', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.string('key', 100).unique().notNullable();
+      table.text('value').notNullable();
+      table.string('description', 255).nullable();
+      table.timestamp('created_at').defaultTo(database.fn.now());
+      table.timestamp('updated_at').defaultTo(database.fn.now());
     });
   }
 
@@ -762,6 +886,132 @@ export async function seedDatabase(database: Knex): Promise<void> {
           performed_by: adminUser.id,
         });
       }
+    }
+  }
+
+  // 6. Business Settings Seeding
+  const defaultSettings = [
+    { key: 'site_name', value: 'Liton Brothers Grocery & FMCG', description: 'Storefront Name' },
+    { key: 'site_tagline', value: 'Premium Groceries & Daily Essentials Delivered in Dhaka', description: 'Storefront Tagline' },
+    { key: 'currency', value: 'BDT', description: 'Operational Currency Code' },
+    { key: 'currency_symbol', value: '৳', description: 'Currency Symbol' },
+    { key: 'delivery_fee_standard', value: '60', description: 'Standard City Delivery Charge (BDT)' },
+    { key: 'free_shipping_threshold', value: '1000', description: 'Minimum cart total for free delivery (BDT)' },
+    { key: 'tax_percentage', value: '0', description: 'VAT / Tax percentage' },
+    { key: 'friday_flash_enabled', value: 'true', description: 'Whether Friday Flash Deals are actively featured' },
+  ];
+
+  for (const s of defaultSettings) {
+    const existing = await database('business_settings').where({ key: s.key }).first();
+    if (!existing) {
+      await database('business_settings').insert({
+        id: crypto.randomUUID(),
+        key: s.key,
+        value: s.value,
+        description: s.description,
+      });
+    }
+  }
+
+  // 7. Seed Sample Coupons
+  const sampleCoupons = [
+    {
+      code: 'RAMADAN20',
+      title: 'Ramadan Special 20% Off',
+      description: 'Get 20% off up to ৳200 on all grocery orders above ৳500',
+      discount_type: 'PERCENTAGE',
+      discount_value: 20,
+      min_order_amount: 500,
+      max_discount_amount: 200,
+      start_date: new Date(Date.now() - 7 * 86400000),
+      end_date: new Date(Date.now() + 30 * 86400000),
+      usage_limit_total: 1000,
+      usage_limit_per_user: 2,
+      is_active: true,
+    },
+    {
+      code: 'LITON100',
+      title: 'Flat ৳100 Welcome Discount',
+      description: 'Save ৳100 instantly on your grocery cart above ৳1,000',
+      discount_type: 'FIXED_AMOUNT',
+      discount_value: 100,
+      min_order_amount: 1000,
+      max_discount_amount: 100,
+      start_date: new Date(Date.now() - 7 * 86400000),
+      end_date: new Date(Date.now() + 60 * 86400000),
+      usage_limit_total: 500,
+      usage_limit_per_user: 1,
+      is_active: true,
+    },
+    {
+      code: 'FREEDEL',
+      title: 'Free Home Delivery Coupon',
+      description: 'Zero delivery fee on orders above ৳400',
+      discount_type: 'FREE_SHIPPING',
+      discount_value: 60,
+      min_order_amount: 400,
+      max_discount_amount: 60,
+      start_date: new Date(Date.now() - 7 * 86400000),
+      end_date: new Date(Date.now() + 30 * 86400000),
+      usage_limit_total: 2000,
+      usage_limit_per_user: 3,
+      is_active: true,
+    },
+  ];
+
+  for (const c of sampleCoupons) {
+    const existing = await database('coupons').where({ code: c.code }).first();
+    if (!existing) {
+      await database('coupons').insert({
+        id: crypto.randomUUID(),
+        ...c,
+      });
+    }
+  }
+
+  // 8. Seed Sample Friday Flash Deal
+  const existingFlash = await database('flash_deals').where({ slug: 'mega-friday-flash-bazaar' }).first();
+  if (!existingFlash) {
+    const flashId = crypto.randomUUID();
+    await database('flash_deals').insert({
+      id: flashId,
+      title: 'Mega Friday Flash Bazaar',
+      slug: 'mega-friday-flash-bazaar',
+      description: 'Exclusive Friday mega discounts on essential oils and aromatic rice! Limited stock available.',
+      banner_image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
+      start_time: new Date(Date.now() - 86400000), // Started yesterday
+      end_time: new Date(Date.now() + 7 * 86400000), // Ends in 7 days
+      status: 'ACTIVE',
+      is_active: true,
+    });
+
+    // Add 5L soybean oil variant and 5kg rice variant to flash deal
+    const oilVariant = await database('product_variants').where({ sku: 'TEER-OIL-5L' }).first();
+    if (oilVariant) {
+      await database('flash_deal_items').insert({
+        id: crypto.randomUUID(),
+        flash_deal_id: flashId,
+        product_id: oilVariant.product_id,
+        variant_id: oilVariant.id,
+        deal_price: 790, // discounted from 820
+        allocated_stock: 50,
+        sold_stock: 12,
+        max_per_customer: 2,
+      });
+    }
+
+    const riceVariant = await database('product_variants').where({ sku: 'RICE-MINI-5KG' }).first();
+    if (riceVariant) {
+      await database('flash_deal_items').insert({
+        id: crypto.randomUUID(),
+        flash_deal_id: flashId,
+        product_id: riceVariant.product_id,
+        variant_id: riceVariant.id,
+        deal_price: 330, // discounted from 360
+        allocated_stock: 40,
+        sold_stock: 8,
+        max_per_customer: 2,
+      });
     }
   }
 }

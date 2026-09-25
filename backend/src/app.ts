@@ -21,6 +21,14 @@ import { productPublicRouter, productAdminRouter } from './modules/products/prod
 import inventoryAdminRouter from './modules/inventory/inventory.routes.js';
 import mediaAdminRouter from './modules/media/media.routes.js';
 
+// Phase 4 Cart, Coupons, Deals, Wishlist, Checkout & Settings Route imports
+import cartRouter from './modules/cart/cart.routes.js';
+import wishlistRouter from './modules/wishlist/wishlist.routes.js';
+import { couponPublicRouter, couponAdminRouter } from './modules/coupons/coupons.routes.js';
+import { dealsPublicRouter, dealsAdminRouter } from './modules/deals/deals.routes.js';
+import checkoutRouter from './modules/checkout/checkout.routes.js';
+import { settingsPublicRouter, settingsAdminRouter } from './modules/settings/settings.routes.js';
+
 export function createApp(): Express {
   const app = express();
 
@@ -546,17 +554,122 @@ export function createApp(): Express {
       </div>
     </div>
 
+    <!-- Friday Flash Deal Banner & Section -->
+    <div style="background: linear-gradient(135deg, #b91c1c 0%, #dc2626 50%, #991b1b 100%); color: white; border-radius: 14px; padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: 0 10px 20px rgba(220, 38, 38, 0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <span style="background: rgba(255,255,255,0.25); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px;">⚡ Friday Flash Deal Active</span>
+          <h2 style="font-size: 1.6rem; font-weight: 800; margin-top: 0.35rem;">Mega Friday Flash Bazaar</h2>
+          <p style="opacity: 0.9; font-size: 0.9rem; margin-top: 0.25rem;">Exclusive Friday price slashes on everyday cooking essentials. Strictly limited inventory!</p>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); padding: 0.75rem 1.25rem; border-radius: 10px; text-align: center;">
+          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.85;">Ends In</div>
+          <div id="flash-timer" style="font-family: monospace; font-size: 1.4rem; font-weight: 800; color: #fef08a;">06d 23h 59m 40s</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+        <!-- Flash Deal Item 1 -->
+        <div style="background: white; color: #0f172a; border-radius: 10px; padding: 1rem; display: flex; gap: 1rem; align-items: center;">
+          <div style="font-size: 2.5rem; background: #fef2f2; border-radius: 8px; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;">🛢️</div>
+          <div style="flex: 1;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #dc2626; text-transform: uppercase;">Teer Soybean Oil (5L Can)</div>
+            <div style="display: flex; align-items: baseline; gap: 0.5rem; margin: 0.25rem 0;">
+              <span style="font-size: 1.25rem; font-weight: 800; color: #b91c1c;">৳790</span>
+              <span style="font-size: 0.85rem; color: #94a3b8; text-decoration: line-through;">৳820</span>
+              <span style="font-size: 0.75rem; background: #fee2e2; color: #dc2626; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 700;">-৳30 OFF</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Remaining Stock: 38 / 50 allocated</div>
+            <div style="background: #e2e8f0; border-radius: 9999px; height: 6px; overflow: hidden;">
+              <div style="background: #dc2626; width: 76%; height: 100%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flash Deal Item 2 -->
+        <div style="background: white; color: #0f172a; border-radius: 10px; padding: 1rem; display: flex; gap: 1rem; align-items: center;">
+          <div style="font-size: 2.5rem; background: #fef2f2; border-radius: 8px; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;">🍚</div>
+          <div style="flex: 1;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #dc2626; text-transform: uppercase;">Miniket Premium Rice (5 KG)</div>
+            <div style="display: flex; align-items: baseline; gap: 0.5rem; margin: 0.25rem 0;">
+              <span style="font-size: 1.25rem; font-weight: 800; color: #b91c1c;">৳330</span>
+              <span style="font-size: 0.85rem; color: #94a3b8; text-decoration: line-through;">৳360</span>
+              <span style="font-size: 0.75rem; background: #fee2e2; color: #dc2626; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 700;">-৳30 OFF</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Remaining Stock: 32 / 40 allocated</div>
+            <div style="background: #e2e8f0; border-radius: 9999px; height: 6px; overflow: hidden;">
+              <div style="background: #dc2626; width: 80%; height: 100%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Cart & Server-Side Price Authority Tester -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <div class="section-title" style="margin-bottom: 0.75rem;">
+        <span>💳 Live Cart & Server-Side Price Authority Simulator (Section 13 & 75)</span>
+        <span style="font-size: 0.8rem; background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight: 600;">Server Decides Price Authority</span>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        The client NEVER calculates the final payable amount. Test live coupon rules and delivery calculations against real backend business settings.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        <!-- Left: Quick Coupon & Cart Controls -->
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 0.35rem;">Test Promotional Coupon Code:</label>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <input type="text" id="coupon-input" value="RAMADAN20" placeholder="Enter coupon" style="flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-family: monospace; font-size: 0.9rem; text-transform: uppercase;">
+            <button onclick="testCoupon()" class="btn" style="background: var(--primary); color: white; padding: 0.5rem 1rem;">Apply</button>
+          </div>
+          <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <button onclick="setCoupon('RAMADAN20')" style="background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.75rem; cursor: pointer;">RAMADAN20 (20% off >৳500)</button>
+            <button onclick="setCoupon('LITON100')" style="background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.75rem; cursor: pointer;">LITON100 (৳100 off >৳1,000)</button>
+            <button onclick="setCoupon('FREEDEL')" style="background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.75rem; cursor: pointer;">FREEDEL (Free Delivery)</button>
+          </div>
+          <div id="coupon-status" style="font-size: 0.8rem; font-weight: 600; color: #15803d; min-height: 1.2rem;"></div>
+        </div>
+
+        <!-- Right: Server Calculated Breakdown -->
+        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 1rem;">
+          <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+            <span>Simulated Cart Items:</span>
+            <span>Teer Oil (5L) x 1 + Rice (5kg) x 1</span>
+          </div>
+          <div style="font-size: 0.85rem; display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: var(--text-muted);">
+            <span>Subtotal:</span>
+            <span id="breakdown-subtotal" style="font-weight: 600; color: var(--text-dark);">৳1,120.00</span>
+          </div>
+          <div style="font-size: 0.85rem; display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: #16a34a;">
+            <span>Coupon Discount:</span>
+            <span id="breakdown-discount" style="font-weight: 600;">-৳200.00</span>
+          </div>
+          <div style="font-size: 0.85rem; display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: var(--text-muted);">
+            <span>Delivery Fee (Free over ৳1,000):</span>
+            <span id="breakdown-delivery" style="font-weight: 600; color: var(--text-dark);">৳0.00 (Free)</span>
+          </div>
+          <div style="border-top: 1px dashed var(--border); margin: 0.5rem 0;"></div>
+          <div style="font-size: 1.1rem; font-weight: 800; display: flex; justify-content: space-between; color: var(--primary-dark);">
+            <span>Grand Total (BDT):</span>
+            <span id="breakdown-grandtotal">৳920.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Live API Explorer / Tester -->
     <div class="api-explorer">
       <h3>🚀 Quick Live API Tester (Click an endpoint to fetch live data)</h3>
       <div class="endpoint-tags">
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/health')">GET /api/v1/health</button>
+        <button class="endpoint-tag" onclick="fetchApi('/api/v1/deals/friday-flash')">GET /api/v1/deals/friday-flash</button>
+        <button class="endpoint-tag" onclick="fetchApi('/api/v1/deals/deals-of-the-day')">GET /api/v1/deals/deals-of-the-day</button>
+        <button class="endpoint-tag" onclick="fetchApi('/api/v1/cart')">GET /api/v1/cart</button>
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/products')">GET /api/v1/products</button>
-        <button class="endpoint-tag" onclick="fetchApi('/api/v1/products/teer-pure-soybean-oil')">GET /api/v1/products/teer-pure-soybean-oil</button>
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/categories')">GET /api/v1/categories</button>
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/brands')">GET /api/v1/brands</button>
-        <button class="endpoint-tag" onclick="fetchApi('/api/v1/tags')">GET /api/v1/tags</button>
-        <button class="endpoint-tag" onclick="fetchApi('/api/v1/products/sections/friday-flash-deal')">GET /api/v1/products/sections/friday-flash-deal</button>
+        <button class="endpoint-tag" onclick="fetchApi('/api/v1/settings')">GET /api/v1/settings</button>
       </div>
       <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.35rem;" id="active-url">URL: /api/v1/health</div>
       <pre id="json-viewer">Loading live health probe...</pre>
@@ -570,6 +683,42 @@ export function createApp(): Express {
       element.classList.add('active');
       parent.querySelector('.sale-price').textContent = '৳' + salePrice;
       parent.querySelector('.base-price').textContent = '৳' + basePrice;
+    }
+
+    function setCoupon(code) {
+      document.getElementById('coupon-input').value = code;
+      testCoupon();
+    }
+
+    async function testCoupon() {
+      const code = document.getElementById('coupon-input').value.trim();
+      const statusEl = document.getElementById('coupon-status');
+      statusEl.textContent = 'Validating on server...';
+      statusEl.style.color = '#0284c7';
+
+      try {
+        const res = await fetch('/api/v1/coupons/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, subtotal: 1120, deliveryFee: 60 })
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.textContent = '✓ ' + data.message;
+          statusEl.style.color = '#15803d';
+          const discount = data.data.discountAmount;
+          document.getElementById('breakdown-discount').textContent = '-৳' + discount.toFixed(2);
+          document.getElementById('breakdown-grandtotal').textContent = '৳' + (1120 - discount).toFixed(2);
+        } else {
+          statusEl.textContent = '✕ ' + (data.message || 'Coupon invalid');
+          statusEl.style.color = '#dc2626';
+          document.getElementById('breakdown-discount').textContent = '-৳0.00';
+          document.getElementById('breakdown-grandtotal').textContent = '৳1,120.00';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Network error: ' + err.message;
+        statusEl.style.color = '#dc2626';
+      }
     }
 
     async function fetchApi(endpoint) {
@@ -586,6 +735,7 @@ export function createApp(): Express {
 
     // Initial load
     fetchApi('/api/v1/health');
+    testCoupon();
   </script>
 </body>
 </html>`);
@@ -600,6 +750,12 @@ export function createApp(): Express {
   apiV1.use('/brands', brandPublicRouter);
   apiV1.use('/tags', tagPublicRouter);
   apiV1.use('/products', productPublicRouter);
+  apiV1.use('/cart', cartRouter);
+  apiV1.use('/wishlist', wishlistRouter);
+  apiV1.use('/coupons', couponPublicRouter);
+  apiV1.use('/deals', dealsPublicRouter);
+  apiV1.use('/checkout', checkoutRouter);
+  apiV1.use('/settings', settingsPublicRouter);
 
   // Admin Routes
   apiV1.use('/admin/customers', customerAdminRouter);
@@ -609,6 +765,9 @@ export function createApp(): Express {
   apiV1.use('/admin/products', productAdminRouter);
   apiV1.use('/admin/inventory', inventoryAdminRouter);
   apiV1.use('/admin/media', mediaAdminRouter);
+  apiV1.use('/admin/coupons', couponAdminRouter);
+  apiV1.use('/admin/deals', dealsAdminRouter);
+  apiV1.use('/admin/settings', settingsAdminRouter);
   apiV1.use('/admin', rbacRouter);
 
   app.use('/api/v1', apiV1);

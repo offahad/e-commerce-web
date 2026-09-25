@@ -206,6 +206,176 @@
           }
         }
       ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "Get Category Tree",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/categories"
+          }
+        },
+        {
+          "name": "Get Active Brands",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/brands"
+          }
+        },
+        {
+          "name": "Search & Filter Products",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/products?q=Oil&sortBy=price_asc"
+          }
+        },
+        {
+          "name": "Product Suggestions Autocomplete",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/products/suggestions?q=Rice"
+          }
+        },
+        {
+          "name": "Product Details with Variants",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/products/teer-pure-soybean-oil"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart & Wishlist",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/cart"
+          }
+        },
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"variantId\": \"{{VARIANT_ID}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": "{{BASE_URL}}/cart/items"
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}"
+            },
+            "url": "{{BASE_URL}}/cart/items/:id"
+          }
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/cart/items/:id"
+          }
+        },
+        {
+          "name": "Get Customer Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/wishlist"
+          }
+        },
+        {
+          "name": "Toggle Wishlist Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }],
+            "url": "{{BASE_URL}}/wishlist/:productId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deals & Coupons",
+      "item": [
+        {
+          "name": "Active Friday Flash Deal",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/deals/friday-flash"
+          }
+        },
+        {
+          "name": "Deals of the Day",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/deals/deals-of-the-day"
+          }
+        },
+        {
+          "name": "Validate Coupon Code",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"RAMADAN20\",\n  \"subtotal\": 850,\n  \"deliveryFee\": 60\n}"
+            },
+            "url": "{{BASE_URL}}/coupons/validate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "item": [
+        {
+          "name": "Server-Side Checkout Preview",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"couponCode\": \"RAMADAN20\",\n  \"items\": [\n    {\n      \"variantId\": \"{{VARIANT_ID}}\",\n      \"quantity\": 2\n    }\n  ]\n}"
+            },
+            "url": "{{BASE_URL}}/checkout/preview"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get Public Business Settings",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/settings"
+          }
+        }
+      ]
     }
   ]
 }

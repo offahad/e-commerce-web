@@ -660,6 +660,336 @@
           }
         }
       }
+    },
+    "/cart": {
+      "get": {
+        "tags": [
+          "Shopping Cart"
+        ],
+        "summary": "Get Live Shopping Cart",
+        "description": "Returns cart items with server-validated prices, stock status, active flash deal pricing, and savings calculation.",
+        "responses": {
+          "200": {
+            "description": "Live cart summary"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Shopping Cart"
+        ],
+        "summary": "Clear Shopping Cart",
+        "responses": {
+          "200": {
+            "description": "Cart emptied"
+          }
+        }
+      }
+    },
+    "/cart/items": {
+      "post": {
+        "tags": [
+          "Shopping Cart"
+        ],
+        "summary": "Add Item Variant to Cart",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "variantId"
+                ],
+                "properties": {
+                  "variantId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "default": 1
+                  },
+                  "sessionId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Item added to cart"
+          }
+        }
+      }
+    },
+    "/cart/items/{id}": {
+      "put": {
+        "tags": [
+          "Shopping Cart"
+        ],
+        "summary": "Update Cart Item Quantity",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "quantity"
+                ],
+                "properties": {
+                  "quantity": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cart item updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Shopping Cart"
+        ],
+        "summary": "Remove Item from Cart",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item removed"
+          }
+        }
+      }
+    },
+    "/wishlist": {
+      "get": {
+        "tags": [
+          "Wishlist"
+        ],
+        "summary": "Get Customer Wishlist",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wishlisted products list"
+          }
+        }
+      }
+    },
+    "/wishlist/{productId}": {
+      "post": {
+        "tags": [
+          "Wishlist"
+        ],
+        "summary": "Toggle Item in Wishlist",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wishlist status toggled"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Wishlist"
+        ],
+        "summary": "Remove Item from Wishlist",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed from wishlist"
+          }
+        }
+      }
+    },
+    "/deals/friday-flash": {
+      "get": {
+        "tags": [
+          "Deals & Flash Sales"
+        ],
+        "summary": "Active Friday Flash Deal Campaign",
+        "description": "Returns active flash deals, allocated vs sold stock, remaining quantities, and real-time countdown timer.",
+        "responses": {
+          "200": {
+            "description": "Active Friday Flash Deal"
+          }
+        }
+      }
+    },
+    "/deals/deals-of-the-day": {
+      "get": {
+        "tags": [
+          "Deals & Flash Sales"
+        ],
+        "summary": "Deals of the Day",
+        "description": "Discounted daily grocery essentials with verified stock.",
+        "responses": {
+          "200": {
+            "description": "Deals of the day"
+          }
+        }
+      }
+    },
+    "/coupons/validate": {
+      "post": {
+        "tags": [
+          "Coupons & Discounts"
+        ],
+        "summary": "Validate Coupon Code against Cart",
+        "description": "Verifies active dates, min order amounts, user usage limits, and calculates exact discount amount.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "subtotal"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "RAMADAN20"
+                  },
+                  "subtotal": {
+                    "type": "number",
+                    "example": 850
+                  },
+                  "deliveryFee": {
+                    "type": "number",
+                    "default": 60
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Coupon validation result"
+          }
+        }
+      }
+    },
+    "/checkout/preview": {
+      "post": {
+        "tags": [
+          "Checkout & Pricing Engine"
+        ],
+        "summary": "Server-Side Price Authority Checkout Preview",
+        "description": "Calculates verified subtotal, coupon discount, delivery fee, tax and payable grand total. Client values are never trusted.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "couponCode": {
+                    "type": "string",
+                    "example": "RAMADAN20"
+                  },
+                  "sessionId": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "variantId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "quantity": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Calculated checkout totals breakdown"
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": [
+          "Business Settings"
+        ],
+        "summary": "Get Public Business Settings",
+        "description": "Delivery fee rates, free shipping thresholds, currency, tax.",
+        "responses": {
+          "200": {
+            "description": "Business settings"
+          }
+        }
+      }
     }
   }
 }

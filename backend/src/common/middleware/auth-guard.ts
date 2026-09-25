@@ -87,3 +87,37 @@ export async function authGuard(req: Request, res: Response, next: NextFunction)
     return ApiResponse.error(res, 'Invalid authentication token', 'INVALID_TOKEN', 401);
   }
 }
+
+export async function optionalAuthGuard(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, config.JWT_SECRET) as { userId: string; role: string };
+    const db = getDatabase();
+
+    const user = await db('users')
+      .where({ id: decoded.userId })
+      .whereNull('deleted_at')
+      .first();
+
+    if (user && user.status !== 'BLOCKED' && user.status !== 'SUSPENDED') {
+      req.user = {
+        id: user.id,
+        phone: user.phone,
+        full_name: user.full_name,
+        role: user.role,
+        status: user.status,
+        email: user.email,
+      };
+      req.token = token;
+    }
+  } catch {
+    // Ignore invalid token on optional auth
+  }
+
+  next();
+}
