@@ -29,6 +29,9 @@ import { dealsPublicRouter, dealsAdminRouter } from './modules/deals/deals.route
 import checkoutRouter from './modules/checkout/checkout.routes.js';
 import { settingsPublicRouter, settingsAdminRouter } from './modules/settings/settings.routes.js';
 
+// Phase 5 Orders & Payment Route imports
+import { ordersCustomerRouter, ordersAdminRouter } from './modules/orders/orders.routes.js';
+
 export function createApp(): Express {
   const app = express();
 
@@ -658,14 +661,64 @@ export function createApp(): Express {
       </div>
     </div>
 
+    <!-- Phase 5: Real-Time Order Tracking Timeline & Payment Gateway Simulator -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin-bottom: 2.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <div class="section-title" style="margin-bottom: 0.75rem;">
+        <span>📦 Real-Time Order Tracking & Payment Subsystem (Section 18 & 55)</span>
+        <span style="font-size: 0.8rem; background: #dcfce7; color: #15803d; padding: 0.25rem 0.5rem; border-radius: 6px; font-weight: 600;">ACID & Strategy Pattern</span>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Track any order publicly without login using a secure tracking number. All transitions are logged with immutable audit timestamps.
+      </p>
+
+      <!-- Tracking input -->
+      <div style="display: flex; gap: 0.5rem; max-width: 600px; margin-bottom: 1.5rem;">
+        <input type="text" id="tracking-input" value="TRK-DEMO-2026-001" placeholder="Enter tracking number (e.g. TRK-DEMO-2026-001)" style="flex: 1; padding: 0.6rem 0.85rem; border: 1px solid var(--border); border-radius: 8px; font-family: monospace; font-size: 0.95rem; font-weight: 600; text-transform: uppercase;">
+        <button onclick="trackOrder()" class="btn" style="background: var(--primary); color: white; padding: 0.6rem 1.25rem; font-weight: 700; border-radius: 8px;">Track Shipment</button>
+      </div>
+
+      <!-- Live Tracking Card -->
+      <div id="tracking-card" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+          <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Order Reference</div>
+            <div id="track-order-no" style="font-size: 1.15rem; font-weight: 800; color: var(--text-dark);">ORD-2026-DEMO01</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Payment Gateway</div>
+            <span id="track-payment-badge" style="background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">bKash (PAID)</span>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Total Amount</div>
+            <div id="track-total" style="font-size: 1.15rem; font-weight: 800; color: var(--primary-dark);">৳585.00 BDT</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Delivery Destination</div>
+            <div id="track-address" style="font-size: 0.85rem; color: var(--text-dark); font-weight: 600;">Dhanmondi, Dhaka</div>
+          </div>
+        </div>
+
+        <!-- Timeline Steps -->
+        <div id="timeline-container" style="display: flex; justify-content: space-between; position: relative; margin-top: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+          <!-- Dynamically populated via trackOrder() -->
+        </div>
+
+        <!-- Recent Status Log -->
+        <div id="tracking-logs" style="margin-top: 1.5rem; background: white; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem;">
+          <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Status Log Updates:</div>
+          <div id="tracking-log-items" style="font-size: 0.85rem; color: var(--text-dark); display: flex; flex-direction: column; gap: 0.35rem;"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Live API Explorer / Tester -->
     <div class="api-explorer">
       <h3>🚀 Quick Live API Tester (Click an endpoint to fetch live data)</h3>
       <div class="endpoint-tags">
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/health')">GET /api/v1/health</button>
+        <button class="endpoint-tag" onclick="fetchApi('/api/v1/orders/track/TRK-DEMO-2026-001')">GET /api/v1/orders/track/:num</button>
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/deals/friday-flash')">GET /api/v1/deals/friday-flash</button>
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/deals/deals-of-the-day')">GET /api/v1/deals/deals-of-the-day</button>
-        <button class="endpoint-tag" onclick="fetchApi('/api/v1/cart')">GET /api/v1/cart</button>
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/products')">GET /api/v1/products</button>
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/categories')">GET /api/v1/categories</button>
         <button class="endpoint-tag" onclick="fetchApi('/api/v1/brands')">GET /api/v1/brands</button>
@@ -721,6 +774,84 @@ export function createApp(): Express {
       }
     }
 
+    async function trackOrder() {
+      const trackingNumber = document.getElementById('tracking-input').value.trim();
+      try {
+        const res = await fetch('/api/v1/orders/track/' + encodeURIComponent(trackingNumber));
+        const json = await res.json();
+        if (!json.success) {
+          alert('Tracking error: ' + json.message);
+          return;
+        }
+
+        const data = json.data;
+        document.getElementById('track-order-no').textContent = data.orderNumber;
+        document.getElementById('track-payment-badge').textContent = data.paymentMethod + ' (' + data.paymentStatus + ')';
+        document.getElementById('track-total').textContent = '৳' + data.grandTotal.toFixed(2) + ' ' + data.currency;
+        document.getElementById('track-address').textContent = data.deliveryAddress.district + ', ' + data.deliveryAddress.division;
+
+        // Render timeline
+        const container = document.getElementById('timeline-container');
+        container.innerHTML = '';
+        data.timeline.forEach((step, idx) => {
+          const stepDiv = document.createElement('div');
+          stepDiv.style.flex = '1';
+          stepDiv.style.minWidth = '110px';
+          stepDiv.style.textAlign = 'center';
+          stepDiv.style.position = 'relative';
+
+          const iconCircle = document.createElement('div');
+          iconCircle.style.width = '36px';
+          iconCircle.style.height = '36px';
+          iconCircle.style.borderRadius = '50%';
+          iconCircle.style.margin = '0 auto 0.5rem';
+          iconCircle.style.display = 'flex';
+          iconCircle.style.alignItems = 'center';
+          iconCircle.style.justifyContent = 'center';
+          iconCircle.style.fontSize = '0.9rem';
+          iconCircle.style.fontWeight = 'bold';
+
+          const isCurrent = data.status === step.status;
+          if (step.completed && !isCurrent) {
+            iconCircle.style.background = '#15803d';
+            iconCircle.style.color = 'white';
+            iconCircle.innerHTML = '✓';
+          } else if (isCurrent) {
+            iconCircle.style.background = '#2563eb';
+            iconCircle.style.color = 'white';
+            iconCircle.style.boxShadow = '0 0 0 4px #bfdbfe';
+            iconCircle.innerHTML = '●';
+          } else {
+            iconCircle.style.background = '#e2e8f0';
+            iconCircle.style.color = '#94a3b8';
+            iconCircle.innerHTML = idx + 1;
+          }
+
+          const label = document.createElement('div');
+          label.style.fontSize = '0.75rem';
+          label.style.fontWeight = isCurrent || step.completed ? '700' : '500';
+          label.style.color = isCurrent ? '#1d4ed8' : (step.completed ? '#15803d' : '#64748b');
+          label.textContent = step.title || step.label;
+
+          stepDiv.appendChild(iconCircle);
+          stepDiv.appendChild(label);
+          container.appendChild(stepDiv);
+        });
+
+        // Render logs
+        const logsContainer = document.getElementById('tracking-log-items');
+        logsContainer.innerHTML = '';
+        data.statusHistory.forEach(log => {
+          const item = document.createElement('div');
+          const time = new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          item.innerHTML = '<span style="font-weight:700; color:#1e293b;">[' + time + '] ' + log.status + '</span> — <span style="color:#475569;">' + (log.comment || 'Status updated') + '</span>';
+          logsContainer.appendChild(item);
+        });
+      } catch (err) {
+        console.error('Tracking fetch failed', err);
+      }
+    }
+
     async function fetchApi(endpoint) {
       document.getElementById('active-url').textContent = 'URL: ' + endpoint;
       document.getElementById('json-viewer').textContent = 'Fetching data...';
@@ -736,6 +867,7 @@ export function createApp(): Express {
     // Initial load
     fetchApi('/api/v1/health');
     testCoupon();
+    trackOrder();
   </script>
 </body>
 </html>`);
@@ -756,6 +888,7 @@ export function createApp(): Express {
   apiV1.use('/deals', dealsPublicRouter);
   apiV1.use('/checkout', checkoutRouter);
   apiV1.use('/settings', settingsPublicRouter);
+  apiV1.use('/orders', ordersCustomerRouter);
 
   // Admin Routes
   apiV1.use('/admin/customers', customerAdminRouter);
@@ -768,6 +901,7 @@ export function createApp(): Express {
   apiV1.use('/admin/coupons', couponAdminRouter);
   apiV1.use('/admin/deals', dealsAdminRouter);
   apiV1.use('/admin/settings', settingsAdminRouter);
+  apiV1.use('/admin/orders', ordersAdminRouter);
   apiV1.use('/admin', rbacRouter);
 
   app.use('/api/v1', apiV1);

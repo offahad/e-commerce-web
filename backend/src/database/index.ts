@@ -417,6 +417,88 @@ export async function initDatabase(): Promise<void> {
     });
   }
 
+  // 25. Orders Table
+  const hasOrders = await database.schema.hasTable('orders');
+  if (!hasOrders) {
+    await database.schema.createTable('orders', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.string('order_number', 50).unique().notNullable();
+      table.string('tracking_number', 50).unique().notNullable();
+      table.uuid('user_id').references('id').inTable('users').onDelete('RESTRICT').notNullable();
+      table.string('status', 30).notNullable().defaultTo('PENDING'); // PENDING, CONFIRMED, PROCESSING, SHIPPED, OUT_FOR_DELIVERY, DELIVERED, CANCELLED, RETURNED
+      table.string('payment_status', 30).notNullable().defaultTo('PENDING'); // PENDING, PAID, FAILED, REFUNDED
+      table.string('payment_method', 30).notNullable().defaultTo('COD'); // COD, BKASH, NAGAD, ROCKET, CARD
+      table.double('subtotal').notNullable();
+      table.double('discount_amount').notNullable().defaultTo(0);
+      table.uuid('coupon_id').references('id').inTable('coupons').onDelete('SET NULL').nullable();
+      table.string('coupon_code', 50).nullable();
+      table.double('delivery_fee').notNullable().defaultTo(60);
+      table.double('tax_amount').notNullable().defaultTo(0);
+      table.double('grand_total').notNullable();
+      table.string('currency', 10).notNullable().defaultTo('BDT');
+      table.uuid('shipping_address_id').nullable();
+      table.text('shipping_address_snapshot').notNullable();
+      table.text('customer_notes').nullable();
+      table.text('admin_notes').nullable();
+      table.string('delivery_slot', 50).nullable();
+      table.date('delivery_date').nullable();
+      table.text('cancelled_reason').nullable();
+      table.timestamp('cancelled_at').nullable();
+      table.timestamp('delivered_at').nullable();
+      table.timestamp('created_at').defaultTo(database.fn.now());
+      table.timestamp('updated_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 26. Order Items Table
+  const hasOrderItems = await database.schema.hasTable('order_items');
+  if (!hasOrderItems) {
+    await database.schema.createTable('order_items', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('order_id').references('id').inTable('orders').onDelete('CASCADE').notNullable();
+      table.uuid('product_id').references('id').inTable('products').onDelete('RESTRICT').notNullable();
+      table.uuid('variant_id').references('id').inTable('product_variants').onDelete('RESTRICT').notNullable();
+      table.string('product_name', 255).notNullable();
+      table.string('variant_name', 150).notNullable();
+      table.string('sku', 100).notNullable();
+      table.double('unit_price').notNullable();
+      table.integer('quantity').notNullable();
+      table.double('total_price').notNullable();
+      table.timestamp('created_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 27. Order Status History Table
+  const hasOrderStatusHistory = await database.schema.hasTable('order_status_history');
+  if (!hasOrderStatusHistory) {
+    await database.schema.createTable('order_status_history', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('order_id').references('id').inTable('orders').onDelete('CASCADE').notNullable();
+      table.string('status', 30).notNullable();
+      table.text('comment').nullable();
+      table.uuid('changed_by').references('id').inTable('users').onDelete('SET NULL').nullable();
+      table.timestamp('created_at').defaultTo(database.fn.now());
+    });
+  }
+
+  // 28. Payments Table
+  const hasPayments = await database.schema.hasTable('payments');
+  if (!hasPayments) {
+    await database.schema.createTable('payments', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('order_id').references('id').inTable('orders').onDelete('CASCADE').notNullable();
+      table.string('payment_method', 30).notNullable();
+      table.double('amount').notNullable();
+      table.string('currency', 10).notNullable().defaultTo('BDT');
+      table.string('status', 30).notNullable().defaultTo('PENDING'); // PENDING, PAID, FAILED, REFUNDED
+      table.string('transaction_id', 100).nullable();
+      table.text('gateway_response').nullable();
+      table.timestamp('paid_at').nullable();
+      table.timestamp('created_at').defaultTo(database.fn.now());
+      table.timestamp('updated_at').defaultTo(database.fn.now());
+    });
+  }
+
   // Seed default roles, super admin, and sample catalog if not present
   await seedDatabase(database);
 }
@@ -509,6 +591,24 @@ export async function seedDatabase(database: Knex): Promise<void> {
       role: 'SUPER_ADMIN',
     });
     adminUser = { id: newAdminId };
+  }
+
+  // 3b. Seed default Approved Customer account
+  const customerPhone = '01800000000';
+  let demoCustomer = await database('users').where({ phone: customerPhone }).first();
+  if (!demoCustomer) {
+    const hashedCustPass = await bcrypt.hash('Customer@123456', config.BCRYPT_ROUNDS);
+    const newCustId = crypto.randomUUID();
+    await database('users').insert({
+      id: newCustId,
+      full_name: 'Approved Demo Customer',
+      phone: customerPhone,
+      password_hash: hashedCustPass,
+      email: 'customer@example.com',
+      address: 'House 42, Road 11, Dhanmondi, Dhaka',
+      status: 'APPROVED',
+      role: 'CUSTOMER',
+    });
   }
 
   // 4. Seed Hierarchical Categories
@@ -1011,6 +1111,93 @@ export async function seedDatabase(database: Knex): Promise<void> {
         allocated_stock: 40,
         sold_stock: 8,
         max_per_customer: 2,
+      });
+    }
+  }
+
+  // 9. Seed Sample Demo Order for Public Tracking & Testing
+  const existingOrder = await database('orders').where({ tracking_number: 'TRK-DEMO-2026-001' }).first();
+  if (!existingOrder) {
+    const demoOrderId = crypto.randomUUID();
+    const customer = await database('users').where({ phone: '01800000000' }).first();
+    const oil1L = await database('product_variants').where({ sku: 'TEER-OIL-1L' }).first();
+
+    if (customer && oil1L) {
+      const addressSnapshot = {
+        name: 'Approved Demo Customer',
+        phone: '01800000000',
+        address: 'House 42, Road 11, Dhanmondi, Dhaka',
+        district: 'Dhaka',
+        division: 'Dhaka',
+      };
+
+      await database('orders').insert({
+        id: demoOrderId,
+        order_number: 'ORD-2026-DEMO01',
+        tracking_number: 'TRK-DEMO-2026-001',
+        user_id: customer.id,
+        status: 'PROCESSING',
+        payment_status: 'PAID',
+        payment_method: 'BKASH',
+        subtotal: 525,
+        delivery_fee: 60,
+        discount_amount: 0,
+        tax_amount: 0,
+        grand_total: 585,
+        currency: 'BDT',
+        shipping_address_snapshot: JSON.stringify(addressSnapshot),
+        delivery_slot: 'Evening Slot (6 PM - 9 PM)',
+        customer_notes: 'Please call before arriving.',
+      });
+
+      await database('order_items').insert({
+        id: crypto.randomUUID(),
+        order_id: demoOrderId,
+        product_id: oil1L.product_id,
+        variant_id: oil1L.id,
+        product_name: 'Teer Pure Soybean Oil',
+        variant_name: '1 Liter',
+        sku: 'TEER-OIL-1L',
+        unit_price: 175,
+        quantity: 3,
+        total_price: 525,
+      });
+
+      // Status history: PENDING -> CONFIRMED -> PROCESSING
+      await database('order_status_history').insert([
+        {
+          id: crypto.randomUUID(),
+          order_id: demoOrderId,
+          status: 'PENDING',
+          comment: 'Order placed by customer via web portal',
+          created_at: new Date(Date.now() - 3600000 * 3),
+        },
+        {
+          id: crypto.randomUUID(),
+          order_id: demoOrderId,
+          status: 'CONFIRMED',
+          comment: 'Payment verified and order confirmed by sales team',
+          created_at: new Date(Date.now() - 3600000 * 2),
+        },
+        {
+          id: crypto.randomUUID(),
+          order_id: demoOrderId,
+          status: 'PROCESSING',
+          comment: 'Order packed at Tejgaon warehouse, awaiting courier dispatch',
+          created_at: new Date(Date.now() - 3600000 * 1),
+        },
+      ]);
+
+      await database('payments').insert({
+        id: crypto.randomUUID(),
+        order_id: demoOrderId,
+        payment_method: 'BKASH',
+        transaction_id: 'BKASH-TXN-98246193',
+        amount: 585,
+        currency: 'BDT',
+        status: 'PAID',
+        gateway_response: JSON.stringify({ statusCode: '0000', statusMessage: 'Successful', trxID: 'BKASH-TXN-98246193' }),
+        paid_at: new Date(Date.now() - 3600000 * 2),
       });
     }
   }

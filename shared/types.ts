@@ -52,6 +52,98 @@ export enum FlashDealStatus {
   DISABLED = 'DISABLED',
 }
 
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  RETURNED = 'RETURNED',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+}
+
+export enum PaymentMethod {
+  COD = 'COD',
+  BKASH = 'BKASH',
+  NAGAD = 'NAGAD',
+  ROCKET = 'ROCKET',
+  CARD = 'CARD',
+}
+
+export interface OrderItemDto {
+  id: string;
+  orderId: string;
+  productId: string;
+  variantId: string;
+  productName: string;
+  variantName: string;
+  sku: string;
+  unitPrice: number;
+  quantity: number;
+  totalPrice: number;
+  imageUrl?: string | null;
+}
+
+export interface OrderDto {
+  id: string;
+  orderNumber: string;
+  trackingNumber: string;
+  userId: string;
+  customerName?: string;
+  customerPhone?: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
+  subtotal: number;
+  discountAmount: number;
+  couponCode?: string | null;
+  deliveryFee: number;
+  taxAmount: number;
+  grandTotal: number;
+  currency: string;
+  shippingAddressSnapshot: any;
+  customerNotes?: string | null;
+  adminNotes?: string | null;
+  deliverySlot?: string | null;
+  deliveryDate?: string | null;
+  cancelledReason?: string | null;
+  items?: OrderItemDto[];
+  statusHistory?: any[];
+  payments?: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderTrackingDto {
+  orderNumber: string;
+  trackingNumber: string;
+  status: OrderStatus;
+  statusLabel: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  grandTotal?: number;
+  currency?: string;
+  estimatedDeliveryDate?: string | null;
+  deliverySlot?: string | null;
+  deliveryAddress?: any;
+  statusHistory?: any[];
+  timeline: {
+    status: OrderStatus;
+    title: string;
+    description: string;
+    completed: boolean;
+    timestamp?: string | null;
+  }[];
+}
+
 export interface CartItemDto {
   id: string;
   variantId: string;

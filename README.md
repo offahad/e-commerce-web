@@ -25,12 +25,59 @@ Production-ready, multi-channel e-commerce ecosystem built with Node.js, TypeScr
   * Promotional Coupon Engine (`PERCENTAGE`, `FIXED_AMOUNT`, `FREE_SHIPPING`) with date ranges, min order amounts, and per-user limits
   * Server-Side Price Authority Engine (`/api/v1/checkout/preview`) ensuring zero client price manipulation
   * Dynamic Business Settings (Standard delivery fee, free delivery threshold, tax, operational currency in BDT ৳)
-* [ ] **Phase 5 — Checkout, Orders & Payments** (ACID Transactional Orders, bKash/Nagad/COD Gateways, Invoice, Tracking)
+* [x] **Phase 5 — Checkout, Orders, Payments Strategy & Order Tracking Subsystem**: Implemented & Verified (57/57 total automated tests passing)
+  * ACID Transactional Order Creation with row-level locks (`forUpdate()`) to prevent race conditions and overselling
+  * Strategy Pattern Payment Engine (Cash on Delivery, bKash, Nagad, Rocket, Credit/Debit Cards)
+  * Dynamic Delivery Fee calculation with Free Delivery rules over ৳1,000 threshold
+  * Automatic stock reduction and immutable `inventory_transactions` audit logging upon order placement
+  * Atomic stock restock and transaction auditing on order cancellation
+  * Friday Flash Deal remaining quota deduction & coupon usage ledger tracking
+  * Real-Time Public Order Tracking Timeline (`/api/v1/orders/track/:trackingNumber`) with multi-stage status progression
+  * Admin Order Fulfillment Management: Status transitions (`PENDING` -> `CONFIRMED` -> `PROCESSING` -> `SHIPPED` -> `OUT_FOR_DELIVERY` -> `DELIVERED`), payment reconciliations, and printable tax invoice data
 * [ ] **Phase 6 — Customer Storefront Web App & Progressive Web App**
 * [ ] **Phase 7 — Admin Dashboard** (Overview Analytics, Customer Management, Inventory, Order Fulfillment, CRM)
 * [ ] **Phase 8 — Frontend Polish & SEO**
 * [ ] **Phase 9 — Full End-to-End & Concurrency Testing**
 * [ ] **Phase 10 — Production Deployment & Docker Orchestration**
+
+---
+
+## Orders, Checkout & Payment Gateways Subsystem (Phase 5)
+
+### 1. ACID Transactional Order Placement & Concurrency Guards (Section 18 & 55)
+Every order is created within a strict database transaction (`knex.transaction`):
+1. **Pessimistic Row-Locking**: Queries variants with `.forUpdate()` to lock rows, preventing overselling or race conditions during peak traffic or flash deal rushes.
+2. **Stock Verification**: Verifies `stock_quantity >= item.quantity`. Rejects immediately if insufficient stock.
+3. **Flash Deal Quotas**: Decrements `flash_deal_items.sold_stock` atomically and applies deal price if eligible.
+4. **Server Price Authority**: Recalculates subtotal from server variant prices. The client can never manipulate order costs.
+5. **Promotional Coupon Redemption**: Validates minimum order amount and per-user usage limits, increments `coupons.used_count`, and writes to `coupon_usages`.
+6. **Stock Reduction & Audit Ledger**: Decrements variant inventory and creates an immutable `inventory_transactions` record marked `STOCK_OUT` with `reference_id = orderNumber`.
+7. **Order & Order Items Record**: Writes order header, line items snapshot, and initial `order_status_history` record (`PENDING`).
+8. **Cart Clearing**: Empties the customer's cart atomically.
+
+### 2. Strategy Pattern Payment Subsystem (Section 19)
+Clean, extensible payment gateway architecture implementing `IPaymentGateway`:
+* `CodGateway`: Cash on Delivery with zero processing fee and cash verification instructions.
+* `BkashGateway`: Direct integration adapter with bKash payment gateway simulator (URL generation, callback verification, execute payment).
+* `NagadGateway`: Nagad mobile financial service adapter.
+* `PaymentGatewayFactory`: Dynamic resolution of payment gateways for COD, bKash, Nagad, Rocket, and Card.
+
+### 3. Public Real-Time Tracking Timeline (Section 55)
+Customers and recipients can track their orders using their unique tracking number (`TRK-YYYYMMDD-XXXXXX`) without needing an account:
+* Order Placed (`PENDING`)
+* Order Confirmed (`CONFIRMED`)
+* Packaging & Quality Check at Warehouse (`PROCESSING`)
+* Dispatched to Delivery Team (`SHIPPED`)
+* Out for Doorstep Delivery in Dhaka (`OUT_FOR_DELIVERY`)
+* Successfully Delivered (`DELIVERED`) — automatically marks COD orders as `PAID`.
+
+### 4. Cancellation & Atomic Restock (Section 18)
+Eligible orders (`PENDING` or `CONFIRMED`) can be cancelled by the customer or admin:
+* Reverts variant inventory levels atomically.
+* Creates `inventory_transactions` audit logs marked `STOCK_IN` with reason "Order Cancellation Restock".
+* Appends `CANCELLED` state to `order_status_history`.
+
+---
 
 ---
 
@@ -117,7 +164,7 @@ The API service starts on port `4000`:
 cd backend
 npm test
 ```
-All 27 integration tests run in ~4 seconds across authentication, customer approval, catalog search, variants, inventory ledger, and image processing.
+All 57 integration tests run in ~10 seconds across authentication, customer approval, catalog search, variants, inventory ledger, shopping cart, flash deals, coupons, pricing engine, transactional order placement, stock deduction, payment gateways, and public tracking timelines.
 
 ---
 

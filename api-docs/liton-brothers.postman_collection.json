@@ -376,6 +376,138 @@
           }
         }
       ]
+    },
+    {
+      "name": "Orders & Payments",
+      "item": [
+        {
+          "name": "Place Order (Cash on Delivery)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"variantId\": \"{{VARIANT_ID}}\",\n      \"quantity\": 2\n    }\n  ],\n  \"paymentMethod\": \"COD\",\n  \"couponCode\": \"RAMADAN20\",\n  \"deliverySlot\": \"Evening Slot (6 PM - 9 PM)\",\n  \"customerNotes\": \"Please call before arriving.\"\n}"
+            },
+            "url": "{{BASE_URL}}/orders"
+          }
+        },
+        {
+          "name": "Place Order (bKash Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"variantId\": \"{{VARIANT_ID}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"paymentMethod\": \"BKASH\",\n  \"deliverySlot\": \"Standard Delivery (9 AM - 6 PM)\"\n}"
+            },
+            "url": "{{BASE_URL}}/orders"
+          }
+        },
+        {
+          "name": "Customer Order History",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/orders?page=1&limit=10"
+          }
+        },
+        {
+          "name": "Order Detail by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/orders/{{ORDER_ID}}"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Changed mind on variant size\"\n}"
+            },
+            "url": "{{BASE_URL}}/orders/{{ORDER_ID}}/cancel"
+          }
+        },
+        {
+          "name": "Public Real-Time Order Tracking Timeline",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/orders/track/{{TRACKING_NUMBER}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Orders",
+      "item": [
+        {
+          "name": "Admin List All Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/admin/orders?page=1&limit=20&status=PENDING"
+          }
+        },
+        {
+          "name": "Admin Update Order Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"comment\": \"Order verified by warehouse team\"\n}"
+            },
+            "url": "{{BASE_URL}}/admin/orders/{{ORDER_ID}}/status"
+          }
+        },
+        {
+          "name": "Admin Update Payment Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentStatus\": \"PAID\",\n  \"transactionId\": \"TRX-MANUAL-98234\",\n  \"comment\": \"Verified bank deposit\"\n}"
+            },
+            "url": "{{BASE_URL}}/admin/orders/{{ORDER_ID}}/payment"
+          }
+        },
+        {
+          "name": "Admin Printable Invoice Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_ACCESS_TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/admin/orders/{{ORDER_ID}}/invoice"
+          }
+        }
+      ]
     }
   ]
 }
