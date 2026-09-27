@@ -47,9 +47,9 @@ export function createApp(): Express {
 
   app.use(
     cors({
-      origin: '*', // Allow web and mobile clients
+      origin: true, // Echo origin to allow cross-origin previews and credentials
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Session-ID'],
       credentials: true,
     })
   );
