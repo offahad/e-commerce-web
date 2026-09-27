@@ -1,7 +1,8 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
+import fs from 'fs';
 import { requestLogger, sanitizeRequestBody } from './common/middleware/request-logger.js';
 import { errorHandler, notFoundHandler } from './common/middleware/error-handler.js';
 import { globalRateLimiter } from './common/middleware/rate-limiter.js';
@@ -73,10 +74,22 @@ export function createApp(): Express {
   // 6. Interactive Swagger / OpenAPI Documentation
   setupSwagger(app);
 
-  // 7. Interactive Liton Brothers Live Preview Dashboard at Root (`/`)
-  app.get('/', (_req: Request, res: Response) => {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(`<!DOCTYPE html>
+  // 7. Customer Storefront (React 19 SPA) & Live Preview
+  const candidateDirs = [
+    path.join(process.cwd(), 'frontend', 'dist'),
+    path.join(process.cwd(), '..', 'frontend', 'dist'),
+  ];
+  const frontendDistPath = candidateDirs.find((p) => fs.existsSync(path.join(p, 'index.html')));
+
+  if (frontendDistPath) {
+    app.use(express.static(frontendDistPath));
+    app.get('/', (_req: Request, res: Response) => {
+      res.sendFile(path.join(frontendDistPath, 'index.html'));
+    });
+  } else {
+    app.get('/', (_req: Request, res: Response) => {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -871,7 +884,8 @@ export function createApp(): Express {
   </script>
 </body>
 </html>`);
-  });
+    });
+  }
 
   // 8. Mount REST API Version 1 Routes
   const apiV1 = express.Router();
@@ -905,6 +919,16 @@ export function createApp(): Express {
   apiV1.use('/admin', rbacRouter);
 
   app.use('/api/v1', apiV1);
+
+  // Fallback to React Storefront for client-side navigation
+  if (frontendDistPath) {
+    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+        return next();
+      }
+      res.sendFile(path.join(frontendDistPath, 'index.html'));
+    });
+  }
 
   // 9. Error Handling
   app.use(notFoundHandler);
