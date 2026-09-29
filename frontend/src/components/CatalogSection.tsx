@@ -372,12 +372,13 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
               </div>
 
               {(() => {
-                const ci = cartItems.find(
-                  (c) =>
-                    (p.variantId && c.variantId === p.variantId) ||
-                    c.productId === p.id ||
-                    (c.name && p.name && c.name.toLowerCase().trim() === p.name.toLowerCase().trim())
-                );
+                const ci = cartItems.find((c) => {
+                  if (p.variantId && c.variantId === p.variantId) return true;
+                  if (p.id && (c.productId === p.id || c.id === p.id)) return true;
+                  const cName = (c.productName || c.name || '').toLowerCase().trim();
+                  const pName = (p.name || '').toLowerCase().trim();
+                  return pName.length > 0 && cName === pName;
+                });
                 const cartQty = ci ? ci.quantity : 0;
 
                 if (cartQty > 0 && ci) {
@@ -390,11 +391,14 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (cartQty > 1) updateQuantity(ci.id, cartQty - 1);
-                          else removeItem(ci.id);
+                          if (cartQty > 1) {
+                            updateQuantity(ci.id, cartQty - 1);
+                          } else {
+                            removeItem(ci.id);
+                          }
                         }}
                         className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90"
-                        title="Decrease"
+                        title="Decrease quantity"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
@@ -406,7 +410,7 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
                           updateQuantity(ci.id, cartQty + 1);
                         }}
                         className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90"
-                        title="Increase"
+                        title="Increase quantity"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -419,7 +423,7 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      addToCart(p.variantId, 1, p);
+                      addToCart(p.variantId || 'v-' + p.id, 1, p);
                     }}
                     className="w-full py-2 rounded-full border border-emerald-800 text-emerald-800 hover:bg-emerald-800 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
                   >

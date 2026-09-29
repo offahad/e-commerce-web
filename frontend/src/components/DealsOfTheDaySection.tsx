@@ -136,9 +136,10 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOp
   const getCartInfo = (dealItem: DealItem) => {
     const ci = cartItems.find((c) => {
       if (dealItem.variantId && c.variantId === dealItem.variantId) return true;
-      if (dealItem.id && c.productId === dealItem.id) return true;
-      if (dealItem.name && c.name && c.name.toLowerCase().trim() === dealItem.name.toLowerCase().trim()) return true;
-      return false;
+      if (dealItem.id && (c.productId === dealItem.id || c.id === dealItem.id)) return true;
+      const cName = (c.productName || c.name || '').toLowerCase().trim();
+      const dName = (dealItem.name || '').toLowerCase().trim();
+      return dName.length > 0 && cName === dName;
     });
     return ci ? { qty: ci.quantity, cartItemId: ci.id } : { qty: 0, cartItemId: null };
   };
@@ -146,13 +147,18 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOp
   const handleAdd = async (item: DealItem, e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.isSoldOut) return;
-    if (item.variantId) {
-      await addToCart(item.variantId, 1);
-    } else if (item.rawProduct?.variants?.[0]?.id) {
-      await addToCart(item.rawProduct.variants[0].id, 1);
-    } else {
-      onOpenProduct(item.rawProduct || item);
-    }
+    await addToCart(item.variantId || 'deal-v-' + item.id, 1, {
+      id: item.id,
+      productId: item.id,
+      name: item.name,
+      productName: item.name,
+      variantName: item.unitSubtitle,
+      unit: item.unitSubtitle,
+      price: item.salePrice,
+      salePrice: item.salePrice,
+      basePrice: item.regularPrice,
+      imageUrl: item.imageUrl,
+    });
   };
 
   const handleIncrement = async (item: DealItem, e: React.MouseEvent) => {

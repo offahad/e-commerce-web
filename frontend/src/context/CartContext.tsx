@@ -54,9 +54,52 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+export const normalizeCartItem = (raw: any): CartItem => {
+  const pName = raw.productName || raw.name || raw.title || 'Grocery Item';
+  const vName = raw.variantName || raw.variant_name || raw.unit || raw.unitSubtitle || 'Standard Pack';
+  const uPrice = Number(raw.unitPrice ?? raw.price ?? raw.salePrice ?? raw.basePrice ?? 100);
+  const qty = Number(raw.quantity ?? 1);
+  const tPrice = Number(raw.totalPrice ?? raw.lineTotal ?? (uPrice * qty));
+  const origPrice = Number(raw.originalPrice ?? raw.basePrice ?? raw.regularPrice ?? uPrice);
+  const img = raw.imageUrl || raw.image_url || raw.thumbnailUrl || raw.primaryImage || '';
+
+  return {
+    id: raw.id || raw.item_id || 'cart-item-' + Math.random().toString(36).substring(2, 9),
+    variantId: raw.variantId || raw.product_variant_id || raw.variant_id || '',
+    productId: raw.productId || raw.product_id || '',
+    productName: pName,
+    name: pName,
+    variantName: vName,
+    sku: raw.sku || '',
+    unitPrice: uPrice,
+    price: uPrice,
+    salePrice: uPrice,
+    basePrice: origPrice,
+    originalPrice: origPrice,
+    quantity: qty,
+    lineTotal: tPrice,
+    totalPrice: tPrice,
+    imageUrl: img,
+    thumbnailUrl: img,
+    stockQuantity: Number(raw.stockQuantity ?? raw.availableStock ?? 100),
+    isOutOfStock: Boolean(raw.isOutOfStock),
+  };
+};
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('lb_cart_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(normalizeCartItem);
+        }
+      }
+    } catch (e) {}
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -101,43 +144,27 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const freeDeliveryThreshold = 1000;
   const standardDeliveryFee = 60;
 
-  const normalizeCartItem = (raw: any): CartItem => {
-    const pName = raw.productName || raw.name || raw.title || 'Grocery Item';
-    const vName = raw.variantName || raw.variant_name || raw.unit || raw.unitSubtitle || 'Standard Pack';
-    const uPrice = Number(raw.unitPrice ?? raw.price ?? raw.salePrice ?? raw.basePrice ?? 100);
-    const qty = Number(raw.quantity ?? 1);
-    const tPrice = Number(raw.totalPrice ?? raw.lineTotal ?? (uPrice * qty));
-    const origPrice = Number(raw.originalPrice ?? raw.basePrice ?? raw.regularPrice ?? uPrice);
-    const img = raw.imageUrl || raw.image_url || raw.thumbnailUrl || raw.primaryImage || '';
-
-    return {
-      id: raw.id || raw.item_id || 'cart-item-' + Math.random().toString(36).substring(2, 9),
-      variantId: raw.variantId || raw.product_variant_id || raw.variant_id || '',
-      productId: raw.productId || raw.product_id || '',
-      productName: pName,
-      name: pName,
-      variantName: vName,
-      sku: raw.sku || '',
-      unitPrice: uPrice,
-      price: uPrice,
-      salePrice: uPrice,
-      basePrice: origPrice,
-      originalPrice: origPrice,
-      quantity: qty,
-      lineTotal: tPrice,
-      totalPrice: tPrice,
-      imageUrl: img,
-      thumbnailUrl: img,
-      stockQuantity: Number(raw.stockQuantity ?? raw.availableStock ?? 100),
-      isOutOfStock: Boolean(raw.isOutOfStock),
-    };
-  };
-
   const loadCart = async () => {
     try {
-      const res = await api.getCart();
-      if (res.success && res.data && Array.isArray(res.data.items)) {
-        setCartItems(res.data.items.map(normalizeCartItem));
+      const res = await api.getCart().catch(() => null);
+      if (res && res.success && res.data && Array.isArray(res.data.items) && res.data.items.length > 0) {
+        const serverItems = res.data.items.map(normalizeCartItem);
+        setCartItems((prev) => {
+          const merged = [...serverItems];
+          for (const local of prev) {
+            const exists = merged.some(
+              (m) =>
+                (local.variantId && m.variantId === local.variantId) ||
+                (local.productId && m.productId === local.productId) ||
+                (local.productName && m.productName && local.productName.toLowerCase().trim() === m.productName.toLowerCase().trim())
+            );
+            if (!exists) merged.push(local);
+          }
+          try {
+            localStorage.setItem('lb_cart_items', JSON.stringify(merged));
+          } catch (e) {}
+          return merged;
+        });
       }
     } catch (err) {
       console.error('Error loading cart', err);
@@ -170,42 +197,65 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const existing = prev.find(
         (i) =>
           (variantId && i.variantId === variantId) ||
-          (itemMetadata?.name && (i.name || i.productName)?.toLowerCase().trim() === itemMetadata.name.toLowerCase().trim()) ||
-          (itemMetadata?.id && i.productId === itemMetadata.id)
+          (itemMetadata?.id && (i.productId === itemMetadata.id || i.id === itemMetadata.id)) ||
+          (itemMetadata?.name && (i.name || i.productName)?.toLowerCase().trim() === itemMetadata.name.toLowerCase().trim())
       );
+      let updated: CartItem[];
       if (existing) {
-        return prev.map((i) =>
+        updated = prev.map((i) =>
           i.id === existing.id
             ? normalizeCartItem({ ...i, quantity: i.quantity + quantity })
             : i
         );
+      } else {
+        const pName = itemMetadata?.name || itemMetadata?.productName || 'Fresh Grocery Item';
+        const uPrice = Number(itemMetadata?.price ?? itemMetadata?.salePrice ?? 100);
+        const newItem: CartItem = normalizeCartItem({
+          id: 'cart-item-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+          variantId,
+          productId: itemMetadata?.productId || itemMetadata?.id || variantId,
+          productName: pName,
+          name: pName,
+          variantName: itemMetadata?.unit || itemMetadata?.unitSubtitle || itemMetadata?.variantName || '1 pack',
+          quantity,
+          unitPrice: uPrice,
+          price: uPrice,
+          salePrice: uPrice,
+          basePrice: itemMetadata?.regularPrice || itemMetadata?.basePrice || uPrice,
+          originalPrice: itemMetadata?.regularPrice || itemMetadata?.basePrice || uPrice,
+          imageUrl: itemMetadata?.imageUrl || itemMetadata?.thumbnailUrl || '',
+          thumbnailUrl: itemMetadata?.imageUrl || itemMetadata?.thumbnailUrl || '',
+          stockQuantity: 100,
+        });
+        updated = [...prev, newItem];
       }
-      const pName = itemMetadata?.name || itemMetadata?.productName || 'Fresh Grocery Item';
-      const uPrice = Number(itemMetadata?.price ?? itemMetadata?.salePrice ?? 100);
-      const newItem: CartItem = normalizeCartItem({
-        id: 'cart-item-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
-        variantId,
-        productId: itemMetadata?.productId || itemMetadata?.id || variantId,
-        productName: pName,
-        name: pName,
-        variantName: itemMetadata?.unit || itemMetadata?.unitSubtitle || itemMetadata?.variantName || '1 pack',
-        quantity,
-        unitPrice: uPrice,
-        price: uPrice,
-        salePrice: uPrice,
-        basePrice: itemMetadata?.regularPrice || itemMetadata?.basePrice || uPrice,
-        originalPrice: itemMetadata?.regularPrice || itemMetadata?.basePrice || uPrice,
-        imageUrl: itemMetadata?.imageUrl || itemMetadata?.thumbnailUrl || '',
-        thumbnailUrl: itemMetadata?.imageUrl || itemMetadata?.thumbnailUrl || '',
-        stockQuantity: 100,
-      });
-      return [...prev, newItem];
+
+      try {
+        localStorage.setItem('lb_cart_items', JSON.stringify(updated));
+      } catch (e) {}
+
+      return updated;
     });
 
     try {
-      const res = await api.addToCart(variantId, quantity);
-      if (res.success) {
-        await loadCart();
+      const res = await api.addToCart(variantId, quantity).catch(() => null);
+      if (res && res.success && res.data && Array.isArray(res.data.items) && res.data.items.length > 0) {
+        setCartItems((prev) => {
+          const serverItems = res.data.items.map(normalizeCartItem);
+          const merged = [...serverItems];
+          for (const local of prev) {
+            const exists = merged.some(
+              (m) =>
+                (local.variantId && m.variantId === local.variantId) ||
+                (local.productId && m.productId === local.productId)
+            );
+            if (!exists) merged.push(local);
+          }
+          try {
+            localStorage.setItem('lb_cart_items', JSON.stringify(merged));
+          } catch (e) {}
+          return merged;
+        });
       }
       return { success: true };
     } catch (err: any) {
@@ -221,11 +271,41 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await removeItem(itemId);
         return;
       }
-      setCartItems((prev) =>
-        prev.map((i) => (i.id === itemId || i.variantId === itemId ? { ...i, quantity } : i))
-      );
-      await api.updateCartItem(itemId, quantity).catch(() => {});
-      await loadCart().catch(() => {});
+      setCartItems((prev) => {
+        const updated = prev.map((i) =>
+          i.id === itemId ||
+          i.variantId === itemId ||
+          (i.productId && i.productId === itemId) ||
+          ((i.name || i.productName) && String(itemId).toLowerCase().trim() === (i.name || i.productName).toLowerCase().trim())
+            ? normalizeCartItem({ ...i, quantity })
+            : i
+        );
+        try {
+          localStorage.setItem('lb_cart_items', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
+
+      // Update backend in background without wiping local items on failure
+      const res = await api.updateCartItem(itemId, quantity).catch(() => null);
+      if (res && res.success && res.data && Array.isArray(res.data.items) && res.data.items.length > 0) {
+        setCartItems((prev) => {
+          const serverItems = res.data.items.map(normalizeCartItem);
+          const merged = [...serverItems];
+          for (const local of prev) {
+            const exists = merged.some(
+              (m) =>
+                (local.variantId && m.variantId === local.variantId) ||
+                (local.productId && m.productId === local.productId)
+            );
+            if (!exists) merged.push(local);
+          }
+          try {
+            localStorage.setItem('lb_cart_items', JSON.stringify(merged));
+          } catch (e) {}
+          return merged;
+        });
+      }
     } catch (err) {
       console.error('Failed to update quantity', err);
     }
@@ -233,9 +313,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const removeItem = async (itemId: string) => {
     try {
-      setCartItems((prev) => prev.filter((i) => i.id !== itemId && i.variantId !== itemId));
+      setCartItems((prev) => {
+        const updated = prev.filter(
+          (i) =>
+            i.id !== itemId &&
+            i.variantId !== itemId &&
+            i.productId !== itemId &&
+            (!i.name || i.name.toLowerCase().trim() !== String(itemId).toLowerCase().trim()) &&
+            (!i.productName || i.productName.toLowerCase().trim() !== String(itemId).toLowerCase().trim())
+        );
+        try {
+          localStorage.setItem('lb_cart_items', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
       await api.removeCartItem(itemId).catch(() => {});
-      await loadCart().catch(() => {});
     } catch (err) {
       console.error('Failed to remove cart item', err);
     }
@@ -243,9 +335,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearCart = async () => {
     try {
-      await api.clearCart();
       setCartItems([]);
       setAppliedCoupon(null);
+      try {
+        localStorage.removeItem('lb_cart_items');
+      } catch (e) {}
+      await api.clearCart().catch(() => {});
     } catch (err) {
       console.error('Failed to clear cart', err);
     }

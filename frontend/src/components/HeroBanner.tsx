@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -50,25 +50,69 @@ const DEFAULT_SLIDES: BannerSlide[] = [
 export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = DEFAULT_SLIDES, onShopNow }) => {
   const { t, language } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  // Auto change after delay (5 seconds)
+  const activeSlides = slides && slides.length > 0 ? slides : DEFAULT_SLIDES;
+  const totalSlides = activeSlides.length;
+
+  const handlePrev = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+  }, [totalSlides]);
+
+  const handleNext = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % totalSlides);
+  }, [totalSlides]);
+
+  // Auto scroll after delay (5 seconds), pausing on hover or when single slide
   useEffect(() => {
-    if (slides.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
+    if (totalSlides <= 1 || isHovered) return;
 
-  const currentSlide = slides[currentIndex] || slides[0];
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % totalSlides);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [currentIndex, totalSlides, isHovered]);
+
+  const currentSlide = activeSlides[currentIndex] || activeSlides[0];
 
   return (
-    <div className="relative mb-8 overflow-hidden rounded-3xl bg-[#14532d] text-white shadow-xl">
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative mb-8 overflow-hidden rounded-3xl bg-[#14532d] text-white shadow-xl group"
+    >
       {/* Background Graphic Curves */}
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
       <div className="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
 
-      <div className="relative px-6 py-10 sm:px-12 sm:py-14 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8 z-10">
+      {/* Actionable Left Arrow Navigation Button */}
+      {totalSlides > 1 && (
+        <button
+          type="button"
+          onClick={handlePrev}
+          aria-label="Previous Hero Slide"
+          className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-md transition-all shadow-xl z-30 cursor-pointer active:scale-90 hover:scale-110 border border-white/20"
+        >
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+      )}
+
+      {/* Actionable Right Arrow Navigation Button */}
+      {totalSlides > 1 && (
+        <button
+          type="button"
+          onClick={handleNext}
+          aria-label="Next Hero Slide"
+          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-md transition-all shadow-xl z-30 cursor-pointer active:scale-90 hover:scale-110 border border-white/20"
+        >
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+      )}
+
+      <div className="relative px-6 py-10 sm:px-14 sm:py-14 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8 z-10">
         {/* Left Content */}
         <div className="max-w-xl text-left space-y-4">
           <div className="inline-flex items-center gap-2 bg-emerald-800/80 border border-emerald-600/50 px-3 py-1 rounded-full text-xs font-semibold text-emerald-200">
@@ -76,18 +120,19 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = DEFAULT_SLIDES,
             <span>{currentSlide.badgeText || (language === 'bn' ? 'এক্সপ্রেস ডেলিভারি' : '15-Min Express')}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-white drop-shadow-sm">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-white drop-shadow-sm transition-opacity duration-300">
             {language === 'bn' && currentIndex === 0 ? t('heroTitle') : currentSlide.headline}
           </h1>
 
-          <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed max-w-lg">
+          <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed max-w-lg transition-opacity duration-300">
             {language === 'bn' && currentIndex === 0 ? t('heroSub') : currentSlide.subtext}
           </p>
 
           <div className="pt-2">
             <button
+              type="button"
               onClick={() => onShopNow(currentSlide.targetCategory)}
-              className="inline-flex items-center gap-2 bg-white text-[#14532d] hover:bg-emerald-50 px-6 py-3 rounded-full font-bold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 bg-white text-[#14532d] hover:bg-emerald-50 px-6 py-3 rounded-full font-bold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:scale-95"
             >
               <span>{language === 'bn' ? t('shopNow') : currentSlide.buttonText}</span>
               <ArrowRight className="w-4 h-4 text-[#14532d]" />
@@ -95,15 +140,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = DEFAULT_SLIDES,
           </div>
         </div>
 
-        {/* Right Floating Produce Bag Card (Matching Screenshot 1) */}
+        {/* Right Floating Produce Bag Card */}
         <div className="relative shrink-0 w-full md:w-auto flex justify-center">
           <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-80 rounded-2xl bg-white p-3 shadow-2xl flex items-center justify-center overflow-hidden">
             <img
+              key={currentSlide.id || currentIndex}
               src={currentSlide.imageUrl}
               alt={currentSlide.headline}
               className="w-full h-full object-cover rounded-xl transition-transform duration-700 hover:scale-105"
             />
-            <div className="absolute bottom-4 left-4 right-4 bg-emerald-950/80 backdrop-blur-md rounded-xl p-2.5 text-white flex items-center justify-between">
+            <div className="absolute bottom-4 left-4 right-4 bg-emerald-950/80 backdrop-blur-md rounded-xl p-2.5 text-white flex items-center justify-between pointer-events-none">
               <div className="text-left">
                 <div className="text-[10px] text-emerald-300 uppercase tracking-wider font-bold">100% Organic & Fresh</div>
                 <div className="text-xs font-bold truncate">Dhaka Central Hub</div>
@@ -116,8 +162,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = DEFAULT_SLIDES,
         </div>
       </div>
 
-      {/* Soft Curved Wave along the bottom (Matching Screenshot 1) */}
-      <div className="w-full overflow-hidden leading-none z-10 relative">
+      {/* Soft Curved Wave along the bottom */}
+      <div className="w-full overflow-hidden leading-none z-10 relative pointer-events-none">
         <svg
           viewBox="0 0 1200 120"
           preserveAspectRatio="none"
@@ -127,37 +173,24 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = DEFAULT_SLIDES,
         </svg>
       </div>
 
-      {/* Slider Controls */}
-      {slides.length > 1 && (
-        <>
-          <button
-            onClick={() => setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length)}
-            aria-label="Previous Slide"
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setCurrentIndex((prev) => (prev + 1) % slides.length)}
-            aria-label="Next Slide"
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-sm transition"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-
-          {/* Dots Indicator */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`h-2 rounded-full transition-all ${
-                  idx === currentIndex ? 'w-6 bg-emerald-400' : 'w-2 bg-white/40'
-                }`}
-              />
-            ))}
-          </div>
-        </>
+      {/* Dots Indicator */}
+      {totalSlides > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+          {activeSlides.map((_, idx) => (
+            <button
+              type="button"
+              key={idx}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex(idx);
+              }}
+              aria-label={`Go to slide ${idx + 1}`}
+              className={`h-2 rounded-full transition-all cursor-pointer ${
+                idx === currentIndex ? 'w-6 bg-emerald-400' : 'w-2 bg-white/40 hover:bg-white/80'
+              }`}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
