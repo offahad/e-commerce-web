@@ -51,7 +51,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
   const handleAddToCart = async () => {
     if (!selectedVariant || isOutOfStock) return;
     setAdding(true);
-    const res = await addToCart(selectedVariant.id, quantity);
+    const res = await addToCart(selectedVariant.id, quantity, {
+      id: product.id,
+      productId: product.id,
+      name: product.name,
+      productName: product.name,
+      variantName: selectedVariant.displayName,
+      unit: selectedVariant.displayName,
+      price: currentSalePrice || currentBasePrice,
+      salePrice: currentSalePrice,
+      basePrice: currentBasePrice,
+      imageUrl: product.images?.[0]?.imageUrl || product.primaryImage,
+      thumbnailUrl: product.images?.[0]?.imageUrl || product.primaryImage,
+    });
     setAdding(false);
     if (res.success) {
       setAdded(true);
@@ -63,7 +75,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
 
   const handleBuyNow = async () => {
     if (!selectedVariant || isOutOfStock) return;
-    const res = await addToCart(selectedVariant.id, quantity);
+    const res = await addToCart(selectedVariant.id, quantity, {
+      id: product.id,
+      productId: product.id,
+      name: product.name,
+      productName: product.name,
+      variantName: selectedVariant.displayName,
+      unit: selectedVariant.displayName,
+      price: currentSalePrice || currentBasePrice,
+      salePrice: currentSalePrice,
+      basePrice: currentBasePrice,
+      imageUrl: product.images?.[0]?.imageUrl || product.primaryImage,
+      thumbnailUrl: product.images?.[0]?.imageUrl || product.primaryImage,
+    });
     if (res.success) {
       onClose();
       openCheckout();

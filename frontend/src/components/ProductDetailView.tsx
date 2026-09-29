@@ -69,7 +69,19 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     : `${quantity} ${primaryUnit}`;
 
   const handleAddToCart = () => {
-    addToCart(selectedVariant.id, quantity);
+    addToCart(selectedVariant.id, quantity, {
+      id: product.id,
+      productId: product.id,
+      name: product.name,
+      productName: product.name,
+      variantName: displayQuantityText,
+      unit: selectedWeight,
+      price: baseUnitPrice,
+      salePrice: baseUnitPrice,
+      basePrice: selectedVariant?.compareAtPrice,
+      imageUrl: images[0],
+      thumbnailUrl: images[0],
+    });
   };
 
   const handleBuyNow = () => {

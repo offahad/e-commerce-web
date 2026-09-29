@@ -101,15 +101,23 @@ export interface CartItem {
   variantId: string;
   productId: string;
   productName: string;
-  productSlug: string;
+  name?: string;
+  productSlug?: string;
   variantName: string;
-  sku: string;
+  sku?: string;
   unitPrice: number;
-  basePrice: number;
+  price?: number;
+  salePrice?: number;
+  basePrice?: number;
+  originalPrice?: number;
   quantity: number;
-  lineTotal: number;
+  lineTotal?: number;
+  totalPrice?: number;
   imageUrl?: string;
-  stockQuantity: number;
+  thumbnailUrl?: string;
+  stockQuantity?: number;
+  availableStock?: number;
+  isOutOfStock?: boolean;
 }
 
 export interface OrderTimelineStep {

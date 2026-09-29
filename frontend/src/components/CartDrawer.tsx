@@ -149,13 +149,13 @@ export const CartDrawer: React.FC = () => {
                   {/* Details */}
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-bold text-slate-900 truncate">
-                      {item.productName}
+                      {item.productName || item.name || 'Grocery Item'}
                     </h4>
                     <div className="text-[11px] font-semibold text-emerald-700">
                       {item.variantName}
                     </div>
                     <div className="text-xs font-bold text-slate-800 mt-1">
-                      ৳{item.unitPrice}
+                      ৳{Number(item.unitPrice || item.price || 0).toFixed(2)}
                     </div>
                   </div>
 

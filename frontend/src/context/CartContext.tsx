@@ -101,11 +101,43 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const freeDeliveryThreshold = 1000;
   const standardDeliveryFee = 60;
 
+  const normalizeCartItem = (raw: any): CartItem => {
+    const pName = raw.productName || raw.name || raw.title || 'Grocery Item';
+    const vName = raw.variantName || raw.variant_name || raw.unit || raw.unitSubtitle || 'Standard Pack';
+    const uPrice = Number(raw.unitPrice ?? raw.price ?? raw.salePrice ?? raw.basePrice ?? 100);
+    const qty = Number(raw.quantity ?? 1);
+    const tPrice = Number(raw.totalPrice ?? raw.lineTotal ?? (uPrice * qty));
+    const origPrice = Number(raw.originalPrice ?? raw.basePrice ?? raw.regularPrice ?? uPrice);
+    const img = raw.imageUrl || raw.image_url || raw.thumbnailUrl || raw.primaryImage || '';
+
+    return {
+      id: raw.id || raw.item_id || 'cart-item-' + Math.random().toString(36).substring(2, 9),
+      variantId: raw.variantId || raw.product_variant_id || raw.variant_id || '',
+      productId: raw.productId || raw.product_id || '',
+      productName: pName,
+      name: pName,
+      variantName: vName,
+      sku: raw.sku || '',
+      unitPrice: uPrice,
+      price: uPrice,
+      salePrice: uPrice,
+      basePrice: origPrice,
+      originalPrice: origPrice,
+      quantity: qty,
+      lineTotal: tPrice,
+      totalPrice: tPrice,
+      imageUrl: img,
+      thumbnailUrl: img,
+      stockQuantity: Number(raw.stockQuantity ?? raw.availableStock ?? 100),
+      isOutOfStock: Boolean(raw.isOutOfStock),
+    };
+  };
+
   const loadCart = async () => {
     try {
       const res = await api.getCart();
-      if (res.success && res.data) {
-        setCartItems(res.data.items || []);
+      if (res.success && res.data && Array.isArray(res.data.items)) {
+        setCartItems(res.data.items.map(normalizeCartItem));
       }
     } catch (err) {
       console.error('Error loading cart', err);
@@ -138,27 +170,35 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const existing = prev.find(
         (i) =>
           (variantId && i.variantId === variantId) ||
-          (itemMetadata?.name && i.name && i.name.toLowerCase().trim() === itemMetadata.name.toLowerCase().trim()) ||
+          (itemMetadata?.name && (i.name || i.productName)?.toLowerCase().trim() === itemMetadata.name.toLowerCase().trim()) ||
           (itemMetadata?.id && i.productId === itemMetadata.id)
       );
       if (existing) {
         return prev.map((i) =>
-          i.id === existing.id ? { ...i, quantity: i.quantity + quantity } : i
+          i.id === existing.id
+            ? normalizeCartItem({ ...i, quantity: i.quantity + quantity })
+            : i
         );
       }
-      const newItem: CartItem = {
+      const pName = itemMetadata?.name || itemMetadata?.productName || 'Fresh Grocery Item';
+      const uPrice = Number(itemMetadata?.price ?? itemMetadata?.salePrice ?? 100);
+      const newItem: CartItem = normalizeCartItem({
         id: 'cart-item-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
         variantId,
         productId: itemMetadata?.productId || itemMetadata?.id || variantId,
-        name: itemMetadata?.name || 'Fresh Grocery Item',
+        productName: pName,
+        name: pName,
         variantName: itemMetadata?.unit || itemMetadata?.unitSubtitle || itemMetadata?.variantName || '1 pack',
         quantity,
-        unitPrice: itemMetadata?.price || itemMetadata?.salePrice || 100,
-        salePrice: itemMetadata?.price || itemMetadata?.salePrice || 100,
-        basePrice: itemMetadata?.regularPrice || itemMetadata?.basePrice || 120,
+        unitPrice: uPrice,
+        price: uPrice,
+        salePrice: uPrice,
+        basePrice: itemMetadata?.regularPrice || itemMetadata?.basePrice || uPrice,
+        originalPrice: itemMetadata?.regularPrice || itemMetadata?.basePrice || uPrice,
+        imageUrl: itemMetadata?.imageUrl || itemMetadata?.thumbnailUrl || '',
         thumbnailUrl: itemMetadata?.imageUrl || itemMetadata?.thumbnailUrl || '',
         stockQuantity: 100,
-      };
+      });
       return [...prev, newItem];
     });
 
@@ -288,8 +328,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Computed totals
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
-  const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const subtotal = cartItems.reduce((acc, item) => {
+    const itemPrice = Number(item.unitPrice ?? item.price ?? 0);
+    const itemQty = Number(item.quantity ?? 1);
+    return acc + (itemPrice * itemQty);
+  }, 0);
+  const itemCount = cartItems.reduce((acc, item) => acc + Number(item.quantity ?? 0), 0);
 
   const deliveryFee = subtotal >= freeDeliveryThreshold || appliedCoupon?.code === 'FREEDEL'
     ? 0

@@ -34,7 +34,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
     if (!selectedVariant || isOutOfStock) return;
 
     setIsAdding(true);
-    const result = await addToCart(selectedVariant.id, 1);
+    const result = await addToCart(selectedVariant.id, 1, {
+      id: product.id,
+      productId: product.id,
+      name: product.name,
+      productName: product.name,
+      variantName: selectedVariant.displayName,
+      unit: selectedVariant.displayName,
+      price: selectedVariant.salePrice || selectedVariant.basePrice || product.salePrice || product.basePrice,
+      salePrice: selectedVariant.salePrice || product.salePrice,
+      basePrice: selectedVariant.basePrice || product.basePrice,
+      imageUrl: product.primaryImage,
+      thumbnailUrl: product.primaryImage,
+    });
     setIsAdding(false);
 
     if (result.success) {
