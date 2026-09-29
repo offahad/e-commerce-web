@@ -1,7 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from './auth.service.js';
 import { ApiResponse } from '../../common/utils/api-response.js';
-import { registerSchema, loginSchema, refreshTokenSchema, changePasswordSchema } from './auth.dto.js';
+import {
+  registerSchema,
+  loginSchema,
+  refreshTokenSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  mfaVerifySchema,
+} from './auth.dto.js';
 
 export class AuthController {
   private authService: AuthService;
@@ -25,6 +33,74 @@ export class AuthController {
       const validated = loginSchema.parse(req.body);
       const result = await this.authService.login(validated);
       return ApiResponse.success(res, result, 'Login successful');
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  verifyMfaLogin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validated = mfaVerifySchema.parse(req.body);
+      if (!validated.tempToken) {
+        return ApiResponse.error(res, 'Temporary MFA session token required', 'MISSING_TEMP_TOKEN', 400);
+      }
+      const result = await this.authService.verifyMfaLogin(validated.tempToken, validated.code);
+      return ApiResponse.success(res, result, 'MFA login verified successfully');
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validated = forgotPasswordSchema.parse(req.body);
+      const result = await this.authService.forgotPassword(validated);
+      return ApiResponse.success(res, result, result.message);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validated = resetPasswordSchema.parse(req.body);
+      const result = await this.authService.resetPassword(validated);
+      return ApiResponse.success(res, result, result.message);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  setupMfa = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.authService.setupMfa(req.user!.id);
+      return ApiResponse.success(res, result, 'MFA setup initiated');
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  enableMfa = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const code = req.body.code;
+      if (!code) {
+        return ApiResponse.error(res, 'Verification code is required', 'MISSING_CODE', 400);
+      }
+      const result = await this.authService.enableMfa(req.user!.id, code);
+      return ApiResponse.success(res, result, result.message);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  disableMfa = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const code = req.body.code;
+      if (!code) {
+        return ApiResponse.error(res, 'Verification code is required', 'MISSING_CODE', 400);
+      }
+      const result = await this.authService.disableMfa(req.user!.id, code);
+      return ApiResponse.success(res, result, result.message);
     } catch (err) {
       next(err);
     }

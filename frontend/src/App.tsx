@@ -57,47 +57,42 @@ const MainContent: React.FC = () => {
   const [accountTab, setAccountTab] = useState('profile');
 
   // Hero CMS Banners State
-  const [heroSlides, setHeroSlides] = useState<BannerSlide[]>(() => {
-    const saved = localStorage.getItem('lb_cms_hero_banners');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {}
-    }
-    return [
-      {
-        id: 'slide-1',
-        headline: 'We bring the store to your door',
-        subtext: 'Get organic produce and sustainably sourced groceries delivery at up to 4% off grocery.',
-        buttonText: 'Shop now',
-        imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
-        badgeText: 'Dhaka Express 15-Min',
-        targetCategory: 'vegetables',
-      },
-      {
-        id: 'slide-2',
-        headline: 'Mega Friday Flash Deals — Up to 35% OFF',
-        subtext: 'Premium Teer & Rupchanda edible oils, aromatic Chinigura rice & pure spices at wholesale rates.',
-        buttonText: 'View Flash Deals',
-        imageUrl: 'https://images.unsplash.com/photo-1579113800032-c38bd7635818?auto=format&fit=crop&w=800&q=80',
-        badgeText: 'Friday Bazaar',
-        targetCategory: 'cooking-oil',
-      },
-    ];
-  });
+  const [heroSlides, setHeroSlides] = useState<BannerSlide[]>([
+    {
+      id: 'slide-1',
+      headline: 'We bring the store to your door',
+      subtext: 'Get organic produce and sustainably sourced groceries delivery at up to 4% off grocery.',
+      buttonText: 'Shop now',
+      imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
+      badgeText: 'Dhaka Express 15-Min',
+      targetCategory: 'vegetables',
+    },
+    {
+      id: 'slide-2',
+      headline: 'Mega Friday Flash Deals — Up to 35% OFF',
+      subtext: 'Premium Teer & Rupchanda edible oils, aromatic Chinigura rice & pure spices at wholesale rates.',
+      buttonText: 'View Flash Deals',
+      imageUrl: 'https://images.unsplash.com/photo-1579113800032-c38bd7635818?auto=format&fit=crop&w=800&q=80',
+      badgeText: 'Friday Bazaar',
+      targetCategory: 'cooking-oil',
+    },
+  ]);
 
-  // Listen for CMS updates from AdminPortal
+  // Load persistent hero banners from REST API
   useEffect(() => {
-    const handleBannersUpdated = () => {
-      const saved = localStorage.getItem('lb_cms_hero_banners');
-      if (saved) {
-        try {
-          setHeroSlides(JSON.parse(saved));
-        } catch (e) {}
+    const loadBanners = async () => {
+      try {
+        const res = await api.getHeroBanners();
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setHeroSlides(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to load hero banners', err);
       }
     };
-    window.addEventListener('lb_banners_updated', handleBannersUpdated);
-    return () => window.removeEventListener('lb_banners_updated', handleBannersUpdated);
+    loadBanners();
+    window.addEventListener('lb_banners_updated', loadBanners);
+    return () => window.removeEventListener('lb_banners_updated', loadBanners);
   }, []);
 
   const fetchCatalog = async () => {

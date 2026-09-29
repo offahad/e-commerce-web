@@ -233,20 +233,29 @@ CMD ["npm", "run", "start", "--prefix", "backend"]
 
 ## 7. Pre-Seeded Credentials & Roles
 
-The system is pre-populated with ready-to-test accounts representing different roles:
+The system is pre-populated with ready-to-test accounts representing different roles and access levels:
 
 | Role | Phone Number | Password | Account Status | Permissions & Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| **Super Admin** | `01700000000` | `AdminSecret123!` | `ACTIVE` | Full control: Customer approvals, stock adjustments, order fulfillment, pricing history, and tax invoices. |
-| **Store Manager**| `01711000000` | `ManagerPass123!` | `ACTIVE` | Warehouse inventory adjustments, stock alerts, order status updates. |
-| **Approved Customer** | `01800000000` | `CustomerPass123!` | `ACTIVE` | Place orders, apply coupon codes, manage address book, cancel orders. |
-| **Pending Customer** | `01900000000` | `CustomerPass123!` | `PENDING_APPROVAL` | Can browse catalog, but order checkout is blocked until an Admin approves the account. |
+| **Super Admin** | `01700000000` | `Admin@12345` (or `AdminSecret123!`) | `ACTIVE` | **Full Authority**: Customer 360 & approval queue, Staff management & role assignment, sensitive audit logs, warehouse stock adjustments, orders fulfillment, hero banner CMS, and tax invoices. |
+| **Store Moderator**| `01711111111` | `Staff@12345` (or `ManagerPass123!`) | `ACTIVE` | **Restricted Operations**: Order fulfillment, product catalog, inventory alerts & adjustments, hero banner CMS. **Deny-by-default (HTTP 403)** on staff management, audit logs, and customer approvals. |
+| **Approved Customer** | `01811111111` | `User@12345` (or `CustomerPass123!`) | `ACTIVE` | Place orders, apply coupon codes, manage saved addresses, view live order tracking, cancel unfulfilled orders. |
+| **Pending Customer** | `01900000000` | `CustomerPass123!` | `PENDING_APPROVAL` | Can browse catalog, but order checkout is blocked until a Super Admin approves the account. |
 
-> **Tip**: The Sign In dialog in the UI includes **one-click demo login buttons** for instant testing without typing credentials!
+> **Tip**: The Sign In dialog in the UI includes **one-click demo login buttons** for instant testing of Super Admin, Store Moderator, and Customer accounts without typing!
 
 ---
 
 ## 8. Customer Storefront User Guide (How to Use & Test the UI)
+
+### Customer Password Reset Flow
+If a customer forgets their password:
+1. Open the Sign In modal from the top-right avatar menu.
+2. Click **"Forgot Password?"**.
+3. Enter registered Bangladeshi phone number (e.g., `01811111111`) and click **"Send Reset Code"**.
+4. The system securely generates a reset token (displayed in a testing preview banner in non-production environments).
+5. Enter the code along with your new password and confirmation.
+6. Once updated, sign in immediately with your new credentials!
 
 ### Catalog Navigation & Live Autocomplete Search
 1. Open [http://localhost:4000/](http://localhost:4000/).
@@ -332,50 +341,71 @@ In the Cart Drawer, enter any of the pre-seeded coupons into the promo box and c
 
 ## 9. Operations Admin Portal Guide (Store Management)
 
-To access store operations, sign in with the Super Admin credentials (`01700000000` / `AdminSecret123!`) and click **"Admin Portal"** in the header.
+To access store operations:
+1. Sign in with Super Admin credentials (`01700000000` / `Admin@12345`) or Store Moderator credentials (`01711111111` / `Staff@12345`).
+2. Click **"Admin Portal"** in the top-right profile dropdown menu.
+3. The Admin Portal features **7 dedicated responsive sections**:
+   * **Overview**: Real-time KPI summary, system alerts, quick actions.
+   * **Orders**: Fulfillment pipeline, tracking assignment, printable tax invoice.
+   * **Products**: Product catalog with multi-quantity variant creation and stock initialization.
+   * **Inventory**: Stock alerts, alert acknowledgement, stock adjustments with required reasons.
+   * **Hero Banners**: Persistent Knex CMS banner creation, display ordering, scheduling, preview, publish.
+   * **Customer Approvals**: Super Admin exclusive queue, Customer 360 modal, approve/reject with audit logging.
+   * **Staff & Audit**: Super Admin exclusive staff invitations, role assignments, sensitive immutable audit trail.
 
-### Real-Time KPI Dashboard
-The Overview tab presents 4 real-time business health metrics:
-* **Total Store Revenue (৳ BDT)**: Total collected across all confirmed and paid orders.
-* **Pending Orders**: Orders awaiting confirmation and warehouse dispatch.
-* **Pending Customer Approvals**: New customer registrations requiring review.
-* **Low Stock Alerts**: Number of product variants with stock below the alert threshold (20 units).
+### Live Role Simulation & Deny-by-Default Testing
+The Admin Portal includes an interactive **Role Simulation Switcher** at the top right of the navigation bar:
+* Click the toggle between **Super Admin** and **Moderator (Store Staff)**.
+* When viewing as **Super Admin**: Full access to all 7 tabs including Staff & Audit and Customer Approvals.
+* When viewing as **Moderator**: Access to Orders, Products, Inventory, and Hero Banners. Navigating to Customer Approvals or Staff & Audit displays a **Deny-by-Default 403 Forbidden Shield** with an explicit notice explaining that only Super Admins may access these resources. Backend API routes strictly enforce this at the HTTP level (`403 Forbidden`).
 
-### Customer Approval Workflow
-In compliance with Section 5 of the requirements, new customer registrations are flagged as `PENDING_APPROVAL`:
-1. Navigate to the **"Customer Approvals"** tab.
-2. Review the list of customers awaiting verification.
-3. Click **"Approve Account"** to activate the customer immediately.
-4. Alternatively, click **"Block / Reject"** if credentials or contact details are suspicious.
+### Admin Multi-Factor Authentication (MFA)
+1. In the Admin Portal header, click the **MFA Security Shield** button.
+2. In the modal, click **"Configure MFA"** to generate a TOTP-compatible base32 secret and QR key string.
+3. Enter the 6-digit verification code to confirm activation.
+4. Once enabled, subsequent administrative logins require both phone/password credentials and the active 6-digit 2FA token.
 
-### Order Fulfillment & Status Transitions
-1. Navigate to the **"Order Fulfillment"** tab.
-2. Filter orders by status (`PENDING`, `CONFIRMED`, `PROCESSING`, `SHIPPED`, `OUT_FOR_DELIVERY`, `DELIVERED`).
-3. To advance an order, click **"Update Status"**:
-   * Change status to `PROCESSING` or `SHIPPED`.
-   * Add an internal operations comment (e.g., *"Assigned to Paperfly Courier rider #104"*).
-   * When an order is updated to `DELIVERED`, **Cash on Delivery orders are automatically reconciled and marked as `PAID`**.
+### Customer Approval Workflow & Customer 360
+In compliance with Liton Brothers policy, new customer accounts require admin approval before ordering:
+1. Navigate to the **"Customer Approvals"** tab (Super Admin only).
+2. Filter accounts by status (`PENDING_APPROVAL`, `APPROVED`, `SUSPENDED`).
+3. Click **"Customer 360"** next to any record to view customer contact info, registered delivery addresses, and past order history.
+4. Click **"Approve"** or **"Reject"** to open a confirmation modal.
+5. Provide a mandatory administrative review reason (e.g., *"Phone number verified via SMS and delivery address in Dhanmondi confirmed"*).
+6. The account is immediately updated, and the action is immutably logged to the sensitive audit ledger.
 
-### Printable Formal Tax Invoices
-1. In the **Order Fulfillment** list, click **"Print Invoice"** next to any order.
-2. A formal tax invoice appears displaying:
-   * Liton Brothers business header & BSTI trade registration numbers.
-   * Customer details, shipping address, and delivery slot.
-   * Itemized variant table with unit price, quantity, line totals, coupon discount, delivery fee, and net payable in **BDT (৳)**.
-   * Click **"Print"** to trigger the browser's native print / save as PDF dialog.
+### Order Fulfillment & Printable Formal Tax Invoices
+1. Navigate to the **"Orders"** tab.
+2. Filter orders by status or search by customer name, phone, or tracking number.
+3. Click **"Fulfill Order"** to transition statuses:
+   `PENDING` $\rightarrow$ `CONFIRMED` $\rightarrow$ `PROCESSING` $\rightarrow$ `SHIPPED` $\rightarrow$ `OUT_FOR_DELIVERY` $\rightarrow$ `DELIVERED`
+4. Add internal notes and courier dispatch references.
+5. When an order transitions to `DELIVERED`, **Cash on Delivery (COD) orders are automatically marked as `PAID`**.
+6. Click **"Invoice"** to open a formal tax invoice with printable BDT currency amounts, itemized breakdown, and print trigger.
 
 ### Warehouse Inventory & Stock Adjustments
-1. Navigate to the **"Inventory & Stock"** tab.
-2. View every product and multi-quantity variant alongside its current warehouse stock level.
-3. To record inventory movements, click **"Stock In / Out"**:
-   * Select the product and variant.
-   * Choose transaction type: `STOCK_IN` (received supplier shipment), `STOCK_OUT` (damaged goods removal), or `ADJUSTMENT`.
-   * Enter the quantity and reference number (e.g., `PO-2026-09-01`).
-   * The system logs the change in the immutable **double-entry inventory ledger** and updates the available stock in real time.
+1. Navigate to the **"Inventory"** tab.
+2. The **Stock Alerts Banner** highlights any variants at or below 20 units (low stock) or 0 units (out of stock).
+3. Click **"Acknowledge Alert"** to record that operations staff has noted the shortage.
+4. Click **"Adjust Stock"** to record an inventory movement:
+   * Select variant and enter quantity change (positive or negative).
+   * **Mandatory Reason Guard**: The system requires a detailed reason for the adjustment (e.g., *"Supplier shipment received PO-908"* or *"Packaging leak detected during shelf inspection"*). Adjustments without a reason are rejected by both frontend validation and backend API schemas.
+   * Every adjustment writes to the immutable `inventory_transactions` ledger with before/after balances.
 
-### Low Stock & Out of Stock Alerts
-* Variants with $\le 20$ units display a yellow **"Low Stock"** badge.
-* Variants with $0$ units display a red **"Out of Stock"** badge.
+### Hero Carousel Banners CMS Workflow
+1. Navigate to the **"Hero Banners"** tab.
+2. View all currently active, scheduled, and draft banners in order of display.
+3. Click **"Add Banner"** to create a promotional banner:
+   * **Title & Subtitle**: Promotional headline (e.g. *"Mega Ramadan Grocery Bazaar"*).
+   * **Badge / Tag**: Eye-catching tag (e.g. *"UP TO 40% OFF"*).
+   * **Image URL**: High-resolution banner image.
+   * **Alt Text**: Screen-reader accessible alternative text.
+   * **Destination Link**: In-app route or category filter (e.g. `category/cooking-oil` or `#friday-deals`).
+   * **Display Order**: Integer sequence for carousel presentation.
+   * **Scheduling (Start & End Dates)**: Optional activation window for scheduled campaigns.
+   * **Status**: `PUBLISHED` or `DRAFT`.
+4. Click **"Publish / Draft"** to instantly toggle banner visibility.
+5. Banners update live across the customer storefront without requiring a page refresh!
 
 ---
 
@@ -405,38 +435,43 @@ Includes pre-configured requests, environment variables, authentication bearer t
 
 ## 11. Running Automated Test Suites
 
-The backend includes **57 automated integration and unit tests** built with Jest and Supertest.
+The backend includes **89 automated integration and unit tests** built with Jest and Supertest, covering all 6 development phases including full RBAC, MFA, Password Reset, Customer Approvals, Inventory Alerts, and Hero Banners CMS.
 
-### Run All 57 Tests:
+### Run All 89 Tests:
 ```bash
 npm test
 ```
 
 ### Run Specific Test Suites:
 ```bash
-# Test 1: Authentication, Customer Approval Guard, & RBAC (14 tests)
-npm test -- tests/auth-and-approval.test.ts
+# Test 1: Admin Dashboard, RBAC Enforcements, Staff & Customer Approvals (32 tests)
+npm test -- tests/admin-dashboard-rbac.test.ts
 
-# Test 2: Catalog, Multi-Quantity Variants, & Inventory Ledger (13 tests)
-npm test -- tests/catalog-and-inventory.test.ts
+# Test 2: Orders, Atomic Checkout, Row-Locks, & Payments (14 tests)
+npm test -- tests/orders-and-checkout.test.ts
 
 # Test 3: Cart, Wishlist, Flash Deals, Coupons, & Pricing Engine (16 tests)
 npm test -- tests/cart-and-promotions.test.ts
 
-# Test 4: Orders, Atomic Checkout, Row-Locks, & Payments (14 tests)
-npm test -- tests/orders-and-checkout.test.ts
+# Test 4: Catalog, Multi-Quantity Variants, & Inventory Ledger (13 tests)
+npm test -- tests/catalog-and-inventory.test.ts
+
+# Test 5: Authentication, Customer Approval Guard, & RBAC (14 tests)
+npm test -- tests/auth-and-approval.test.ts
 ```
 
 ### Test Suite Summary:
 ```
+PASS tests/admin-dashboard-rbac.test.ts (32/32 passed)
 PASS tests/orders-and-checkout.test.ts (14/14 passed)
 PASS tests/cart-and-promotions.test.ts (16/16 passed)
 PASS tests/catalog-and-inventory.test.ts (13/13 passed)
 PASS tests/auth-and-approval.test.ts (14/14 passed)
 
-Test Suites: 4 passed, 4 total
-Tests:       57 passed, 57 total
+Test Suites: 5 passed, 5 total
+Tests:       89 passed, 89 total
 Snapshots:   0 total
+Pass Rate:   100%
 ```
 
 ---

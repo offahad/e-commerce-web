@@ -200,6 +200,20 @@ export class UsersService {
     }
 
     const addresses = await db('customer_addresses').where({ user_id: customerId });
+    const orders = await db('orders')
+      .where({ user_id: customerId })
+      .select('id', 'order_number', 'status', 'payment_status', 'grand_total', 'created_at')
+      .orderBy('created_at', 'desc')
+      .limit(10);
+
+    const statusHistory = await db('audit_logs')
+      .where({ entity_name: 'users', entity_id: customerId })
+      .select('id', 'action', 'old_value', 'new_value', 'created_at')
+      .orderBy('created_at', 'desc');
+
+    const totalOrders = orders.length;
+    const totalSpent = orders.reduce((sum: number, o: any) => sum + Number(o.grand_total || 0), 0);
+    const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
     return {
       customer: {
@@ -215,10 +229,12 @@ export class UsersService {
         createdAt: customer.created_at,
       },
       addresses,
+      orders,
+      statusHistory,
       stats: {
-        totalOrders: 0,
-        totalSpent: 0,
-        averageOrderValue: 0,
+        totalOrders,
+        totalSpent,
+        averageOrderValue,
       },
     };
   }

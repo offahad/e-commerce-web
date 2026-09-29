@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { InventoryService } from './inventory.service.js';
 import { ApiResponse } from '../../common/utils/api-response.js';
-import { stockAdjustmentSchema, inventoryQuerySchema } from './inventory.dto.js';
+import { stockAdjustmentSchema, inventoryQuerySchema, acknowledgeAlertSchema } from './inventory.dto.js';
 
 export class InventoryController {
   private inventoryService: InventoryService;
@@ -34,6 +34,16 @@ export class InventoryController {
     try {
       const alerts = await this.inventoryService.getAlerts();
       return ApiResponse.success(res, alerts, 'Inventory stock alerts retrieved');
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  acknowledgeAlert = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const validated = acknowledgeAlertSchema.parse(req.body);
+      const result = await this.inventoryService.acknowledgeAlert(validated, req.user?.id);
+      return ApiResponse.success(res, result, 'Stock alert acknowledged successfully');
     } catch (err) {
       next(err);
     }

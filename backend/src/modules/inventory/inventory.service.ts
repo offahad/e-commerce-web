@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { getDatabase } from '../../database/index.js';
 import { AppError } from '../../common/middleware/error-handler.js';
-import { StockAdjustmentDto, InventoryQueryDto } from './inventory.dto.js';
+import { StockAdjustmentDto, InventoryQueryDto, AcknowledgeAlertDto } from './inventory.dto.js';
 
 export class InventoryService {
   async adjustStock(dto: StockAdjustmentDto, adminId?: string) {
@@ -177,12 +177,97 @@ export class InventoryService {
         'products.id as product_id'
       );
 
+    // Fetch acknowledgments
+    const acks = await db('inventory_alert_acknowledgments')
+      .leftJoin('users', 'inventory_alert_acknowledgments.acknowledged_by', 'users.id')
+      .select(
+        'inventory_alert_acknowledgments.*',
+        'users.full_name as acknowledged_by_name'
+      );
+
+    const ackMap = new Map<string, any>();
+    for (const ack of acks) {
+      const key = `${ack.product_id}_${ack.variant_id || 'base'}_${ack.alert_type}`;
+      ackMap.set(key, ack);
+    }
+
+    const decorateProduct = (p: any, alertType: 'LOW_STOCK' | 'OUT_OF_STOCK') => {
+      const ack = ackMap.get(`${p.id}_base_${alertType}`);
+      return {
+        ...p,
+        alertType,
+        acknowledged: !!ack,
+        acknowledgedAt: ack?.acknowledged_at || null,
+        acknowledgedNote: ack?.note || null,
+        acknowledgedByName: ack?.acknowledged_by_name || null,
+      };
+    };
+
+    const decoratedOutOfStock = outOfStockProducts.map((p) => decorateProduct(p, 'OUT_OF_STOCK'));
+    const decoratedLowStock = lowStockProducts.map((p) => decorateProduct(p, 'LOW_STOCK'));
+
+    const decoratedVariants = lowStockVariants.map((v) => {
+      const alertType = v.stock_quantity <= 0 ? 'OUT_OF_STOCK' : 'LOW_STOCK';
+      const ack = ackMap.get(`${v.product_id}_${v.variant_id}_${alertType}`);
+      return {
+        ...v,
+        alertType,
+        acknowledged: !!ack,
+        acknowledgedAt: ack?.acknowledged_at || null,
+        acknowledgedNote: ack?.note || null,
+        acknowledgedByName: ack?.acknowledged_by_name || null,
+      };
+    });
+
     return {
       outOfStockCount: outOfStockProducts.length,
       lowStockCount: lowStockProducts.length,
-      outOfStockProducts,
-      lowStockProducts,
-      lowStockVariants,
+      outOfStockProducts: decoratedOutOfStock,
+      lowStockProducts: decoratedLowStock,
+      lowStockVariants: decoratedVariants,
     };
+  }
+
+  async acknowledgeAlert(dto: AcknowledgeAlertDto, adminId?: string) {
+    const db = getDatabase();
+    const ackId = crypto.randomUUID();
+
+    await db.transaction(async (trx) => {
+      // Remove any previous acknowledgement for same item & type if re-acknowledging
+      let deleteQuery = trx('inventory_alert_acknowledgments')
+        .where({ product_id: dto.productId, alert_type: dto.alertType });
+      if (dto.variantId) {
+        deleteQuery = deleteQuery.where({ variant_id: dto.variantId });
+      } else {
+        deleteQuery = deleteQuery.whereNull('variant_id');
+      }
+      await deleteQuery.delete();
+
+      await trx('inventory_alert_acknowledgments').insert({
+        id: ackId,
+        product_id: dto.productId,
+        variant_id: dto.variantId || null,
+        alert_type: dto.alertType,
+        note: dto.note || 'Alert reviewed and acknowledged by store staff',
+        acknowledged_by: adminId || null,
+        acknowledged_at: db.fn.now(),
+      });
+
+      await trx('audit_logs').insert({
+        id: crypto.randomUUID(),
+        user_id: adminId || null,
+        action: 'INVENTORY_ALERT_ACKNOWLEDGED',
+        entity_name: 'inventory_alert_acknowledgments',
+        entity_id: ackId,
+        new_value: JSON.stringify({
+          productId: dto.productId,
+          variantId: dto.variantId || null,
+          alertType: dto.alertType,
+          note: dto.note || null,
+        }),
+      });
+    });
+
+    return { success: true, acknowledgmentId: ackId };
   }
 }

@@ -33,6 +33,10 @@ import { settingsPublicRouter, settingsAdminRouter } from './modules/settings/se
 // Phase 5 Orders & Payment Route imports
 import { ordersCustomerRouter, ordersAdminRouter } from './modules/orders/orders.routes.js';
 
+// Phase 6 Admin Dashboard, Staff, Banners & RBAC Route imports
+import staffRouter from './modules/staff/staff.routes.js';
+import { bannersPublicRouter, bannersAdminRouter } from './modules/banners/banners.routes.js';
+
 export function createApp(): Express {
   const app = express();
 
@@ -903,9 +907,12 @@ export function createApp(): Express {
   apiV1.use('/checkout', checkoutRouter);
   apiV1.use('/settings', settingsPublicRouter);
   apiV1.use('/orders', ordersCustomerRouter);
+  apiV1.use('/hero-banners', bannersPublicRouter);
 
   // Admin Routes
   apiV1.use('/admin/customers', customerAdminRouter);
+  apiV1.use('/admin/staff', staffRouter);
+  apiV1.use('/admin/hero-banners', bannersAdminRouter);
   apiV1.use('/admin/categories', categoryAdminRouter);
   apiV1.use('/admin/brands', brandAdminRouter);
   apiV1.use('/admin/tags', tagAdminRouter);

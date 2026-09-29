@@ -28,15 +28,25 @@ export class RbacService {
     return db('permissions').select('*').orderBy('code', 'asc');
   }
 
-  async listAuditLogs(page = 1, limit = 20) {
+  async listAuditLogs(page = 1, limit = 20, filter?: { action?: string; entityName?: string }) {
     const db = getDatabase();
     const offset = (page - 1) * limit;
 
-    const countResult = await db('audit_logs').count<{ count: string | number }>('id as count').first();
+    let baseQuery = db('audit_logs')
+      .leftJoin('users', 'audit_logs.user_id', 'users.id');
+
+    if (filter?.action) {
+      baseQuery = baseQuery.whereILike('audit_logs.action', `%${filter.action}%`);
+    }
+    if (filter?.entityName) {
+      baseQuery = baseQuery.where('audit_logs.entity_name', filter.entityName);
+    }
+
+    const countResult = await baseQuery.clone().count<{ count: string | number }>('audit_logs.id as count').first();
     const total = Number(countResult?.count || 0);
 
-    const logs = await db('audit_logs')
-      .leftJoin('users', 'audit_logs.user_id', 'users.id')
+    const logs = await baseQuery
+      .clone()
       .select(
         'audit_logs.id',
         'audit_logs.action',
@@ -54,8 +64,40 @@ export class RbacService {
       .limit(limit)
       .offset(offset);
 
+    // Sanitize any credentials or sensitive tokens from values
+    const sanitizedLogs = logs.map((log: any) => {
+      let oldValue = log.old_value;
+      let newValue = log.new_value;
+      try {
+        if (oldValue) {
+          const parsed = JSON.parse(oldValue);
+          delete parsed.password;
+          delete parsed.password_hash;
+          delete parsed.mfa_secret;
+          delete parsed.refresh_token_hash;
+          oldValue = JSON.stringify(parsed);
+        }
+      } catch {}
+      try {
+        if (newValue) {
+          const parsed = JSON.parse(newValue);
+          delete parsed.password;
+          delete parsed.password_hash;
+          delete parsed.mfa_secret;
+          delete parsed.refresh_token_hash;
+          newValue = JSON.stringify(parsed);
+        }
+      } catch {}
+
+      return {
+        ...log,
+        old_value: oldValue,
+        new_value: newValue,
+      };
+    });
+
     return {
-      logs,
+      logs: sanitizedLogs,
       pagination: {
         page,
         limit,

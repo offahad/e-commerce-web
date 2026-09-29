@@ -207,8 +207,16 @@ export const api = {
 
   getOrderInvoice: (orderId: string) => request<any>(`/admin/orders/${orderId}/invoice`),
 
-  getAdminCustomers: (status?: string) =>
-    request<any[]>(`/admin/customers${status ? `?status=${status}` : ''}`),
+  getAdminCustomers: (status?: string, q?: string, page = 1, limit = 20) => {
+    const query = new URLSearchParams();
+    if (status) query.append('status', status);
+    if (q) query.append('q', q);
+    query.append('page', String(page));
+    query.append('limit', String(limit));
+    return request<any>(`/admin/customers?${query.toString()}`);
+  },
+
+  getCustomer360: (customerId: string) => request<any>(`/admin/customers/${customerId}`),
 
   updateCustomerStatus: (userId: string, status: string, reason?: string) =>
     request<any>(`/admin/customers/${userId}/status`, {
@@ -216,13 +224,27 @@ export const api = {
       body: JSON.stringify({ status, reason }),
     }),
 
-  getAdminStockAlerts: () => request<any[]>('/admin/inventory/alerts'),
+  getAdminStockAlerts: () => request<any>('/admin/inventory/alerts'),
 
-  adjustInventory: (payload: { variantId: string; transactionType: string; quantity: number; reason: string; referenceId?: string }) =>
+  acknowledgeStockAlert: (payload: { productId: string; variantId?: string | null; alertType: string; note?: string }) =>
+    request<any>('/admin/inventory/alerts/acknowledge', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  adjustInventory: (payload: { productId?: string; variantId?: string | null; transactionType: string; quantity: number; reason: string; referenceId?: string }) =>
     request<any>('/admin/inventory/adjust', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+
+  getInventoryTransactions: (params: Record<string, string | number> = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== '') query.append(k, String(v));
+    });
+    return request<any>(`/admin/inventory/transactions?${query.toString()}`);
+  },
 
   updateProductPrice: (productId: string, basePrice: number, salePrice?: number, reason?: string) =>
     request<any>(`/admin/products/${productId}`, {
@@ -242,9 +264,103 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
-  cancelOrder: (orderId: string, reason?: string) =>
-    request<any>(`/orders/${orderId}/cancel`, {
+  // Hero Banners CMS
+  getHeroBanners: () => request<any[]>('/hero-banners'),
+
+  getAdminHeroBanners: () => request<any[]>('/admin/hero-banners'),
+
+  createHeroBanner: (payload: any) =>
+    request<any>('/admin/hero-banners', {
       method: 'POST',
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify(payload),
+    }),
+
+  updateHeroBanner: (id: string, payload: any) =>
+    request<any>(`/admin/hero-banners/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+
+  updateHeroBannerStatus: (id: string, status: string, isActive?: boolean) =>
+    request<any>(`/admin/hero-banners/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, isActive }),
+    }),
+
+  deleteHeroBanner: (id: string) =>
+    request<any>(`/admin/hero-banners/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // Staff & RBAC
+  getStaff: () => request<any[]>('/admin/staff'),
+
+  createStaff: (payload: any) =>
+    request<any>('/admin/staff', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateStaffRole: (staffId: string, role: string, reason: string) =>
+    request<any>(`/admin/staff/${staffId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role, reason }),
+    }),
+
+  updateStaffStatus: (staffId: string, status: string, reason: string) =>
+    request<any>(`/admin/staff/${staffId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, reason }),
+    }),
+
+  deleteStaff: (staffId: string) =>
+    request<any>(`/admin/staff/${staffId}`, {
+      method: 'DELETE',
+    }),
+
+  getAuditLogs: (params: Record<string, string | number> = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== '') query.append(k, String(v));
+    });
+    return request<any>(`/admin/audit-logs?${query.toString()}`);
+  },
+
+  getRoles: () => request<any[]>('/admin/roles'),
+
+  // MFA & Password Reset
+  forgotPassword: (phone: string) =>
+    request<any>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    }),
+
+  resetPassword: (payload: any) =>
+    request<any>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  setupMfa: () =>
+    request<any>('/auth/mfa/setup', {
+      method: 'POST',
+    }),
+
+  enableMfa: (code: string) =>
+    request<any>('/auth/mfa/enable', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
+
+  disableMfa: (code: string) =>
+    request<any>('/auth/mfa/disable', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
+
+  verifyMfaLogin: (tempToken: string, code: string) =>
+    request<any>('/auth/mfa/verify-login', {
+      method: 'POST',
+      body: JSON.stringify({ tempToken, code }),
     }),
 };

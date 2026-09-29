@@ -11,6 +11,6 @@ router.use(requireRole('SUPER_ADMIN', 'ADMIN'));
 
 router.get('/roles', controller.listRoles);
 router.get('/permissions', controller.listPermissions);
-router.get('/audit-logs', controller.listAuditLogs);
+router.get('/audit-logs', requireRole('SUPER_ADMIN'), controller.listAuditLogs);
 
 export default router;

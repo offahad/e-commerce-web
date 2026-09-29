@@ -48,8 +48,16 @@ Production-ready, multi-channel e-commerce ecosystem built with Node.js, TypeScr
   * Plum App Download Banner (`#4a2040`) with official Google Play and App Store buttons and Summer Sale mobile mockup
   * Real-Time Public Order Tracking Modal with 6-stage delivery progression timeline, audit timestamps, and operational status logs
   * Customer Account Portal with My Orders history, order cancellation with automatic variant restock, and saved delivery address manager
-  * Integrated Staff & Admin Operations Portal with live KPI Cards (Revenue ৳ BDT, Pending Orders, Pending Approvals, Low Stock Alerts), Customer Approval state machine, warehouse stock adjustments, order fulfillment status transitions, and printable formal Tax Invoices
-* [x] **Phase 7 — Admin Operations & Fulfillment Portal**: Implemented & Verified (Integrated into Operations Portal)
+  * Customer Password Reset flow with verification token preview and immediate sign-in
+* [x] **Phase 7 — Comprehensive Admin Dashboard & Deny-by-Default RBAC Subsystem**: Implemented & Verified (89/89 automated tests passing)
+  * Complete 7-Section Admin Management Suite: **Overview**, **Orders**, **Products**, **Inventory**, **Hero Banners**, **Customer Approvals**, **Staff & Audit**
+  * Granular RBAC (`SUPER_ADMIN` vs `MODERATOR`) with strict deny-by-default HTTP 403 enforcement
+  * Multi-Factor Authentication (MFA/TOTP) setup and 2FA login verification
+  * Staff invitation, status toggling, and role modification with mandatory audit reasoning
+  * Customer 360 view with approval/rejection queue and order history audit
+  * Warehouse Inventory Alerts (Low/Out of Stock), alert acknowledgement, and stock adjustments with mandatory reason logging
+  * Persistent Knex-backed Hero Carousel CMS with scheduling, display sequence, alt text, destination URLs, and draft/published statuses
+  * Interactive in-app role simulation toggle between Super Admin and Store Moderator
 * [ ] **Phase 8 — Frontend Polish & SEO**
 * [ ] **Phase 9 — Full End-to-End & Concurrency Testing**
 * [ ] **Phase 10 — Production Deployment & Docker Orchestration**
@@ -178,12 +186,11 @@ The API service starts on port `4000`:
 cd backend
 npm test
 ```
-All 57 integration tests run in ~10 seconds across authentication, customer approval, catalog search, variants, inventory ledger, shopping cart, flash deals, coupons, pricing engine, transactional order placement, stock deduction, payment gateways, and public tracking timelines.
+All 89 integration tests run across authentication, customer approval, catalog search, variants, inventory ledger, shopping cart, flash deals, coupons, pricing engine, transactional order placement, stock deduction, payment gateways, public tracking timelines, Admin RBAC (`SUPER_ADMIN` vs `MODERATOR`), Staff invitation & role management, Customer 360 review, stock alert acknowledgement, and persistent Hero Banners CMS.
 
 ---
 
-## Default Seeded Admin Credentials
-* **Phone**: `01700000000`
-* **Password**: `Admin@123456`
-* **Role**: `SUPER_ADMIN`
-*(Note: Change admin password in production via `.env` or settings)*
+## Default Seeded Credentials
+* **Super Admin**: `01700000000` / `Admin@12345` (or `AdminSecret123!`) — Full Administrative Access
+* **Store Moderator**: `01711111111` / `Staff@12345` — Inventory, Products, Orders & Banners (Deny-by-default for Staff/Audit/Customer approvals)
+* **Demo Customer**: `01811111111` / `User@12345` — Approved Customer Account

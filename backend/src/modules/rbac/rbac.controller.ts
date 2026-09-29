@@ -31,7 +31,9 @@ export class RbacController {
     try {
       const page = Number(req.query.page) || 1;
       const limit = Number(req.query.limit) || 20;
-      const { logs, pagination } = await this.rbacService.listAuditLogs(page, limit);
+      const action = req.query.action as string | undefined;
+      const entityName = req.query.entityName as string | undefined;
+      const { logs, pagination } = await this.rbacService.listAuditLogs(page, limit, { action, entityName });
       return ApiResponse.success(res, logs, 'Audit logs retrieved successfully', 200, pagination);
     } catch (err) {
       next(err);

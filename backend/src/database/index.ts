@@ -86,6 +86,10 @@ export async function initDatabase(): Promise<void> {
       table.string('status', 30).defaultTo('PENDING_APPROVAL').notNullable();
       table.string('role', 30).defaultTo('CUSTOMER').notNullable();
       table.string('refresh_token_hash', 255).nullable();
+      table.boolean('mfa_enabled').defaultTo(false);
+      table.string('mfa_secret', 255).nullable();
+      table.string('password_reset_token_hash', 255).nullable();
+      table.timestamp('password_reset_expires_at').nullable();
       table.timestamp('approved_at').nullable();
       table.uuid('approved_by').nullable();
       table.string('rejection_reason', 255).nullable();
@@ -93,6 +97,16 @@ export async function initDatabase(): Promise<void> {
       table.timestamps(true, true);
       table.timestamp('deleted_at').nullable();
     });
+  } else {
+    const hasMfa = await database.schema.hasColumn('users', 'mfa_enabled');
+    if (!hasMfa) {
+      await database.schema.table('users', (table) => {
+        table.boolean('mfa_enabled').defaultTo(false);
+        table.string('mfa_secret', 255).nullable();
+        table.string('password_reset_token_hash', 255).nullable();
+        table.timestamp('password_reset_expires_at').nullable();
+      });
+    }
   }
 
   // 5. Customer Addresses table
@@ -499,6 +513,43 @@ export async function initDatabase(): Promise<void> {
     });
   }
 
+  // 29. Hero Banners Table
+  const hasHeroBanners = await database.schema.hasTable('hero_banners');
+  if (!hasHeroBanners) {
+    await database.schema.createTable('hero_banners', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.string('title', 255).notNullable();
+      table.string('subtitle', 255).nullable();
+      table.string('tag', 100).nullable();
+      table.string('button_text', 100).defaultTo('Shop now');
+      table.text('image_url').notNullable();
+      table.string('image_alt', 255).defaultTo('Promotional banner');
+      table.string('destination_link', 255).nullable();
+      table.string('destination_category', 100).nullable();
+      table.integer('display_order').defaultTo(1);
+      table.timestamp('start_date').nullable();
+      table.timestamp('end_date').nullable();
+      table.string('status', 30).defaultTo('PUBLISHED'); // DRAFT, PUBLISHED, ARCHIVED
+      table.boolean('is_active').defaultTo(true);
+      table.uuid('created_by').references('id').inTable('users').onDelete('SET NULL').nullable();
+      table.timestamps(true, true);
+    });
+  }
+
+  // 30. Inventory Alert Acknowledgments Table
+  const hasAlertAck = await database.schema.hasTable('inventory_alert_acknowledgments');
+  if (!hasAlertAck) {
+    await database.schema.createTable('inventory_alert_acknowledgments', (table) => {
+      table.uuid('id').primary().defaultTo(database.fn.uuid());
+      table.uuid('product_id').references('id').inTable('products').onDelete('CASCADE').notNullable();
+      table.uuid('variant_id').references('id').inTable('product_variants').onDelete('CASCADE').nullable();
+      table.string('alert_type', 50).notNullable(); // LOW_STOCK, OUT_OF_STOCK
+      table.text('note').nullable();
+      table.uuid('acknowledged_by').references('id').inTable('users').onDelete('SET NULL').nullable();
+      table.timestamp('acknowledged_at').defaultTo(database.fn.now());
+    });
+  }
+
   // Seed default roles, super admin, and sample catalog if not present
   await seedDatabase(database);
 }
@@ -510,6 +561,9 @@ export async function seedDatabase(database: Knex): Promise<void> {
     { code: 'USER_APPROVE', description: 'Approve or reject customer accounts' },
     { code: 'USER_BLOCK', description: 'Block or unblock user accounts' },
     { code: 'USER_DELETE', description: 'Delete user accounts' },
+    { code: 'STAFF_MANAGE', description: 'Create and manage staff accounts and roles' },
+    { code: 'BANNER_MANAGE', description: 'Create and update homepage hero banners' },
+    { code: 'AUDIT_VIEW', description: 'View detailed security and change audit logs' },
     { code: 'PRODUCT_CREATE', description: 'Create products, variants and media' },
     { code: 'PRODUCT_UPDATE', description: 'Update products, prices and stock' },
     { code: 'PRODUCT_DELETE', description: 'Delete products' },
@@ -537,6 +591,7 @@ export async function seedDatabase(database: Knex): Promise<void> {
   // 2. Insert standard roles
   const rolesList = [
     { name: 'SUPER_ADMIN', description: 'Full system ownership and unrestricted access' },
+    { name: 'MODERATOR', description: 'Store moderator with catalog, banner, order and inventory management' },
     { name: 'ADMIN', description: 'Store administrator with catalog, customer and order controls' },
     { name: 'MANAGER', description: 'Store manager for daily inventory and order fulfillment' },
     { name: 'STAFF', description: 'Operational staff with limited order processing rights' },
@@ -569,6 +624,36 @@ export async function seedDatabase(database: Knex): Promise<void> {
           role_id: superAdminRole.id,
           permission_id: p.id,
         });
+      }
+    }
+  }
+
+  // Grant specific scoped permissions to MODERATOR role
+  const moderatorRole = await database('roles').where({ name: 'MODERATOR' }).first();
+  if (moderatorRole) {
+    const modPermCodes = [
+      'PRODUCT_VIEW',
+      'PRODUCT_UPDATE',
+      'ORDER_VIEW',
+      'ORDER_UPDATE',
+      'INVENTORY_MANAGE',
+      'DISCOUNT_MANAGE',
+      'BANNER_MANAGE',
+      'REPORT_VIEW',
+    ];
+    for (const code of modPermCodes) {
+      const p = await database('permissions').where({ code }).first();
+      if (p) {
+        const mapped = await database('role_permissions')
+          .where({ role_id: moderatorRole.id, permission_id: p.id })
+          .first();
+        if (!mapped) {
+          await database('role_permissions').insert({
+            id: crypto.randomUUID(),
+            role_id: moderatorRole.id,
+            permission_id: p.id,
+          });
+        }
       }
     }
   }
@@ -608,6 +693,24 @@ export async function seedDatabase(database: Knex): Promise<void> {
       address: 'House 42, Road 11, Dhanmondi, Dhaka',
       status: 'APPROVED',
       role: 'CUSTOMER',
+    });
+  }
+
+  // 3c. Seed default Store Moderator account
+  const moderatorPhone = '01711111111';
+  let demoModerator = await database('users').where({ phone: moderatorPhone }).first();
+  if (!demoModerator) {
+    const hashedModPass = await bcrypt.hash('Moderator@123456', config.BCRYPT_ROUNDS);
+    const newModId = crypto.randomUUID();
+    await database('users').insert({
+      id: newModId,
+      full_name: 'Liton Brothers Moderator',
+      phone: moderatorPhone,
+      password_hash: hashedModPass,
+      email: 'moderator@litonbrothers.com',
+      address: 'Liton Brothers Operations, Tejgaon, Dhaka',
+      status: 'APPROVED',
+      role: 'MODERATOR',
     });
   }
 
@@ -1200,5 +1303,40 @@ export async function seedDatabase(database: Knex): Promise<void> {
         paid_at: new Date(Date.now() - 3600000 * 2),
       });
     }
+  }
+
+  // 10. Seed Default Hero Carousel Banners
+  const existingBanners = await database('hero_banners').select('id');
+  if (existingBanners.length === 0) {
+    await database('hero_banners').insert([
+      {
+        id: crypto.randomUUID(),
+        title: 'We bring the store to your door',
+        subtitle: 'Get organic produce and sustainably sourced groceries delivery at up to 4% off grocery.',
+        tag: 'Dhaka Express 15-Min',
+        button_text: 'Shop now',
+        image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
+        image_alt: 'Fresh organic groceries assortment basket',
+        destination_link: '/category/fresh-vegetables',
+        destination_category: 'fresh-vegetables',
+        display_order: 1,
+        status: 'PUBLISHED',
+        is_active: true,
+      },
+      {
+        id: crypto.randomUUID(),
+        title: 'Mega Friday Flash Deals — Up to 35% OFF',
+        subtitle: 'Premium Teer & Rupchanda edible oils, aromatic Chinigura rice & pure spices at wholesale rates.',
+        tag: 'Friday Bazaar',
+        button_text: 'View Flash Deals',
+        image_url: 'https://images.unsplash.com/photo-1579113800032-c38bd7635818?auto=format&fit=crop&w=1200&q=80',
+        image_alt: 'Edible cooking oils and rice flash deals banner',
+        destination_link: '/category/cooking-oil',
+        destination_category: 'cooking-oil',
+        display_order: 2,
+        status: 'PUBLISHED',
+        is_active: true,
+      },
+    ]);
   }
 }

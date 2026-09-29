@@ -19,3 +19,12 @@ export const inventoryQuerySchema = z.object({
 });
 
 export type InventoryQueryDto = z.infer<typeof inventoryQuerySchema>;
+
+export const acknowledgeAlertSchema = z.object({
+  productId: z.string().uuid('Product ID must be a valid UUID'),
+  variantId: z.string().uuid('Variant ID must be a valid UUID').optional().nullable(),
+  alertType: z.enum(['LOW_STOCK', 'OUT_OF_STOCK']),
+  note: z.string().optional().nullable(),
+});
+
+export type AcknowledgeAlertDto = z.infer<typeof acknowledgeAlertSchema>;

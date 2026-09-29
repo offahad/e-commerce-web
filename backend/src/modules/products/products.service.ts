@@ -493,6 +493,19 @@ export class ProductsService {
             });
           }
         }
+      } else if (dto.stockQuantity && dto.stockQuantity > 0) {
+        // Record inventory ledger transaction for standalone product
+        await trx('inventory_transactions').insert({
+          id: crypto.randomUUID(),
+          product_id: productId,
+          variant_id: null,
+          transaction_type: 'STOCK_IN',
+          quantity_changed: dto.stockQuantity,
+          previous_stock: 0,
+          new_stock: dto.stockQuantity,
+          reason: 'Initial stock on product creation',
+          performed_by: adminId || null,
+        });
       }
 
       // 5. Insert Images
@@ -552,11 +565,15 @@ export class ProductsService {
     if (dto.vatPercentage !== undefined) updateData.vat_percentage = dto.vatPercentage;
     if (dto.specifications !== undefined) updateData.specifications = dto.specifications;
     if (dto.thumbnailUrl !== undefined) updateData.thumbnail_url = dto.thumbnailUrl;
+    if (dto.stockQuantity !== undefined) updateData.stock_quantity = dto.stockQuantity;
 
     // Check if price changed -> Record Price History (Section 76)
     const isPriceChanged =
       (dto.basePrice !== undefined && dto.basePrice !== Number(product.base_price)) ||
       (dto.salePrice !== undefined && dto.salePrice !== Number(product.sale_price));
+
+    const previousStock = Number(product.stock_quantity || 0);
+    const hasStockChanged = dto.stockQuantity !== undefined && dto.stockQuantity !== previousStock;
 
     await db.transaction(async (trx) => {
       await trx('products').where({ id }).update(updateData);
@@ -570,6 +587,22 @@ export class ProductsService {
           old_sale_price: product.sale_price,
           new_sale_price: dto.salePrice || product.sale_price,
           changed_by: adminId || null,
+        });
+      }
+
+      if (hasStockChanged) {
+        const newStock = dto.stockQuantity!;
+        const diff = newStock - previousStock;
+        await trx('inventory_transactions').insert({
+          id: crypto.randomUUID(),
+          product_id: id,
+          variant_id: null,
+          transaction_type: diff > 0 ? 'STOCK_IN' : 'STOCK_OUT',
+          quantity_changed: Math.abs(diff),
+          previous_stock: previousStock,
+          new_stock: newStock,
+          reason: 'Stock updated via product edit form ledger integration',
+          performed_by: adminId || null,
         });
       }
 

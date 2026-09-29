@@ -22,6 +22,7 @@ export const loginSchema = z.object({
   phone: z.string().min(10, 'Valid phone number required'),
   password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean().optional().default(false),
+  mfaCode: z.string().optional(),
 });
 
 export type LoginDto = z.infer<typeof loginSchema>;
@@ -44,3 +45,34 @@ export const changePasswordSchema = z
   });
 
 export type ChangePasswordDto = z.infer<typeof changePasswordSchema>;
+
+export const forgotPasswordSchema = z.object({
+  phone: z
+    .string()
+    .regex(/^(?:\+?880|0)?1[3-9]\d{8}$/, 'Must be a valid Bangladeshi phone number (e.g. 017XXXXXXXX)'),
+});
+
+export type ForgotPasswordDto = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z
+  .object({
+    phone: z
+      .string()
+      .regex(/^(?:\+?880|0)?1[3-9]\d{8}$/, 'Must be a valid Bangladeshi phone number (e.g. 017XXXXXXXX)'),
+    resetCode: z.string().min(4, 'Reset code is required'),
+    newPassword: z.string().min(6, 'New password must be at least 6 characters').max(100),
+    confirmPassword: z.string().min(6),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
+
+export const mfaVerifySchema = z.object({
+  code: z.string().min(4, 'MFA code is required').max(10),
+  tempToken: z.string().optional(),
+});
+
+export type MfaVerifyDto = z.infer<typeof mfaVerifySchema>;
