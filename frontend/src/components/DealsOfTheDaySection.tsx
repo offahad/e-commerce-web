@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Plus, Minus } from 'lucide-react';
+import { Clock, Plus, Minus, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
@@ -81,7 +81,7 @@ const DEFAULT_DEAL_ITEMS: DealItem[] = [
 
 export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOpenProduct }) => {
   const { t } = useLanguage();
-  const { cartItems, addToCart, updateQuantity, removeItem } = useCart();
+  const { cartItems, addToCart, updateQuantity, removeItem, toggleWishlist, isWishlisted } = useCart();
   const [items, setItems] = useState<DealItem[]>(DEFAULT_DEAL_ITEMS);
   const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 58, seconds: 3 });
 
@@ -236,6 +236,31 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOp
                   alt={item.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(item.id, {
+                      id: item.id,
+                      name: item.name,
+                      price: item.salePrice,
+                      regularPrice: item.regularPrice,
+                      imageUrl: item.imageUrl,
+                      unit: item.unitSubtitle,
+                      variantId: item.variantId,
+                      slug: item.slug,
+                    });
+                  }}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-sm text-slate-500 hover:text-rose-500 transition z-10"
+                  title="Add to Favourites"
+                >
+                  <Heart
+                    className={`w-4 h-4 ${
+                      isWishlisted(item.id) ? 'fill-rose-500 text-rose-500' : ''
+                    }`}
+                  />
+                </button>
 
                 {/* Sold Out Dark Overlay & Centered Pill (Matching Screenshot 2) */}
                 {item.isSoldOut && (

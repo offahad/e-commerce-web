@@ -76,6 +76,19 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     onBuyNow(selectedVariant.id, quantity);
   };
 
+  const handleWishlistToggle = () => {
+    toggleWishlist(product.id, {
+      id: product.id,
+      name: product.name,
+      price: baseUnitPrice,
+      regularPrice: selectedVariant?.compareAtPrice,
+      imageUrl: images[0],
+      unit: selectedWeight,
+      variantId: selectedVariant?.id,
+      slug: product.slug,
+    });
+  };
+
   return (
     <div className="max-w-5xl mx-auto my-6 px-4">
       {/* Top Navigation Back Link (Matching Screenshot 6) */}
@@ -99,8 +112,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 className="w-full h-full object-cover"
               />
               <button
-                onClick={() => toggleWishlist(product.id)}
+                type="button"
+                onClick={handleWishlistToggle}
                 className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-md text-slate-500 hover:text-rose-500 transition"
+                title="Add to Favourites"
               >
                 <Heart
                   className={`w-5 h-5 ${
@@ -251,7 +266,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             {/* Add to Wishlist link */}
             <div className="pt-2 text-center">
               <button
-                onClick={() => toggleWishlist(product.id)}
+                type="button"
+                onClick={handleWishlistToggle}
                 className="text-xs font-bold text-slate-500 hover:text-rose-600 transition inline-flex items-center gap-1.5"
               >
                 <Heart

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Package, MapPin, User, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { X, Package, MapPin, User, AlertCircle, CheckCircle2, ShieldAlert, Heart, Plus, Minus, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
@@ -8,13 +8,23 @@ interface AccountPortalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultTab?: string;
+  initialTab?: string;
 }
 
-export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, defaultTab = 'orders' }) => {
+export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, defaultTab, initialTab }) => {
+  const effectiveTab = initialTab || defaultTab || 'orders';
   const { user, isApproved, addresses, loadAddresses } = useAuth();
-  const { trackOrderNumber } = useCart();
+  const {
+    trackOrderNumber,
+    favouriteItems,
+    toggleFavourite,
+    cartItems,
+    addToCart,
+    updateQuantity,
+    removeItem,
+  } = useCart();
 
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useState(effectiveTab);
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -27,8 +37,8 @@ export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, d
   const [addingAddress, setAddingAddress] = useState(false);
 
   useEffect(() => {
-    if (defaultTab) setActiveTab(defaultTab);
-  }, [defaultTab]);
+    if (initialTab || defaultTab) setActiveTab(initialTab || defaultTab || 'orders');
+  }, [initialTab, defaultTab]);
 
   const fetchOrders = async () => {
     setLoadingOrders(true);
@@ -138,10 +148,10 @@ export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, d
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 bg-white px-5 text-xs font-bold">
+        <div className="flex border-b border-slate-200 bg-white px-5 text-xs font-bold overflow-x-auto">
           <button
             onClick={() => setActiveTab('orders')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition ${
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
               activeTab === 'orders'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -150,8 +160,19 @@ export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, d
             <Package className="w-4 h-4" /> My Orders ({orders.length})
           </button>
           <button
+            onClick={() => setActiveTab('wishlist')}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
+              activeTab === 'wishlist'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${favouriteItems.length > 0 ? 'fill-rose-500 text-rose-500' : ''}`} />
+            <span>Favourites ({favouriteItems.length})</span>
+          </button>
+          <button
             onClick={() => setActiveTab('addresses')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition ${
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
               activeTab === 'addresses'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -161,7 +182,7 @@ export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, d
           </button>
           <button
             onClick={() => setActiveTab('profile')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition ${
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
               activeTab === 'profile'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -253,6 +274,110 @@ export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, d
                     </div>
                   </div>
                 ))
+              )}
+            </div>
+          )}
+
+          {activeTab === 'wishlist' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">My Favourite Items</h3>
+                  <p className="text-xs text-slate-400">Quickly reorder saved items directly to your shopping cart</p>
+                </div>
+                <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-100">
+                  {favouriteItems.length} {favouriteItems.length === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+
+              {favouriteItems.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 space-y-2">
+                  <Heart className="w-12 h-12 mx-auto text-slate-300" />
+                  <p className="text-xs font-semibold">No favourite items saved yet.</p>
+                  <p className="text-[11px] text-slate-400">Tap the heart icon (♡) on any product to save it here.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {favouriteItems.map((item) => {
+                    const ci = cartItems.find(
+                      (c) =>
+                        (item.variantId && c.variantId === item.variantId) ||
+                        c.productId === item.id ||
+                        (c.name && item.name && c.name.toLowerCase().trim() === item.name.toLowerCase().trim())
+                    );
+                    const cartQty = ci ? ci.quantity : 0;
+
+                    return (
+                      <div key={item.id} className="py-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                            <img
+                              src={
+                                item.imageUrl ||
+                                'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80'
+                              }
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-slate-900 text-xs truncate">{item.name}</h4>
+                            <div className="text-[11px] text-slate-400">{item.unit || '1 Pack'}</div>
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                              <span className="font-black text-slate-900 text-xs">৳{item.price}</span>
+                              {item.regularPrice && item.regularPrice > item.price && (
+                                <span className="text-[10px] text-slate-400 line-through">৳{item.regularPrice}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {cartQty > 0 && ci ? (
+                            <div className="flex items-center justify-between bg-emerald-800 text-white rounded-full px-2 py-1 shadow-sm min-w-[85px] text-xs font-bold">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (cartQty > 1) updateQuantity(ci.id, cartQty - 1);
+                                  else removeItem(ci.id);
+                                }}
+                                className="w-4 h-4 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="font-black text-xs px-1.5">{cartQty}</span>
+                              <button
+                                type="button"
+                                onClick={() => updateQuantity(ci.id, cartQty + 1)}
+                                className="w-4 h-4 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => addToCart(item.variantId || 'v-' + item.id, 1, item)}
+                              className="px-3 py-1 bg-emerald-50 hover:bg-emerald-800 text-emerald-800 hover:text-white border border-emerald-200 hover:border-emerald-800 rounded-full font-bold text-xs flex items-center gap-1 transition"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Add</span>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => toggleFavourite(item)}
+                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition"
+                            title="Remove from Favourites"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}

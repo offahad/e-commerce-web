@@ -19,6 +19,7 @@ import { OrderTrackingModal } from './components/OrderTrackingModal';
 import { AuthModal } from './components/AuthModal';
 import { AccountPortal } from './components/AccountPortal';
 import { AdminPortal } from './components/AdminPortal';
+import { FavouritesModal } from './components/FavouritesModal';
 import { Footer } from './components/Footer';
 import { Product } from './types';
 import { api } from './services/api';
@@ -361,6 +362,9 @@ const MainContent: React.FC = () => {
         isOpen={isAdminOpen}
         onClose={() => setIsAdminOpen(false)}
       />
+
+      {/* Favourites / Wishlist Modal */}
+      <FavouritesModal />
 
       {/* Brand Footer with BSTI guarantee, delivery hubs & payment gateways */}
       <Footer />

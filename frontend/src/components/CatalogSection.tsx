@@ -327,11 +327,13 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleWishlist(p.id);
+                    toggleWishlist(p.id, p);
                   }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-sm text-slate-500 hover:text-rose-500 transition"
+                  title="Add to Favourites"
                 >
                   <Heart
                     className={`w-4 h-4 ${

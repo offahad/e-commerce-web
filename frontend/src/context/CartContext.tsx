@@ -3,6 +3,18 @@ import { CartItem } from '../types';
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
 
+export interface FavouriteItem {
+  id: string;
+  name: string;
+  price: number;
+  salePrice?: number;
+  regularPrice?: number;
+  imageUrl?: string;
+  unit?: string;
+  variantId?: string;
+  slug?: string;
+}
+
 interface CartContextType {
   cartItems: CartItem[];
   itemCount: number;
@@ -23,8 +35,14 @@ interface CartContextType {
   clearCart: () => Promise<void>;
   applyCoupon: (code: string) => Promise<{ success: boolean; message?: string }>;
   removeCoupon: () => void;
+  favouriteItems: FavouriteItem[];
+  isFavouritesOpen: boolean;
+  openFavourites: () => void;
+  closeFavourites: () => void;
+  toggleFavourite: (itemOrId: any) => void;
+  isFavourite: (id: string) => boolean;
   wishlistIds: Set<string>;
-  toggleWishlist: (productId: string) => Promise<void>;
+  toggleWishlist: (productId: string, itemMeta?: any) => Promise<void>;
   isWishlisted: (productId: string) => boolean;
   isCheckoutOpen: boolean;
   openCheckout: () => void;
@@ -45,6 +63,40 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeOrderTracking, setActiveOrderTracking] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number; message?: string } | null>(null);
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [isFavouritesOpen, setIsFavouritesOpen] = useState(false);
+  const [favouriteItems, setFavouriteItems] = useState<FavouriteItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('lb_favourite_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to read favourites', e);
+    }
+    return [
+      {
+        id: 'frt-1',
+        name: 'Italian Avocado',
+        price: 350,
+        regularPrice: 380,
+        unit: '1 pc',
+        imageUrl: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-frt-1',
+        slug: 'italian-avocado',
+      },
+      {
+        id: 'veg-1',
+        name: 'Fresh Beetroot',
+        price: 80,
+        regularPrice: 95,
+        unit: '500g',
+        imageUrl: 'https://images.unsplash.com/photo-1588615419957-4627dff1645e?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-veg-1',
+        slug: 'fresh-beetroot',
+      },
+    ];
+  });
 
   const freeDeliveryThreshold = 1000;
   const standardDeliveryFee = 60;
@@ -180,30 +232,60 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAppliedCoupon(null);
   };
 
-  const toggleWishlist = async (productId: string) => {
-    if (!user) {
-      alert('Please login to save items to your wishlist.');
-      return;
-    }
-    try {
-      const res = await api.toggleWishlist(productId);
-      if (res.success) {
-        setWishlistIds((prev) => {
-          const next = new Set(prev);
-          if (next.has(productId)) {
-            next.delete(productId);
-          } else {
-            next.add(productId);
-          }
-          return next;
-        });
+  const openFavourites = () => setIsFavouritesOpen(true);
+  const closeFavourites = () => setIsFavouritesOpen(false);
+
+  const toggleFavourite = (itemOrId: any) => {
+    const id = typeof itemOrId === 'string' ? itemOrId : itemOrId?.id;
+    if (!id) return;
+
+    setFavouriteItems((prev) => {
+      const matchIndex = prev.findIndex(
+        (f) =>
+          f.id === id ||
+          (itemOrId.name && f.name.toLowerCase().trim() === itemOrId.name.toLowerCase().trim())
+      );
+      let updated: FavouriteItem[];
+      if (matchIndex >= 0) {
+        updated = prev.filter((_, idx) => idx !== matchIndex);
+      } else {
+        const newItem: FavouriteItem = {
+          id: id,
+          name: itemOrId.name || 'Grocery Item',
+          price: Number(itemOrId.price || itemOrId.salePrice || itemOrId.basePrice || 100),
+          regularPrice: itemOrId.regularPrice ? Number(itemOrId.regularPrice) : undefined,
+          imageUrl:
+            itemOrId.imageUrl ||
+            itemOrId.thumbnailUrl ||
+            'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80',
+          unit: itemOrId.unit || itemOrId.unitSubtitle || '1 Pack',
+          variantId: itemOrId.variantId || (itemOrId.variants && itemOrId.variants[0]?.id) || 'v-' + id,
+          slug: itemOrId.slug || 'product-' + id,
+        };
+        updated = [newItem, ...prev];
       }
-    } catch (err) {
-      console.error('Failed to toggle wishlist', err);
+      try {
+        localStorage.setItem('lb_favourite_items', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (user) {
+      api.toggleWishlist(id).catch(() => {});
     }
   };
 
-  const isWishlisted = (productId: string) => wishlistIds.has(productId);
+  const isFavourite = (id: string) => {
+    return favouriteItems.some((f) => f.id === id);
+  };
+
+  const toggleWishlist = async (productId: string, itemMeta?: any) => {
+    toggleFavourite(itemMeta || { id: productId });
+  };
+
+  const isWishlisted = (productId: string) => {
+    return isFavourite(productId) || wishlistIds.has(productId);
+  };
 
   // Computed totals
   const subtotal = cartItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
@@ -255,6 +337,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearCart,
         applyCoupon,
         removeCoupon,
+        favouriteItems,
+        isFavouritesOpen,
+        openFavourites,
+        closeFavourites,
+        toggleFavourite,
+        isFavourite,
         wishlistIds,
         toggleWishlist,
         isWishlisted,

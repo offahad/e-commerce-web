@@ -275,13 +275,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
                 </button>
 
                 <button
-                  onClick={() => toggleWishlist(product.id)}
+                  type="button"
+                  onClick={() =>
+                    toggleWishlist(product.id, {
+                      id: product.id,
+                      name: product.name,
+                      price: selectedVariant?.salePrice || selectedVariant?.price || product.basePrice,
+                      regularPrice: selectedVariant?.compareAtPrice,
+                      imageUrl: product.images?.[0]?.url || product.primaryImage,
+                      unit: selectedVariant?.displayName || '1 Pack',
+                      variantId: selectedVariant?.id,
+                      slug: product.slug,
+                    })
+                  }
                   className={`p-3 rounded-xl border transition flex items-center justify-center ${
                     isWishlisted(product.id)
                       ? 'text-rose-500 bg-rose-50 border-rose-200'
                       : 'text-slate-400 hover:text-rose-500 hover:bg-slate-50 border-slate-200'
                   }`}
-                  title="Save to wishlist"
+                  title="Save to favourites"
                 >
                   <Heart className={`w-5 h-5 ${isWishlisted(product.id) ? 'fill-rose-500' : ''}`} />
                 </button>

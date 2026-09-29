@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCartPage,
 }) => {
   const { user, isAuthenticated, isApproved, isAdmin, logout, openAuthModal } = useAuth();
-  const { itemCount, subtotal, openCart, wishlistIds, trackOrderNumber } = useCart();
+  const { itemCount, subtotal, openCart, favouriteItems, openFavourites, trackOrderNumber } = useCart();
   const { language, setLanguage, t } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -216,14 +216,18 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Wishlist Heart with count */}
             <button
-              onClick={() => onOpenAccount('wishlist')}
-              className="relative p-1.5 hover:bg-emerald-800 rounded-full text-emerald-100 hover:text-white transition"
-              title="Wishlist"
+              onClick={openFavourites}
+              className="relative p-1.5 hover:bg-emerald-800 rounded-full text-emerald-100 hover:text-white transition group"
+              title="My Favourite Items"
             >
-              <Heart className="w-5 h-5" />
-              {wishlistIds.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
-                  {wishlistIds.length}
+              <Heart
+                className={`w-5 h-5 transition-transform group-hover:scale-110 ${
+                  favouriteItems.length > 0 ? 'fill-rose-400 text-rose-400' : ''
+                }`}
+              />
+              {favouriteItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-fade-in shadow-xs">
+                  {favouriteItems.length}
                 </span>
               )}
             </button>
@@ -326,6 +330,21 @@ export const Header: React.FC<HeaderProps> = ({
 
                   {/* Links */}
                   <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        openFavourites();
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                      <span>My Favourite Items</span>
+                      {favouriteItems.length > 0 && (
+                        <span className="ml-auto text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+                          {favouriteItems.length}
+                        </span>
+                      )}
+                    </button>
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);

@@ -47,7 +47,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleWishlist(product.id);
+    toggleWishlist(product.id, {
+      id: product.id,
+      name: product.name,
+      price: product.discountPrice || product.basePrice,
+      regularPrice: product.discountPrice ? product.basePrice : undefined,
+      imageUrl: product.primaryImage,
+      unit: product.variants?.[0]?.packSize || '1 Pack',
+      variantId: product.variants?.[0]?.id,
+      slug: product.slug,
+    });
   };
 
   const wishlisted = isWishlisted(product.id);
