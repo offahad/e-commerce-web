@@ -228,16 +228,18 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Shopping Cart Icon with Circular Yellow Badge (Matching Screenshot 1: Badge '3') */}
+            {/* Shopping Cart Icon (Counter only shows when items > 0) */}
             <button
               onClick={() => (onOpenCartPage ? onOpenCartPage() : openCart())}
               className="relative p-1.5 hover:bg-emerald-800 rounded-full text-emerald-100 hover:text-white transition"
               title="Shopping Cart"
             >
               <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-yellow-400 text-slate-950 text-xs font-black flex items-center justify-center shadow-md">
-                {itemCount > 0 ? itemCount : 3}
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-yellow-400 text-slate-950 text-xs font-black flex items-center justify-center shadow-md animate-fade-in">
+                  {itemCount}
+                </span>
+              )}
             </button>
 
             {/* Circular Peach User Profile Avatar (Matching Screenshot 1) */}
