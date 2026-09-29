@@ -12,7 +12,7 @@ interface AccountPortalProps {
 }
 
 export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, defaultTab, initialTab }) => {
-  const effectiveTab = initialTab || defaultTab || 'orders';
+  const effectiveTab = initialTab || defaultTab || 'profile';
   const { user, isApproved, addresses, loadAddresses } = useAuth();
   const {
     trackOrderNumber,
@@ -150,6 +150,26 @@ export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, d
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-200 bg-white px-5 text-xs font-bold overflow-x-auto">
           <button
+            onClick={() => setActiveTab('profile')}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
+              activeTab === 'profile'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <User className="w-4 h-4" /> Customer Profile
+          </button>
+          <button
+            onClick={() => setActiveTab('addresses')}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
+              activeTab === 'addresses'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <MapPin className="w-4 h-4" /> Saved Addresses ({addresses.length})
+          </button>
+          <button
             onClick={() => setActiveTab('orders')}
             className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
               activeTab === 'orders'
@@ -169,26 +189,6 @@ export const AccountPortal: React.FC<AccountPortalProps> = ({ isOpen, onClose, d
           >
             <Heart className={`w-4 h-4 ${favouriteItems.length > 0 ? 'fill-rose-500 text-rose-500' : ''}`} />
             <span>Favourites ({favouriteItems.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('addresses')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
-              activeTab === 'addresses'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <MapPin className="w-4 h-4" /> Saved Addresses ({addresses.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition shrink-0 ${
-              activeTab === 'profile'
-                ? 'border-emerald-600 text-emerald-700'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <User className="w-4 h-4" /> Customer Profile
           </button>
         </div>
 

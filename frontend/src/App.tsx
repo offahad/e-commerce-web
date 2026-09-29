@@ -5,6 +5,7 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Header } from './components/Header';
 import { HeroBanner, BannerSlide } from './components/HeroBanner';
 import { AppDownloadBanner } from './components/AppDownloadBanner';
+import { PromoPosterBanner } from './components/PromoPosterBanner';
 import { FridayFlashSection } from './components/FridayFlashSection';
 import { DealsOfTheDaySection } from './components/DealsOfTheDaySection';
 import { CatalogSection } from './components/CatalogSection';
@@ -17,6 +18,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { CartPage } from './components/CartPage';
 import { CheckoutModal } from './components/CheckoutModal';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
+import { OrdersTrackingModal } from './components/OrdersTrackingModal';
 import { AuthModal } from './components/AuthModal';
 import { AccountPortal } from './components/AccountPortal';
 import { AdminPortal } from './components/AdminPortal';
@@ -50,8 +52,9 @@ const MainContent: React.FC = () => {
   const [activeProductSlug, setActiveProductSlug] = useState<string | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isOrdersTrackingOpen, setIsOrdersTrackingOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [accountTab, setAccountTab] = useState('orders');
+  const [accountTab, setAccountTab] = useState('profile');
 
   // Hero CMS Banners State
   const [heroSlides, setHeroSlides] = useState<BannerSlide[]>(() => {
@@ -168,9 +171,12 @@ const MainContent: React.FC = () => {
         }}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenAccount={handleOpenAccount}
+        onOpenOrdersTracking={() => setIsOrdersTrackingOpen(true)}
         onSearchSubmit={(q) => {
           setSearchQuery(q);
-          setCurrentView('home');
+          if (q.trim()) {
+            handleOpenCategoryPage('all', `Search: ${q}`);
+          }
         }}
         onOpenProductModal={(slug) => {
           setActiveProductSlug(slug);
@@ -233,23 +239,22 @@ const MainContent: React.FC = () => {
           />
         )}
 
-        {/* VIEW 4: HOMEPAGE STOREFRONT (Matching Screenshots 1, 2, 3, 4, 8, 9) */}
+        {/* VIEW 4: HOMEPAGE STOREFRONT (Promotional Hero -> Friday Flash -> Deals of the Day -> Categories & Items -> Promo Poster Banner -> Footer) */}
         {currentView === 'home' && (
           <>
-            {/* Hero Banner with Wave & Auto-advancing CMS Carousel (Screenshot 1) */}
+            {/* 1. Hero Promotional Banner with Wave & Auto-advancing CMS Carousel */}
             <HeroBanner
               slides={heroSlides}
               onShopNow={(categorySlug) => {
                 if (categorySlug) {
                   handleOpenCategoryPage(categorySlug);
                 } else {
-                  const elem = document.getElementById('catalog-products-section');
-                  if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                  handleOpenCategoryPage('all');
                 }
               }}
             />
 
-            {/* 1. Friday Flash Deals (when deal is active it will show products, if not then it will show "Friday deals are closed for today. It will appear on Friday.") */}
+            {/* 2. Friday Flash Deals (when deal is active it will show products, if not then it will show "Friday deals are closed for today. It will appear on Friday.") */}
             <FridayFlashSection
               onOpenProductModal={(slug) => {
                 setActiveProductSlug(slug);
@@ -257,94 +262,21 @@ const MainContent: React.FC = () => {
               onOpenProduct={(prod) => handleOpenProductDetail(prod)}
             />
 
-            {/* 2. Deals of the Day with Red Clock Timer Badges, Sold: X/Y Progress & Sold Out Overlay */}
+            {/* 3. Deals of the Day with Red Clock Timer Badges, Sold: X/Y Progress & Sold Out Overlay */}
             <DealsOfTheDaySection
               onOpenProduct={(prod) => handleOpenProductDetail(prod)}
             />
 
-            {/* 3. Other Categories: Dual Mode Catalog Switcher ("By Category" vs "Product by Items") */}
+            {/* 4. Other Categories: Dual Mode Catalog Switcher ("By Category" vs "Product by Items") */}
             <CatalogSection
               onOpenProduct={(prod) => handleOpenProductDetail(prod)}
               onFilterByCategory={(slug, title) => handleOpenCategoryPage(slug, title)}
             />
 
-            {/* Complete Catalog & Faceted Filter Section */}
-            <div id="catalog-products-section" className="my-10">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-[#14532d] tracking-tight">
-                    {activeCategory ? `Filtered Catalog: ${activeCategory}` : 'Full Grocery Catalog'}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Multi-Quantity Variants (500 ML, 1L, 2L, 5L) with server-verified real-time stock.
-                  </p>
-                </div>
-
-                {/* Filter and Sort Controls */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
-                      <SlidersHorizontal className="w-3.5 h-3.5" /> Sort:
-                    </label>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="bg-white border border-slate-200 text-xs font-semibold rounded-xl px-3 py-1.5 focus:border-emerald-700 focus:outline-none"
-                    >
-                      <option value="featured">Featured</option>
-                      <option value="price_asc">Price: Low to High</option>
-                      <option value="price_desc">Price: High to Low</option>
-                      <option value="rating">Top Rated</option>
-                    </select>
-                  </div>
-
-                  {activeCategory && (
-                    <button
-                      onClick={() => setActiveCategory(null)}
-                      className="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-xl hover:bg-rose-100 transition"
-                    >
-                      Clear Filter ✕
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Product Cards Grid with Multi-Quantity Pills */}
-              {loadingProducts ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} className="h-80 rounded-3xl bg-slate-200/60 animate-pulse" />
-                  ))}
-                </div>
-              ) : products.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-3xl border border-slate-200">
-                  <p className="text-sm font-bold text-slate-600">No products found matching your filter criteria.</p>
-                  <button
-                    onClick={() => {
-                      setActiveCategory(null);
-                      setSearchQuery('');
-                      setSelectedBrand(null);
-                    }}
-                    className="mt-3 px-4 py-2 bg-[#14532d] text-white text-xs font-bold rounded-xl"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                  {products.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onOpenModal={() => handleOpenProductDetail(product)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 6. App Download Banner (Matching Screenshot 4) */}
-            <AppDownloadBanner />
+            {/* 5. Another Promo Item Segment as a Banner or Poster Just Before the Footer */}
+            <PromoPosterBanner
+              onShopDeals={() => handleOpenCategoryPage('all', 'Summer Promo Deals')}
+            />
           </>
         )}
       </main>
@@ -374,7 +306,15 @@ const MainContent: React.FC = () => {
           setIsCheckoutOpen(false);
           setCurrentView('home');
           trackOrderNumber(trackingNo);
+          setIsOrdersTrackingOpen(true);
         }}
+      />
+
+      {/* Dedicated Orders & Live Status Tracking Modal (Triggered by Location Pin Button) */}
+      <OrdersTrackingModal
+        isOpen={isOrdersTrackingOpen}
+        onClose={() => setIsOrdersTrackingOpen(false)}
+        onOpenStore={() => setCurrentView('home')}
       />
 
       {/* Real-time Order Tracking Modal */}

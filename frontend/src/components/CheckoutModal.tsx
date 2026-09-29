@@ -129,6 +129,32 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           })
         );
 
+        // Store order into customer orders memory so it appears instantly in Orders & Status Tracking
+        try {
+          const storedOrders = JSON.parse(localStorage.getItem('lb_customer_orders') || '[]');
+          storedOrders.unshift({
+            id: res.data.order.id,
+            orderNumber: res.data.order.orderNumber,
+            trackingNumber: res.data.order.trackingNumber,
+            createdAt: res.data.order.createdAt || new Date().toISOString(),
+            grandTotal: res.data.order.grandTotal,
+            paymentMethod: res.data.order.paymentMethod,
+            paymentStatus: res.data.order.paymentStatus || 'PENDING',
+            status: res.data.order.status || 'CONFIRMED',
+            deliveryAddress: deliveryAddress.trim(),
+            recipientName: recipientName.trim(),
+            recipientPhone: recipientPhone.trim(),
+            items: items.map((it) => ({
+              productName: it.productName || it.name,
+              variantName: it.variantName || 'Standard',
+              quantity: it.quantity,
+              totalPrice: it.price * it.quantity,
+              imageUrl: it.imageUrl,
+            })),
+          });
+          localStorage.setItem('lb_customer_orders', JSON.stringify(storedOrders));
+        } catch (e) {}
+
         setOrderResult({
           orderNumber: res.data.order.orderNumber,
           trackingNumber: res.data.order.trackingNumber,

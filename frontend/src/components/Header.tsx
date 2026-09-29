@@ -26,6 +26,7 @@ interface HeaderProps {
   activeCategory: string | null;
   onOpenAdmin: () => void;
   onOpenAccount: (tab?: string) => void;
+  onOpenOrdersTracking: () => void;
   onSearchSubmit: (q: string) => void;
   onOpenProductModal: (slug: string) => void;
   onOpenCartPage?: () => void;
@@ -36,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeCategory,
   onOpenAdmin,
   onOpenAccount,
+  onOpenOrdersTracking,
   onSearchSubmit,
   onOpenProductModal,
   onOpenCartPage,
@@ -205,13 +207,14 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right: Icons Strip (MapPin, Wishlist, Cart with Yellow Badge 3, Profile Avatar) */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            {/* Location Pin */}
+            {/* Location Pin - Dedicated Orders & Live Status Tracking */}
             <button
-              onClick={() => onOpenAccount('addresses')}
-              className="p-1.5 hover:bg-emerald-800 rounded-full text-emerald-100 hover:text-white transition hidden sm:flex items-center justify-center"
-              title="Delivery Location: Dhaka"
+              type="button"
+              onClick={onOpenOrdersTracking}
+              className="p-1.5 hover:bg-emerald-800 rounded-full text-emerald-100 hover:text-white transition hidden sm:flex items-center justify-center group relative"
+              title="My Orders & Live Delivery Tracking"
             >
-              <MapPin className="w-5 h-5" />
+              <MapPin className="w-5 h-5 transition-transform group-hover:scale-110" />
             </button>
 
             {/* Wishlist Heart with count */}
@@ -331,6 +334,38 @@ export const Header: React.FC<HeaderProps> = ({
                   {/* Links */}
                   <div className="py-1">
                     <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenAccount('profile');
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-semibold"
+                    >
+                      <User className="w-4 h-4 text-emerald-800" />
+                      <span>{t('myAccount')} (Customer Profile)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenAccount('addresses');
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <MapPin className="w-4 h-4 text-slate-400" /> Saved Addresses
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenOrdersTracking();
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <Package className="w-4 h-4 text-slate-400" /> My Orders & Live Tracking
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => {
                         setUserDropdownOpen(false);
                         openFavourites();
@@ -346,33 +381,17 @@ export const Header: React.FC<HeaderProps> = ({
                       )}
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setUserDropdownOpen(false);
-                        onOpenAccount('orders');
-                      }}
-                      className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <Package className="w-4 h-4 text-slate-400" /> {t('myAccount')} & Orders
-                    </button>
-                    <button
-                      onClick={() => {
-                        setUserDropdownOpen(false);
-                        onOpenAccount('addresses');
-                      }}
-                      className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <MapPin className="w-4 h-4 text-slate-400" /> Saved Addresses
-                    </button>
-                    <button
-                      onClick={() => {
-                        setUserDropdownOpen(false);
-                        setTrackInputOpen(true);
+                        onOpenOrdersTracking();
                       }}
                       className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                     >
                       <Clock className="w-4 h-4 text-slate-400" /> {t('trackOrder')}
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setUserDropdownOpen(false);
                         onOpenAdmin();
