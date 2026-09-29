@@ -9,6 +9,7 @@ import { FridayFlashSection } from './components/FridayFlashSection';
 import { DealsOfTheDaySection } from './components/DealsOfTheDaySection';
 import { CatalogSection } from './components/CatalogSection';
 import { CategoryBar } from './components/CategoryBar';
+import { CategoryPageView } from './components/CategoryPageView';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailView } from './components/ProductDetailView';
 import { ProductDetailModal } from './components/ProductDetailModal';
@@ -30,9 +31,11 @@ const MainContent: React.FC = () => {
   const { trackOrderNumber, addToCart } = useCart();
   const { t } = useLanguage();
 
-  // Navigation View State: 'home' | 'product-detail' | 'cart-page'
-  const [currentView, setCurrentView] = useState<'home' | 'product-detail' | 'cart-page'>('home');
+  // Navigation View State: 'home' | 'product-detail' | 'cart-page' | 'category-page'
+  const [currentView, setCurrentView] = useState<'home' | 'product-detail' | 'cart-page' | 'category-page'>('home');
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [categoryPageViewSlug, setCategoryPageViewSlug] = useState<string>('all');
+  const [categoryPageViewTitle, setCategoryPageViewTitle] = useState<string>('All Categories');
 
   // Catalog state
   const [products, setProducts] = useState<Product[]>([]);
@@ -135,15 +138,33 @@ const MainContent: React.FC = () => {
     setIsCheckoutOpen(true);
   };
 
+  const handleOpenCategoryPage = (slug: string, title?: string) => {
+    setCategoryPageViewSlug(slug || 'all');
+    if (title) {
+      setCategoryPageViewTitle(title);
+    } else {
+      const formatted = (slug || 'All Categories')
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      setCategoryPageViewTitle(formatted);
+    }
+    setCurrentView('category-page');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
       {/* Header with Language Selector & Navigation */}
       <Header
         activeCategory={activeCategory}
         onSelectCategory={(slug) => {
-          setActiveCategory(slug);
-          setSearchQuery('');
-          setCurrentView('home');
+          if (!slug || slug === 'all') {
+            setActiveCategory(null);
+            setSearchQuery('');
+            setCurrentView('home');
+          } else {
+            handleOpenCategoryPage(slug);
+          }
         }}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenAccount={handleOpenAccount}
@@ -180,7 +201,7 @@ const MainContent: React.FC = () => {
         </div>
       )}
 
-      {/* Main Body Switcher: Home vs ProductDetailView vs CartPage */}
+      {/* Main Body Switcher: Home vs ProductDetailView vs CartPage vs CategoryPage */}
       <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
         {/* VIEW 1: DEDICATED PRODUCT DETAIL VIEW (Matching Screenshot 6) */}
         {currentView === 'product-detail' && selectedProduct && (
@@ -200,42 +221,54 @@ const MainContent: React.FC = () => {
           />
         )}
 
-        {/* VIEW 3: HOMEPAGE STOREFRONT (Matching Screenshots 1, 2, 3, 4, 8, 9) */}
+        {/* VIEW 3: DEDICATED CATEGORY & PRODUCT-BY-ITEMS PAGE */}
+        {currentView === 'category-page' && (
+          <CategoryPageView
+            categorySlug={categoryPageViewSlug}
+            categoryTitle={categoryPageViewTitle}
+            onBack={() => setCurrentView('home')}
+            onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+            onSelectCategory={(slug) => handleOpenCategoryPage(slug)}
+            apiProducts={products}
+          />
+        )}
+
+        {/* VIEW 4: HOMEPAGE STOREFRONT (Matching Screenshots 1, 2, 3, 4, 8, 9) */}
         {currentView === 'home' && (
           <>
-            {/* 1. Hero Banner with Wave & Auto-advancing CMS Carousel (Screenshot 1) */}
+            {/* Hero Banner with Wave & Auto-advancing CMS Carousel (Screenshot 1) */}
             <HeroBanner
               slides={heroSlides}
               onShopNow={(categorySlug) => {
-                if (categorySlug) setActiveCategory(categorySlug);
-                const elem = document.getElementById('catalog-products-section');
-                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                if (categorySlug) {
+                  handleOpenCategoryPage(categorySlug);
+                } else {
+                  const elem = document.getElementById('catalog-products-section');
+                  if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                }
               }}
             />
 
-            {/* 2. Deals of the Day with Red Clock Timer Badges, Sold: X/Y Progress & Sold Out Overlay (Screenshot 2) */}
-            <DealsOfTheDaySection
-              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
-            />
-
-            {/* 3. Dual Mode Catalog Switcher: "By Category" vs "Product by Items" (Screenshots 8 & 9) */}
-            <CatalogSection
-              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
-              onFilterByCategory={(slug) => {
-                setActiveCategory(slug === 'all' ? null : slug);
-                const elem = document.getElementById('catalog-products-section');
-                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-              }}
-            />
-
-            {/* 4. Friday Flash Deals Showcase */}
+            {/* 1. Friday Flash Deals (when deal is active it will show products, if not then it will show "Friday deals are closed for today. It will appear on Friday.") */}
             <FridayFlashSection
               onOpenProductModal={(slug) => {
                 setActiveProductSlug(slug);
               }}
+              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
             />
 
-            {/* 5. Complete Catalog & Faceted Filter Section */}
+            {/* 2. Deals of the Day with Red Clock Timer Badges, Sold: X/Y Progress & Sold Out Overlay */}
+            <DealsOfTheDaySection
+              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+            />
+
+            {/* 3. Other Categories: Dual Mode Catalog Switcher ("By Category" vs "Product by Items") */}
+            <CatalogSection
+              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+              onFilterByCategory={(slug, title) => handleOpenCategoryPage(slug, title)}
+            />
+
+            {/* Complete Catalog & Faceted Filter Section */}
             <div id="catalog-products-section" className="my-10">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div>

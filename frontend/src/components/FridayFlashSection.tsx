@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Clock, ShoppingCart, Check, Zap } from 'lucide-react';
+import { Flame, Clock, ShoppingCart, Check, Zap, Plus, Minus } from 'lucide-react';
 import { FlashDealCampaign } from '../types';
 import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
 
 interface FridayFlashSectionProps {
   onOpenProductModal: (slug: string) => void;
+  onOpenProduct?: (product: any) => void;
 }
 
-export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenProductModal }) => {
-  const { addToCart } = useCart();
+export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenProductModal, onOpenProduct }) => {
+  const { items: cartItems, addToCart, updateQuantity, removeItem } = useCart();
   const [deal, setDeal] = useState<FlashDealCampaign | null>(null);
   const [remainingSecs, setRemainingSecs] = useState<number>(0);
   const [addingId, setAddingId] = useState<string | null>(null);
@@ -54,8 +55,17 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
 
   const timer = formatTimer(remainingSecs);
 
-  if (!deal || !deal.items || deal.items.length === 0) {
-    return null;
+  if (!deal || !deal.items || deal.items.length === 0 || deal.status !== 'ACTIVE') {
+    return (
+      <section id="friday-flash" className="my-6 scroll-mt-28 text-left">
+        <div className="rounded-3xl bg-amber-50/90 border border-amber-200/80 p-5 sm:p-6 text-center shadow-xs">
+          <p className="text-amber-900 font-extrabold text-sm sm:text-base flex items-center justify-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+            <span>Friday deals are closed for today. It will appear on Friday.</span>
+          </p>
+        </div>
+      </section>
+    );
   }
 
   const handleAddToCart = async (item: any) => {
@@ -192,32 +202,89 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
                   </div>
                 </div>
 
-                {/* Add to Cart Button */}
-                <button
-                  disabled={isSoldOut || addingId === item.variantId}
-                  onClick={() => handleAddToCart(item)}
-                  className={`mt-4 w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition ${
-                    isSoldOut
-                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                      : justAddedId === item.variantId
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg'
-                  }`}
-                >
-                  {isSoldOut ? (
-                    'Sold Out'
-                  ) : addingId === item.variantId ? (
-                    'Securing Deal...'
-                  ) : justAddedId === item.variantId ? (
-                    <>
-                      <Check className="w-4 h-4" /> Added to Basket
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-4 h-4" /> Claim Friday Deal
-                    </>
-                  )}
-                </button>
+                {/* Add to Cart Button or Interactive Stepper */}
+                {(() => {
+                  const cartItem = cartItems.find((ci) => {
+                    if (item.variantId && ci.variantId === item.variantId) return true;
+                    if (item.id && (ci.productId === item.id || ci.id === item.id)) return true;
+                    const cName = (ci.productName || ci.name || '').toLowerCase().trim();
+                    const iName = (item.productName || item.name || '').toLowerCase().trim();
+                    return iName.length > 0 && cName === iName;
+                  });
+                  const inCartQty = cartItem ? cartItem.quantity : 0;
+
+                  if (isSoldOut) {
+                    return (
+                      <button
+                        disabled
+                        className="mt-4 w-full py-2.5 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed"
+                      >
+                        Sold Out
+                      </button>
+                    );
+                  }
+
+                  if (inCartQty > 0 && cartItem) {
+                    return (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-4 w-full py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-between px-3 shadow-md"
+                      >
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (inCartQty > 1) {
+                              updateQuantity(cartItem.id, inCartQty - 1);
+                            } else {
+                              removeItem(cartItem.id);
+                            }
+                          }}
+                          className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition active:scale-90"
+                          title="Decrease"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="font-black text-sm px-2 text-center min-w-[20px]">{inCartQty}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateQuantity(cartItem.id, inCartQty + 1);
+                          }}
+                          className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition active:scale-90"
+                          title="Increase"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <button
+                      disabled={addingId === item.variantId}
+                      onClick={() => handleAddToCart(item)}
+                      className={`mt-4 w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition ${
+                        justAddedId === item.variantId
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg'
+                      }`}
+                    >
+                      {addingId === item.variantId ? (
+                        'Securing Deal...'
+                      ) : justAddedId === item.variantId ? (
+                        <>
+                          <Check className="w-4 h-4" /> Added to Basket
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-4 h-4" /> Claim Friday Deal
+                        </>
+                      )}
+                    </button>
+                  );
+                })()}
               </div>
             );
           })}

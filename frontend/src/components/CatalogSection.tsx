@@ -13,7 +13,7 @@ import { useCart } from '../context/CartContext';
 
 interface CatalogSectionProps {
   onOpenProduct: (product: any) => void;
-  onFilterByCategory: (slug: string) => void;
+  onFilterByCategory: (slug: string, title?: string) => void;
 }
 
 export interface PastelItem {
@@ -284,7 +284,8 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
         </h3>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => onFilterByCategory(categorySlug)}
+            type="button"
+            onClick={() => onFilterByCategory(categorySlug, title.replace(/^[^\w\s]+/, '').trim())}
             className="text-xs sm:text-sm font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 transition"
           >
             <span>{t('seeMore')}</span>
@@ -473,7 +474,8 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-black text-slate-800">Category</h3>
               <button
-                onClick={() => onFilterByCategory('all')}
+                type="button"
+                onClick={() => onFilterByCategory('all', 'All Categories')}
                 className="text-xs font-bold text-emerald-800 hover:text-emerald-950"
               >
                 See All &gt;
@@ -491,7 +493,7 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
               ].map((c) => (
                 <div
                   key={c.slug}
-                  onClick={() => onFilterByCategory(c.slug)}
+                  onClick={() => onFilterByCategory(c.slug, c.name)}
                   className={`cursor-pointer rounded-2xl p-3 ${c.bg} border border-slate-100 hover:shadow-md transition flex items-center justify-between`}
                 >
                   <div className="text-left">
@@ -527,7 +529,7 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
             {PASTEL_ITEMS.map((item) => (
               <div
                 key={item.id}
-                onClick={() => onFilterByCategory(item.slug)}
+                onClick={() => onFilterByCategory(item.slug, item.name)}
                 className={`cursor-pointer rounded-3xl p-4 border ${item.bgColor} shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group`}
               >
                 <div className="flex items-center justify-between mb-2">
