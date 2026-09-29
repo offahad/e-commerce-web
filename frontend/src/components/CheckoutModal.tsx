@@ -18,10 +18,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const {
     isCheckoutOpen,
     closeCheckout,
-    items: cartItems,
+    cartItems,
     subtotal,
     deliveryFee,
     grandTotal,
+    discountAmount,
+    appliedCoupon,
     clearCart,
     trackOrderNumber,
   } = useCart();
@@ -144,11 +146,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             deliveryAddress: deliveryAddress.trim(),
             recipientName: recipientName.trim(),
             recipientPhone: recipientPhone.trim(),
-            items: items.map((it) => ({
-              productName: it.productName || it.name,
-              variantName: it.variantName || 'Standard',
+            items: cartItems.map((it) => ({
+              productName: it.name,
+              variantName: (it as any).unit || (it as any).variantName || 'Standard',
               quantity: it.quantity,
-              totalPrice: it.price * it.quantity,
+              totalPrice: (it.salePrice || it.price) * it.quantity,
               imageUrl: it.imageUrl,
             })),
           });

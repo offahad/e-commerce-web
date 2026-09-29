@@ -15,6 +15,7 @@ import {
   Globe,
   Sparkles,
   Zap,
+  User,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';

@@ -3,9 +3,13 @@ export interface ProductVariant {
   sku: string;
   displayName: string;
   unit: string;
+  packSize?: string;
+  weight?: string;
   quantityValue: number;
   basePrice: number;
   salePrice: number;
+  price?: number;
+  compareAtPrice?: number;
   stockQuantity: number;
   lowStockThreshold: number;
   isActive: boolean;
@@ -15,6 +19,7 @@ export interface ProductVariant {
 export interface ProductImage {
   id: string;
   imageUrl: string;
+  url?: string;
   thumbnailUrl: string;
   isThumbnail: boolean;
   sortOrder: number;
@@ -29,11 +34,14 @@ export interface Product {
   description?: string;
   basePrice: number;
   salePrice: number;
+  discountPrice?: number;
   costPrice?: number;
   discountPercentage?: number;
   discountAmount?: number;
   stockQuantity: number;
   unit: string;
+  primaryImage?: string;
+  thumbnailUrl?: string;
   isFeatured: boolean;
   isBestSeller: boolean;
   status: 'ACTIVE' | 'DRAFT' | 'ARCHIVED';

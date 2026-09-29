@@ -282,19 +282,13 @@ const MainContent: React.FC = () => {
       </main>
 
       {/* Cart Drawer (Quick slide-out) */}
-      <CartDrawer
-        onProceedToCheckout={() => setIsCheckoutOpen(true)}
-      />
+      <CartDrawer />
 
       {/* Full Product Detail Modal (for quick modal views) */}
       {activeProductSlug && (
         <ProductDetailModal
           slug={activeProductSlug}
           onClose={() => setActiveProductSlug(null)}
-          onBuyNow={() => {
-            setActiveProductSlug(null);
-            setIsCheckoutOpen(true);
-          }}
         />
       )}
 

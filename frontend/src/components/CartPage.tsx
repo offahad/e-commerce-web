@@ -122,7 +122,7 @@ export const CartPage: React.FC<CartPageProps> = ({
     const fetchUserAddress = async () => {
       if (isAuthenticated) {
         try {
-          const res = await api.getAddresses();
+          const res = await api.getCustomerAddresses();
           if (res.success && Array.isArray(res.data) && res.data.length > 0) {
             const def = res.data.find((a: any) => a.isDefault) || res.data[0];
             const addrObj = {

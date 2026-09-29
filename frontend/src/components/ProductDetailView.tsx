@@ -75,7 +75,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       name: product.name,
       productName: product.name,
       variantName: displayQuantityText,
-      unit: selectedWeight,
+      unit: displayQuantityText,
       price: baseUnitPrice,
       salePrice: baseUnitPrice,
       basePrice: selectedVariant?.compareAtPrice,
@@ -95,7 +95,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       price: baseUnitPrice,
       regularPrice: selectedVariant?.compareAtPrice,
       imageUrl: images[0],
-      unit: selectedWeight,
+      unit: displayQuantityText,
       variantId: selectedVariant?.id,
       slug: product.slug,
     });

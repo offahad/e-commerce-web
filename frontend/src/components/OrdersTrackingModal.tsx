@@ -125,8 +125,12 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
         if (matched) {
           setTrackingData({
             orderNumber: matched.orderNumber || matched.id,
+            trackingNumber: matched.trackingNumber || num.trim(),
             status: matched.status || 'CONFIRMED',
-            deliveryAddress: matched.deliveryAddress || 'Dhaka, Bangladesh',
+            statusLabel: matched.status || 'Confirmed',
+            deliveryAddress: typeof matched.deliveryAddress === 'string'
+              ? matched.deliveryAddress
+              : matched.deliveryAddress?.address || 'Dhaka Central Delivery Zone',
             grandTotal: matched.grandTotal,
             paymentMethod: matched.paymentMethod || 'COD',
             paymentStatus: matched.paymentStatus || 'PENDING',
@@ -304,7 +308,13 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                   </h3>
                   <div className="text-xs text-slate-600 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                    <span>{trackingData.deliveryAddress || 'Dhaka Central Delivery Zone'}</span>
+                    <span>
+                      {typeof trackingData.deliveryAddress === 'string'
+                        ? trackingData.deliveryAddress
+                        : trackingData.deliveryAddress
+                        ? `${trackingData.deliveryAddress.address}, ${trackingData.deliveryAddress.district}`
+                        : 'Dhaka Central Delivery Zone'}
+                    </span>
                   </div>
                 </div>
 
@@ -544,10 +554,13 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                           <div className="text-slate-600 flex items-center gap-1.5">
                             <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="truncate max-w-sm">
-                              {ord.deliveryAddress ||
-                                (ord.shipping_address_snapshot
-                                  ? JSON.parse(ord.shipping_address_snapshot).addressLine
-                                  : 'Dhaka Central Express Zone')}
+                              {typeof ord.deliveryAddress === 'string'
+                                ? ord.deliveryAddress
+                                : ord.deliveryAddress?.address
+                                ? `${ord.deliveryAddress.address}, ${ord.deliveryAddress.district}`
+                                : ord.shipping_address_snapshot
+                                ? JSON.parse(ord.shipping_address_snapshot).addressLine
+                                : 'Dhaka Central Express Zone'}
                             </span>
                           </div>
 

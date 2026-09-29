@@ -10,7 +10,7 @@ interface FridayFlashSectionProps {
 }
 
 export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenProductModal, onOpenProduct }) => {
-  const { items: cartItems, addToCart, updateQuantity, removeItem } = useCart();
+  const { cartItems, addToCart, updateQuantity, removeItem } = useCart();
   const [deal, setDeal] = useState<FlashDealCampaign | null>(null);
   const [remainingSecs, setRemainingSecs] = useState<number>(0);
   const [addingId, setAddingId] = useState<string | null>(null);
@@ -206,9 +206,9 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
                 {(() => {
                   const cartItem = cartItems.find((ci) => {
                     if (item.variantId && ci.variantId === item.variantId) return true;
-                    if (item.id && (ci.productId === item.id || ci.id === item.id)) return true;
-                    const cName = (ci.productName || ci.name || '').toLowerCase().trim();
-                    const iName = (item.productName || item.name || '').toLowerCase().trim();
+                    if (ci.productId === item.productId || ci.id === item.productId) return true;
+                    const cName = (ci.name || '').toLowerCase().trim();
+                    const iName = (item.productName || '').toLowerCase().trim();
                     return iName.length > 0 && cName === iName;
                   });
                   const inCartQty = cartItem ? cartItem.quantity : 0;
