@@ -229,4 +229,22 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ basePrice, salePrice, priceChangeReason: reason }),
     }),
+
+  createProduct: (payload: any) =>
+    request<any>('/admin/products', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateProduct: (productId: string, payload: any) =>
+    request<any>(`/admin/products/${productId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+
+  cancelOrder: (orderId: string, reason?: string) =>
+    request<any>(`/orders/${orderId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
 };

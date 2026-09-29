@@ -111,9 +111,25 @@ const MainContent: React.FC = () => {
       if (inStockOnly) params.inStock = 'true';
 
       const res = await api.getProducts(params);
-      if (res.success && Array.isArray(res.data)) {
-        setProducts(res.data);
+      let list = res.success && Array.isArray(res.data) ? [...res.data] : [];
+
+      // Merge custom products created/updated by Admin or Moderator
+      const customSaved = localStorage.getItem('lb_custom_catalog_products');
+      if (customSaved) {
+        try {
+          const customProducts = JSON.parse(customSaved);
+          for (const cp of customProducts) {
+            const existingIdx = list.findIndex((p) => p.id === cp.id || p.slug === cp.slug);
+            if (existingIdx >= 0) {
+              list[existingIdx] = { ...list[existingIdx], ...cp };
+            } else {
+              list.unshift(cp);
+            }
+          }
+        } catch (e) {}
       }
+
+      setProducts(list);
     } catch (err) {
       console.error('Failed to load products', err);
     } finally {
@@ -123,6 +139,9 @@ const MainContent: React.FC = () => {
 
   useEffect(() => {
     fetchCatalog();
+    const handleProductsUpdated = () => fetchCatalog();
+    window.addEventListener('lb_products_updated', handleProductsUpdated);
+    return () => window.removeEventListener('lb_products_updated', handleProductsUpdated);
   }, [activeCategory, selectedBrand, sortBy, searchQuery, inStockOnly]);
 
   const handleOpenAccount = (tab = 'orders') => {
