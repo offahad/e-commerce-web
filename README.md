@@ -37,15 +37,15 @@ Production-ready, multi-channel e-commerce ecosystem built with Node.js, TypeScr
   * Real-Time Public Order Tracking Timeline (`/api/v1/orders/track/:trackingNumber`) with multi-stage status progression
   * Admin Order Fulfillment Management: Status transitions (`PENDING` -> `CONFIRMED` -> `PROCESSING` -> `SHIPPED` -> `OUT_FOR_DELIVERY` -> `DELIVERED`), payment reconciliations, and printable tax invoice data
 * [x] **Phase 6 — Customer Storefront Web App & Progressive Web App (PWA)**: Implemented & Verified
-  * Modern, mobile-first responsive React 19 + TypeScript + Tailwind CSS application
-  * Real-Time Sticky Header with debounced instant autocomplete search, cart/wishlist counters, location selector, and customer account menu
-  * Synchronized Friday Flash Deals bazaar with live ticking countdown timer (Days, Hours, Mins, Secs) and allocated vs remaining stock indicators
-  * Deals of the Day daily discounted grocery showcase
-  * Essential Grocery Categories visual explorer (Cooking Oil, Rice & Grains, Masala & Spices, Dairy & Eggs)
-  * Dynamic Product Cards with interactive Multi-Quantity Variant Pills (500 ML / 1L / 2L / 5L, 1kg / 5kg / 10kg / 25kg) updating prices, savings badges, and stock in real time without page reload
-  * Rich Product Details Modal with image gallery, quantity stepper, stock availability alerts, and "Buy Now with 1-Click"
-  * Interactive Shopping Cart Drawer with quantity steppers, item removal, promotional voucher application (`RAMADAN20`, `LITON100`, `FREEDEL`), and dynamic Free Delivery progress bar (threshold ৳1,000)
-  * Streamlined One-Page Checkout with Dhaka delivery addresses, time slot selection (Morning, Afternoon, Evening), and Payment Gateway selection (COD, bKash, Nagad, Card)
+  * Modern, mobile-first responsive React 19 + TypeScript + Tailwind CSS application matching quick-commerce specifications
+  * Bilingual Localization (`en` / `bn`): Instant reactive language switching between **English 🇬🇧** and **বাংলা 🇧🇩** directly inside the Profile avatar menu
+  * Signature Deep Forest Green Header (`#14532d`) with hamburger menu (`≡`), exact search bar (`Search for Grocery, Stores, Vegetable or Meat`), 15-minute express delivery badge (`⚡ Order now and get it within 15 mint!`), cart with yellow badge (`3`), and peach user avatar (`👤`)
+  * Hero Promotion Card with bottom curved wave, organic produce bag visual, auto-advancing 5-second carousel, and Super Admin CMS management
+  * Dual-Mode Catalog Switcher: Segmented toggle between **"By Category"** (horizontal rails for *You might need*, *Fresh Vegetables*, *Fresh Fruits* with `<` / `>` carousels) and **"Product by Items"** (8 pastel cards for *Oil*, *Rice*, *Drinks*, *Flour*, *Sugar*, *Salt*, *Dal*, *Noodles*)
+  * Deals of the Day Showcase: Circular red timer badges `🕒 [23] : [58] : [03]`, green stock exhaustion progress bars (`Sold: X/Y`), dark overlay with centered red **"Sold Out"** pill, and disabled soft pink **"Stock Out"** button
+  * Dedicated Full Product Detail View: `< Back` navigation, brand tag, rating, `[ KG ]` / `[ Gram ]` quantity customizer, dynamic live `Total Price` bar, side-by-side **Add to Cart** and **Buy Now** buttons, and 4-thumbnail gallery
+  * Dedicated 2-Column Shopping Cart Page: `15 mins estimated delivery` badge, `Clear All` action, and Delivery Address card with **auto-fill memory** for repeat orders
+  * Plum App Download Banner (`#4a2040`) with official Google Play and App Store buttons and Summer Sale mobile mockup
   * Real-Time Public Order Tracking Modal with 6-stage delivery progression timeline, audit timestamps, and operational status logs
   * Customer Account Portal with My Orders history, order cancellation with automatic variant restock, and saved delivery address manager
   * Integrated Staff & Admin Operations Portal with live KPI Cards (Revenue ৳ BDT, Pending Orders, Pending Approvals, Low Stock Alerts), Customer Approval state machine, warehouse stock adjustments, order fulfillment status transitions, and printable formal Tax Invoices

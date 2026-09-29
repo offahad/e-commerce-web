@@ -4,25 +4,70 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
-export const CheckoutModal: React.FC = () => {
+interface CheckoutModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  onOrderSuccess?: (trackingNo: string) => void;
+}
+
+export const CheckoutModal: React.FC<CheckoutModalProps> = ({
+  isOpen: propIsOpen,
+  onClose: propOnClose,
+  onOrderSuccess,
+}) => {
   const {
     isCheckoutOpen,
     closeCheckout,
-    cartItems,
+    items: cartItems,
     subtotal,
     deliveryFee,
-    discountAmount,
     grandTotal,
-    appliedCoupon,
     clearCart,
     trackOrderNumber,
   } = useCart();
 
   const { user } = useAuth();
 
-  const [recipientName, setRecipientName] = useState(user?.fullName || '');
-  const [recipientPhone, setRecipientPhone] = useState(user?.phone || '');
-  const [deliveryAddress, setDeliveryAddress] = useState(user?.address || '');
+  const isModalVisible = propIsOpen !== undefined ? propIsOpen : isCheckoutOpen;
+  const handleClose = () => {
+    if (propOnClose) propOnClose();
+    else closeCheckout();
+  };
+
+  // Saved Delivery Address Memory (Auto-fill on 2nd+ orders or profile)
+  const [recipientName, setRecipientName] = useState(() => {
+    const stored = localStorage.getItem('lb_saved_delivery_address');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.name) return parsed.name;
+      } catch (e) {}
+    }
+    return user?.fullName || 'John Doe';
+  });
+
+  const [recipientPhone, setRecipientPhone] = useState(() => {
+    const stored = localStorage.getItem('lb_saved_delivery_address');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.phone) return parsed.phone;
+      } catch (e) {}
+    }
+    return user?.phone || '+880 1234-567890';
+  });
+
+  const [deliveryAddress, setDeliveryAddress] = useState(() => {
+    const stored = localStorage.getItem('lb_saved_delivery_address');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.address) return parsed.area ? `${parsed.address}, ${parsed.area}` : parsed.address;
+      } catch (e) {}
+    }
+    return 'House 42, Road 5, Block C, Banani, Dhaka 1213';
+  });
+
   const [deliverySlot, setDeliverySlot] = useState('Evening Slot (6 PM - 9 PM)');
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'BKASH' | 'NAGAD' | 'CARD'>('COD');
   const [customerNotes, setCustomerNotes] = useState('');
@@ -39,7 +84,7 @@ export const CheckoutModal: React.FC = () => {
     paymentUrl?: string;
   } | null>(null);
 
-  if (!isCheckoutOpen) return null;
+  if (!isModalVisible) return null;
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +118,17 @@ export const CheckoutModal: React.FC = () => {
       const res = await api.placeOrder(payload);
 
       if (res.success && res.data) {
+        // Persist delivery address to memory for auto-fill on all future orders
+        localStorage.setItem(
+          'lb_saved_delivery_address',
+          JSON.stringify({
+            name: recipientName.trim(),
+            phone: recipientPhone.trim(),
+            address: deliveryAddress.trim(),
+            area: 'Dhaka',
+          })
+        );
+
         setOrderResult({
           orderNumber: res.data.order.orderNumber,
           trackingNumber: res.data.order.trackingNumber,
@@ -82,6 +138,9 @@ export const CheckoutModal: React.FC = () => {
           paymentUrl: res.data.payment?.paymentUrl,
         });
         await clearCart();
+        if (onOrderSuccess) {
+          onOrderSuccess(res.data.order.trackingNumber);
+        }
       } else {
         setError(res.message || 'Order could not be processed. Please check item stock.');
       }
@@ -111,7 +170,7 @@ export const CheckoutModal: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={closeCheckout}
+            onClick={handleClose}
             className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
           >
             <X className="w-5 h-5" />

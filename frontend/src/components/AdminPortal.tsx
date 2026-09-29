@@ -7,7 +7,10 @@ import {
   TrendingUp,
   AlertTriangle,
   Printer,
-  FileText
+  FileText,
+  Plus,
+  Trash2,
+  Sparkles
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -17,7 +20,67 @@ interface AdminPortalProps {
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'orders' | 'customers' | 'inventory' | 'prices'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'customers' | 'inventory' | 'prices' | 'banners'>('orders');
+
+  // Hero Banners CMS State
+  const [banners, setBanners] = useState<any[]>(() => {
+    const saved = localStorage.getItem('lb_cms_hero_banners');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      {
+        id: 'slide-1',
+        headline: 'We bring the store to your door',
+        subtext: 'Get organic produce and sustainably sourced groceries delivery at up to 4% off grocery.',
+        buttonText: 'Shop now',
+        imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
+        badgeText: 'Dhaka Express 15-Min',
+        targetCategory: 'vegetables',
+      },
+      {
+        id: 'slide-2',
+        headline: 'Mega Friday Flash Deals — Up to 35% OFF',
+        subtext: 'Premium Teer & Rupchanda edible oils, aromatic Chinigura rice & pure spices at wholesale rates.',
+        buttonText: 'View Flash Deals',
+        imageUrl: 'https://images.unsplash.com/photo-1579113800032-c38bd7635818?auto=format&fit=crop&w=800&q=80',
+        badgeText: 'Friday Bazaar',
+        targetCategory: 'cooking-oil',
+      },
+    ];
+  });
+
+  const [newHeadline, setNewHeadline] = useState('');
+  const [newSubtext, setNewSubtext] = useState('');
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newButtonText, setNewButtonText] = useState('Shop now');
+
+  const handleAddBanner = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newHeadline.trim() || !newImageUrl.trim()) return;
+    const newSlide = {
+      id: 'slide-' + Date.now(),
+      headline: newHeadline.trim(),
+      subtext: newSubtext.trim() || 'Fresh daily groceries delivered to your door.',
+      buttonText: newButtonText.trim() || 'Shop now',
+      imageUrl: newImageUrl.trim(),
+      badgeText: 'Promotions Campaign',
+    };
+    const updated = [newSlide, ...banners];
+    setBanners(updated);
+    localStorage.setItem('lb_cms_hero_banners', JSON.stringify(updated));
+    window.dispatchEvent(new Event('lb_banners_updated'));
+    setNewHeadline('');
+    setNewSubtext('');
+    setNewImageUrl('');
+  };
+
+  const handleDeleteBanner = (id: string) => {
+    const updated = banners.filter((b) => b.id !== id);
+    setBanners(updated);
+    localStorage.setItem('lb_cms_hero_banners', JSON.stringify(updated));
+    window.dispatchEvent(new Event('lb_banners_updated'));
+  };
 
   // KPI Metrics
   const [orders, setOrders] = useState<any[]>([]);
@@ -291,6 +354,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           >
             <Boxes className="w-4 h-4" /> Inventory Alerts & Ledger
           </button>
+          <button
+            onClick={() => setActiveTab('banners')}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition ${
+              activeTab === 'banners'
+                ? 'border-emerald-600 text-emerald-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" /> Hero Banners CMS ({banners.length})
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -498,6 +571,116 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Hero Banners & Promotions CMS Tab */}
+          {activeTab === 'banners' && (
+            <div className="space-y-6 text-left">
+              <div className="flex justify-between items-center text-xs">
+                <div>
+                  <h3 className="font-bold text-slate-800 uppercase tracking-wide">
+                    Hero Banners & Promotions Campaign CMS
+                  </h3>
+                  <p className="text-slate-500 text-[11px]">
+                    Add, edit, or delete slides displayed on the homepage hero carousel. Rotates automatically every 5 seconds.
+                  </p>
+                </div>
+              </div>
+
+              {/* Add New Banner Form */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <h4 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-1.5">
+                  <Plus className="w-4 h-4 text-emerald-700" /> Add New Hero Promotion Slide
+                </h4>
+                <form onSubmit={handleAddBanner} className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Headline</label>
+                    <input
+                      type="text"
+                      required
+                      value={newHeadline}
+                      onChange={(e) => setNewHeadline(e.target.value)}
+                      placeholder="e.g. Fresh Daily Deals — Up to 25% Off"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Image URL</label>
+                    <input
+                      type="url"
+                      required
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Subtext / Description</label>
+                    <input
+                      type="text"
+                      value={newSubtext}
+                      onChange={(e) => setNewSubtext(e.target.value)}
+                      placeholder="e.g. Pure oils, aromatic rice, and fresh dairy delivered in 15 mins."
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Button Text</label>
+                    <input
+                      type="text"
+                      value={newButtonText}
+                      onChange={(e) => setNewButtonText(e.target.value)}
+                      placeholder="e.g. Shop now"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div className="md:col-span-2 pt-1 flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl transition shadow-sm text-xs flex items-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" /> Add Slide to Homepage Carousel
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Current Active Banners List */}
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-slate-600 block">
+                  Active Homepage Carousel Slides ({banners.length})
+                </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {banners.map((b) => (
+                    <div
+                      key={b.id}
+                      className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-200 shadow-sm relative group"
+                    >
+                      <img
+                        src={b.imageUrl}
+                        alt={b.headline}
+                        className="w-20 h-20 rounded-xl object-cover shrink-0 bg-slate-100"
+                      />
+                      <div className="flex-1 min-w-0 pr-8">
+                        <div className="font-bold text-slate-900 text-xs truncate">{b.headline}</div>
+                        <div className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{b.subtext}</div>
+                        <span className="inline-block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          Btn: {b.buttonText}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteBanner(b.id)}
+                        className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                        title="Delete Slide"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

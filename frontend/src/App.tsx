@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider, useCart } from './context/CartContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { Header } from './components/Header';
+import { HeroBanner, BannerSlide } from './components/HeroBanner';
+import { AppDownloadBanner } from './components/AppDownloadBanner';
 import { FridayFlashSection } from './components/FridayFlashSection';
 import { DealsOfTheDaySection } from './components/DealsOfTheDaySection';
+import { CatalogSection } from './components/CatalogSection';
 import { CategoryBar } from './components/CategoryBar';
 import { ProductCard } from './components/ProductCard';
+import { ProductDetailView } from './components/ProductDetailView';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { CartDrawer } from './components/CartDrawer';
+import { CartPage } from './components/CartPage';
 import { CheckoutModal } from './components/CheckoutModal';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
 import { AuthModal } from './components/AuthModal';
@@ -16,11 +22,16 @@ import { AdminPortal } from './components/AdminPortal';
 import { Footer } from './components/Footer';
 import { Product } from './types';
 import { api } from './services/api';
-import { Filter, SlidersHorizontal, Sparkles, Check, AlertCircle } from 'lucide-react';
+import { AlertCircle, SlidersHorizontal, Check } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { user, isApproved } = useAuth();
-  const { trackOrderNumber } = useCart();
+  const { trackOrderNumber, addToCart } = useCart();
+  const { t } = useLanguage();
+
+  // Navigation View State: 'home' | 'product-detail' | 'cart-page'
+  const [currentView, setCurrentView] = useState<'home' | 'product-detail' | 'cart-page'>('home');
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
 
   // Catalog state
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,13 +46,58 @@ const MainContent: React.FC = () => {
   const [activeProductSlug, setActiveProductSlug] = useState<string | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [accountTab, setAccountTab] = useState('orders');
+
+  // Hero CMS Banners State
+  const [heroSlides, setHeroSlides] = useState<BannerSlide[]>(() => {
+    const saved = localStorage.getItem('lb_cms_hero_banners');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return [
+      {
+        id: 'slide-1',
+        headline: 'We bring the store to your door',
+        subtext: 'Get organic produce and sustainably sourced groceries delivery at up to 4% off grocery.',
+        buttonText: 'Shop now',
+        imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80',
+        badgeText: 'Dhaka Express 15-Min',
+        targetCategory: 'vegetables',
+      },
+      {
+        id: 'slide-2',
+        headline: 'Mega Friday Flash Deals — Up to 35% OFF',
+        subtext: 'Premium Teer & Rupchanda edible oils, aromatic Chinigura rice & pure spices at wholesale rates.',
+        buttonText: 'View Flash Deals',
+        imageUrl: 'https://images.unsplash.com/photo-1579113800032-c38bd7635818?auto=format&fit=crop&w=800&q=80',
+        badgeText: 'Friday Bazaar',
+        targetCategory: 'cooking-oil',
+      },
+    ];
+  });
+
+  // Listen for CMS updates from AdminPortal
+  useEffect(() => {
+    const handleBannersUpdated = () => {
+      const saved = localStorage.getItem('lb_cms_hero_banners');
+      if (saved) {
+        try {
+          setHeroSlides(JSON.parse(saved));
+        } catch (e) {}
+      }
+    };
+    window.addEventListener('lb_banners_updated', handleBannersUpdated);
+    return () => window.removeEventListener('lb_banners_updated', handleBannersUpdated);
+  }, []);
 
   const fetchCatalog = async () => {
     setLoadingProducts(true);
     try {
       const params: Record<string, string | number> = {};
-      if (activeCategory) params.category = activeCategory;
+      if (activeCategory && activeCategory !== 'all') params.category = activeCategory;
       if (selectedBrand) params.brand = selectedBrand;
       if (searchQuery) params.q = searchQuery;
       if (sortBy) params.sortBy = sortBy;
@@ -67,19 +123,40 @@ const MainContent: React.FC = () => {
     setIsAccountOpen(true);
   };
 
+  const handleOpenProductDetail = (prod: any) => {
+    setSelectedProduct(prod);
+    setCurrentView('product-detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBuyNowFromDetail = (variantId: string, quantity: number) => {
+    addToCart(variantId, quantity);
+    setIsCheckoutOpen(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
-      {/* Header */}
+      {/* Header with Language Selector & Navigation */}
       <Header
         activeCategory={activeCategory}
         onSelectCategory={(slug) => {
           setActiveCategory(slug);
           setSearchQuery('');
+          setCurrentView('home');
         }}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenAccount={handleOpenAccount}
-        onSearchSubmit={(q) => setSearchQuery(q)}
-        onOpenProductModal={(slug) => setActiveProductSlug(slug)}
+        onSearchSubmit={(q) => {
+          setSearchQuery(q);
+          setCurrentView('home');
+        }}
+        onOpenProductModal={(slug) => {
+          setActiveProductSlug(slug);
+        }}
+        onOpenCartPage={() => {
+          setCurrentView('cart-page');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
       {/* Notice for Pending Approval Customer */}
@@ -89,7 +166,7 @@ const MainContent: React.FC = () => {
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>
-                Your account is currently <strong>PENDING_APPROVAL</strong>. You can browse the catalog and save items to basket. Once our admin verifies your phone number, you will be able to place orders!
+                Your account is currently <strong>PENDING_APPROVAL</strong>. You can browse the catalog and save items to basket. Once our admin verifies your account, you will be able to place orders!
               </span>
             </div>
             <button
@@ -102,183 +179,205 @@ const MainContent: React.FC = () => {
         </div>
       )}
 
-      {/* Main Container */}
+      {/* Main Body Switcher: Home vs ProductDetailView vs CartPage */}
       <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
-        {/* Hero Promotional Banner */}
-        <div className="rounded-3xl bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 text-white p-6 sm:p-10 shadow-lg relative overflow-hidden mb-6">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10 max-w-2xl">
-            <span className="bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5 mb-3">
-              <Sparkles className="w-3.5 h-3.5" /> Direct From Importer & Mill
-            </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
-              Dhaka&apos;s Trusted Hub for Pure Groceries & Essentials
-            </h1>
-            <p className="text-emerald-100 text-sm sm:text-base mt-2.5 max-w-xl leading-relaxed">
-              Order Teer & Rupchanda Soybean Oil, Miniket Rice, Radhuni Pure Spices, and Farm Fresh Eggs. Guaranteed authentic products delivered to your doorstep in Dhaka.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a
-                href="#friday-flash"
-                className="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-md transition transform active:scale-95 flex items-center gap-2"
-              >
-                <span>⚡ Friday Flash Bazaar</span>
-              </a>
-              <button
-                onClick={() => trackOrderNumber('TRK-DEMO-2026-001')}
-                className="px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/20 font-bold text-xs rounded-xl transition"
-              >
-                📦 Track Order: TRK-DEMO-2026-001
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* VIEW 1: DEDICATED PRODUCT DETAIL VIEW (Matching Screenshot 6) */}
+        {currentView === 'product-detail' && selectedProduct && (
+          <ProductDetailView
+            product={selectedProduct}
+            onBack={() => setCurrentView('home')}
+            onBuyNow={handleBuyNowFromDetail}
+          />
+        )}
 
-        {/* Category Visual Explorer Bar */}
-        <CategoryBar
-          activeCategory={activeCategory}
-          onSelectCategory={(slug) => {
-            setActiveCategory(slug);
-            setSearchQuery('');
-          }}
-        />
+        {/* VIEW 2: DEDICATED SHOPPING CART PAGE (Matching Screenshot 7) */}
+        {currentView === 'cart-page' && (
+          <CartPage
+            onProceedToCheckout={() => setIsCheckoutOpen(true)}
+            onContinueShopping={() => setCurrentView('home')}
+            onOpenAccountAddresses={() => handleOpenAccount('addresses')}
+          />
+        )}
 
-        {/* Friday Flash Deal High-Concurrency Section */}
-        <FridayFlashSection
-          onOpenProductModal={(slug) => setActiveProductSlug(slug)}
-        />
+        {/* VIEW 3: HOMEPAGE STOREFRONT (Matching Screenshots 1, 2, 3, 4, 8, 9) */}
+        {currentView === 'home' && (
+          <>
+            {/* 1. Hero Banner with Wave & Auto-advancing CMS Carousel (Screenshot 1) */}
+            <HeroBanner
+              slides={heroSlides}
+              onShopNow={(categorySlug) => {
+                if (categorySlug) setActiveCategory(categorySlug);
+                const elem = document.getElementById('catalog-products-section');
+                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
 
-        {/* Deals of the Day Markdowns */}
-        <DealsOfTheDaySection
-          onOpenProductModal={(slug) => setActiveProductSlug(slug)}
-        />
+            {/* 2. Deals of the Day with Red Clock Timer Badges, Sold: X/Y Progress & Sold Out Overlay (Screenshot 2) */}
+            <DealsOfTheDaySection
+              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+            />
 
-        {/* Main Product Catalog Section with Filters */}
-        <section className="my-10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-slate-200 pb-4">
-            <div>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                {searchQuery
-                  ? `Search Results for "${searchQuery}"`
-                  : activeCategory
-                  ? `Category: ${activeCategory.replace('-', ' ').toUpperCase()}`
-                  : 'All Premium Grocery Catalog'}
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Showing {products.length} verified items available in Dhaka fulfillment warehouse
-              </p>
-            </div>
+            {/* 3. Dual Mode Catalog Switcher: "By Category" vs "Product by Items" (Screenshots 8 & 9) */}
+            <CatalogSection
+              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+              onFilterByCategory={(slug) => {
+                setActiveCategory(slug === 'all' ? null : slug);
+                const elem = document.getElementById('catalog-products-section');
+                if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
 
-            {/* Faceted Sorting & In-Stock Filter */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <label className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer shadow-xs">
-                <input
-                  type="checkbox"
-                  checked={inStockOnly}
-                  onChange={(e) => setInStockOnly(e.target.checked)}
-                  className="rounded text-emerald-600 focus:ring-emerald-500"
-                />
-                <span>In Stock Only</span>
-              </label>
+            {/* 4. Friday Flash Deals Showcase */}
+            <FridayFlashSection
+              onOpenProductModal={(slug) => {
+                setActiveProductSlug(slug);
+              }}
+            />
 
-              <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer"
-                >
-                  <option value="featured">Featured First</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="newest">Newest Arrivals</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Product Grid */}
-          {loadingProducts ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="bg-white rounded-2xl p-4 border border-slate-200 animate-pulse h-72">
-                  <div className="h-32 bg-slate-100 rounded-xl mb-3" />
-                  <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
-                  <div className="h-3 bg-slate-100 rounded w-1/2 mb-4" />
-                  <div className="h-8 bg-slate-100 rounded-xl mt-auto" />
+            {/* 5. Complete Catalog & Faceted Filter Section */}
+            <div id="catalog-products-section" className="my-10">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#14532d] tracking-tight">
+                    {activeCategory ? `Filtered Catalog: ${activeCategory}` : 'Full Grocery Catalog'}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                    Multi-Quantity Variants (500 ML, 1L, 2L, 5L) with server-verified real-time stock.
+                  </p>
                 </div>
-              ))}
+
+                {/* Filter and Sort Controls */}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                      <SlidersHorizontal className="w-3.5 h-3.5" /> Sort:
+                    </label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="bg-white border border-slate-200 text-xs font-semibold rounded-xl px-3 py-1.5 focus:border-emerald-700 focus:outline-none"
+                    >
+                      <option value="featured">Featured</option>
+                      <option value="price_asc">Price: Low to High</option>
+                      <option value="price_desc">Price: High to Low</option>
+                      <option value="rating">Top Rated</option>
+                    </select>
+                  </div>
+
+                  {activeCategory && (
+                    <button
+                      onClick={() => setActiveCategory(null)}
+                      className="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-xl hover:bg-rose-100 transition"
+                    >
+                      Clear Filter ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Product Cards Grid with Multi-Quantity Pills */}
+              {loadingProducts ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="h-80 rounded-3xl bg-slate-200/60 animate-pulse" />
+                  ))}
+                </div>
+              ) : products.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-3xl border border-slate-200">
+                  <p className="text-sm font-bold text-slate-600">No products found matching your filter criteria.</p>
+                  <button
+                    onClick={() => {
+                      setActiveCategory(null);
+                      setSearchQuery('');
+                      setSelectedBrand(null);
+                    }}
+                    className="mt-3 px-4 py-2 bg-[#14532d] text-white text-xs font-bold rounded-xl"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onOpenModal={() => handleOpenProductDetail(product)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 p-8">
-              <div className="text-5xl mb-3">🔍</div>
-              <h3 className="text-base font-bold text-slate-800">No products match your criteria</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                Try clearing your search query or selecting a different category from above.
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setActiveCategory(null);
-                  setSelectedBrand(null);
-                  setInStockOnly(false);
-                }}
-                className="mt-4 px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-sm"
-              >
-                Reset All Filters
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onOpenModal={() => setActiveProductSlug(product.slug)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+
+            {/* 6. App Download Banner (Matching Screenshot 4) */}
+            <AppDownloadBanner />
+          </>
+        )}
       </main>
 
-      {/* Footer */}
-      <Footer />
-
-      {/* Modals & Drawers */}
-      <ProductDetailModal
-        slug={activeProductSlug}
-        onClose={() => setActiveProductSlug(null)}
+      {/* Cart Drawer (Quick slide-out) */}
+      <CartDrawer
+        onProceedToCheckout={() => setIsCheckoutOpen(true)}
       />
 
-      <CartDrawer />
+      {/* Full Product Detail Modal (for quick modal views) */}
+      {activeProductSlug && (
+        <ProductDetailModal
+          slug={activeProductSlug}
+          onClose={() => setActiveProductSlug(null)}
+          onBuyNow={() => {
+            setActiveProductSlug(null);
+            setIsCheckoutOpen(true);
+          }}
+        />
+      )}
 
-      <CheckoutModal />
+      {/* 1-Page Checkout Modal with Dhaka delivery slots & payments */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onOrderSuccess={(trackingNo) => {
+          setIsCheckoutOpen(false);
+          setCurrentView('home');
+          trackOrderNumber(trackingNo);
+        }}
+      />
 
+      {/* Real-time Order Tracking Modal */}
       <OrderTrackingModal />
 
+      {/* Auth Modal (Phone-first Login & Register) */}
       <AuthModal />
 
+      {/* Customer Account & Address Manager Portal */}
       <AccountPortal
         isOpen={isAccountOpen}
         onClose={() => setIsAccountOpen(false)}
-        defaultTab={accountTab}
+        initialTab={accountTab}
       />
 
+      {/* Staff & Admin Operations Portal with CMS Banners Tab */}
       <AdminPortal
         isOpen={isAdminOpen}
         onClose={() => setIsAdminOpen(false)}
       />
+
+      {/* Brand Footer with BSTI guarantee, delivery hubs & payment gateways */}
+      <Footer />
     </div>
   );
 };
 
 export const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <MainContent />
-      </CartProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <CartProvider>
+          <MainContent />
+        </CartProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 };
+
+export default App;
