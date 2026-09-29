@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Heart, Check, Plus, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Heart, Check, Plus, Minus, AlertCircle } from 'lucide-react';
 import { Product, ProductVariant } from '../types';
 import { useCart } from '../context/CartContext';
 
@@ -9,7 +9,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }) => {
-  const { addToCart, isWishlisted, toggleWishlist } = useCart();
+  const { cartItems, addToCart, updateQuantity, removeItem, isWishlisted, toggleWishlist } = useCart();
 
   // Selected variant state (defaults to primary variant)
   const variants = product.variants && product.variants.length > 0 ? product.variants : [];
@@ -177,32 +177,71 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
           </div>
         </div>
 
-        {/* Quick Add Button */}
-        <button
-          disabled={isOutOfStock || isAdding}
-          onClick={handleAdd}
-          className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-            isOutOfStock
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : justAdded
-              ? 'bg-emerald-600 text-white'
-              : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600'
-          }`}
-        >
-          {isOutOfStock ? (
-            'Out of Stock'
-          ) : isAdding ? (
-            'Adding...'
-          ) : justAdded ? (
-            <>
-              <Check className="w-3.5 h-3.5" /> Added to Basket
-            </>
-          ) : (
-            <>
-              <Plus className="w-3.5 h-3.5" /> Add to Basket
-            </>
-          )}
-        </button>
+        {/* Quick Add Button vs Interactive Stepper */}
+        {(() => {
+          const currentVariantId = selectedVariant?.id;
+          const cartItem = cartItems.find(
+            (c) => (currentVariantId && c.variantId === currentVariantId) || c.productId === product.id
+          );
+          const cartQty = cartItem ? cartItem.quantity : 0;
+
+          if (cartQty > 0 && cartItem) {
+            return (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="w-full py-2 rounded-xl bg-emerald-800 text-white font-bold text-xs flex items-center justify-between px-3 shadow-md animate-fade-in"
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (cartQty > 1) updateQuantity(cartItem.id, cartQty - 1);
+                    else removeItem(cartItem.id);
+                  }}
+                  className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90"
+                  title="Decrease"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <span className="font-black text-sm">{cartQty} in Basket</span>
+                <button
+                  type="button"
+                  disabled={cartQty >= currentStock}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateQuantity(cartItem.id, cartQty + 1);
+                  }}
+                  className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90 disabled:opacity-40"
+                  title="Increase"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          }
+
+          return (
+            <button
+              disabled={isOutOfStock || isAdding}
+              onClick={handleAdd}
+              className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                isOutOfStock
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 active:scale-95'
+              }`}
+            >
+              {isOutOfStock ? (
+                'Out of Stock'
+              ) : isAdding ? (
+                'Adding...'
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5" /> Add to Basket
+                </>
+              )}
+            </button>
+          );
+        })()}
       </div>
     </div>
   );

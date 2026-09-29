@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Plus } from 'lucide-react';
-import { Product } from '../types';
+import { Clock, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
@@ -82,7 +81,7 @@ const DEFAULT_DEAL_ITEMS: DealItem[] = [
 
 export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOpenProduct }) => {
   const { t } = useLanguage();
-  const { addToCart } = useCart();
+  const { cartItems, addToCart, updateQuantity, removeItem } = useCart();
   const [items, setItems] = useState<DealItem[]>(DEFAULT_DEAL_ITEMS);
   const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 58, seconds: 3 });
 
@@ -110,18 +109,18 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOp
         const res = await api.getDealsOfTheDay();
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           const mapped: DealItem[] = res.data.map((p: any, idx: number) => ({
-            id: p.id,
-            name: p.name,
-            unitSubtitle: p.variants?.[0]?.displayName || p.unit || '1 Pack',
-            imageUrl: p.thumbnailUrl || p.images?.[0] || DEFAULT_DEAL_ITEMS[idx % DEFAULT_DEAL_ITEMS.length].imageUrl,
+            id: p.productId || p.id,
+            name: p.productName || p.name,
+            unitSubtitle: p.variantName || p.variants?.[0]?.displayName || p.unit || '1 Pack',
+            imageUrl: p.imageUrl || p.thumbnailUrl || p.images?.[0] || DEFAULT_DEAL_ITEMS[idx % DEFAULT_DEAL_ITEMS.length].imageUrl,
             discountPercentage: Math.round(p.discountPercentage || 15),
             salePrice: p.salePrice || p.basePrice || 100,
-            regularPrice: p.basePrice || 120,
-            soldCount: idx === 1 ? 50 : 35 + idx * 10,
-            totalStock: idx === 1 ? 50 : 80,
+            regularPrice: p.originalPrice || p.basePrice || 120,
+            soldCount: idx === 1 ? 50 : 25 + idx * 8,
+            totalStock: idx === 1 ? 50 : 60 + idx * 10,
             isSoldOut: idx === 1 || p.stockQuantity === 0,
-            slug: p.slug,
-            variantId: p.variants?.[0]?.id,
+            slug: p.productSlug || p.slug,
+            variantId: p.variantId || p.variants?.[0]?.id,
             rawProduct: p,
           }));
           setItems(mapped);
@@ -133,34 +132,48 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOp
     loadApiDeals();
   }, []);
 
-  const handleAdd = (item: DealItem, e: React.MouseEvent) => {
+  // Helper to get active cart quantity & cart item ID for a deal item
+  const getCartInfo = (dealItem: DealItem) => {
+    const ci = cartItems.find((c) => {
+      if (dealItem.variantId && c.variantId === dealItem.variantId) return true;
+      if (dealItem.id && c.productId === dealItem.id) return true;
+      if (dealItem.name && c.name && c.name.toLowerCase().trim() === dealItem.name.toLowerCase().trim()) return true;
+      return false;
+    });
+    return ci ? { qty: ci.quantity, cartItemId: ci.id } : { qty: 0, cartItemId: null };
+  };
+
+  const handleAdd = async (item: DealItem, e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.isSoldOut) return;
     if (item.variantId) {
-      addToCart(item.variantId, 1);
-    } else if (item.rawProduct) {
-      onOpenProduct(item.rawProduct);
+      await addToCart(item.variantId, 1);
+    } else if (item.rawProduct?.variants?.[0]?.id) {
+      await addToCart(item.rawProduct.variants[0].id, 1);
     } else {
-      onOpenProduct({
-        id: item.id,
-        name: item.name,
-        slug: item.slug,
-        basePrice: item.regularPrice,
-        salePrice: item.salePrice,
-        unit: item.unitSubtitle,
-        thumbnailUrl: item.imageUrl,
-        stockQuantity: item.totalStock - item.soldCount,
-        variants: [
-          {
-            id: item.variantId || 'v-' + item.id,
-            sku: 'SKU-' + item.id,
-            displayName: item.unitSubtitle,
-            price: item.regularPrice,
-            salePrice: item.salePrice,
-            stockQuantity: item.totalStock - item.soldCount,
-          },
-        ],
-      });
+      onOpenProduct(item.rawProduct || item);
+    }
+  };
+
+  const handleIncrement = async (item: DealItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { qty, cartItemId } = getCartInfo(item);
+    if (cartItemId) {
+      await updateQuantity(cartItemId, qty + 1);
+    } else {
+      await handleAdd(item, e);
+    }
+  };
+
+  const handleDecrement = async (item: DealItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { qty, cartItemId } = getCartInfo(item);
+    if (cartItemId) {
+      if (qty > 1) {
+        await updateQuantity(cartItemId, qty - 1);
+      } else {
+        await removeItem(cartItemId);
+      }
     }
   };
 
@@ -200,6 +213,7 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOp
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
         {items.map((item) => {
           const progressPercent = Math.min(100, Math.round((item.soldCount / item.totalStock) * 100));
+          const { qty: cartQty } = getCartInfo(item);
 
           return (
             <div
@@ -266,8 +280,8 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOp
                 </div>
               </div>
 
-              {/* Bottom Action Button (Matching Screenshot 2) */}
-              <div className="flex justify-center pt-1">
+              {/* Bottom Action: Sold Out vs Interactive Stepper vs Circular (+) */}
+              <div className="flex justify-center pt-1 min-h-[44px] items-center">
                 {item.isSoldOut ? (
                   <button
                     disabled
@@ -275,11 +289,39 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({ onOp
                   >
                     {t('stockOut')}
                   </button>
+                ) : cartQty > 0 ? (
+                  /* Interactive Stepper: [-] [qty] [+] */
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center justify-between bg-emerald-800 text-white rounded-full px-2.5 py-1.5 shadow-md min-w-[105px] transition-all animate-fade-in"
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => handleDecrement(item, e)}
+                      className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 text-white flex items-center justify-center transition font-bold active:scale-90"
+                      title="Decrease quantity"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="font-black text-sm px-2 text-center min-w-[20px]">
+                      {cartQty}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => handleIncrement(item, e)}
+                      className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 text-white flex items-center justify-center transition font-bold active:scale-90"
+                      title="Increase quantity"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 ) : (
+                  /* Single Plus Button (+) */
                   <button
+                    type="button"
                     onClick={(e) => handleAdd(item, e)}
                     aria-label="Add to cart"
-                    className="w-10 h-10 rounded-full bg-slate-100 hover:bg-emerald-600 text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md"
+                    className="w-10 h-10 rounded-full bg-slate-100 hover:bg-emerald-700 text-slate-700 hover:text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md active:scale-90"
                   >
                     <Plus className="w-5 h-5" />
                   </button>

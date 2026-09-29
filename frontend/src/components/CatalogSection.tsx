@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Heart,
   Plus,
+  Minus,
   Star,
   ArrowRight,
 } from 'lucide-react';
@@ -96,7 +97,7 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
   onFilterByCategory,
 }) => {
   const { t } = useLanguage();
-  const { addToCart, toggleWishlist, isWishlisted } = useCart();
+  const { cartItems, addToCart, updateQuantity, removeItem, toggleWishlist, isWishlisted } = useCart();
   const [activeTab, setActiveTab] = useState<'category' | 'items'>('category');
 
   // Carousel refs for horizontal scrolling
@@ -367,16 +368,61 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
                   <span className="text-xs text-slate-400 line-through">৳{p.regularPrice}</span>
                 )}
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  addToCart(p.variantId, 1);
-                }}
-                className="w-full py-1.5 rounded-full border border-emerald-800 text-emerald-800 hover:bg-emerald-800 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{t('addToCart')}</span>
-              </button>
+
+              {(() => {
+                const ci = cartItems.find(
+                  (c) => (p.variantId && c.variantId === p.variantId) || c.productId === p.id || c.name === p.name
+                );
+                const cartQty = ci ? ci.quantity : 0;
+
+                if (cartQty > 0 && ci) {
+                  return (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full py-1 rounded-full bg-emerald-800 text-white font-bold text-xs flex items-center justify-between px-3 shadow-md animate-fade-in"
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (cartQty > 1) updateQuantity(ci.id, cartQty - 1);
+                          else removeItem(ci.id);
+                        }}
+                        className="w-5 h-5 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90"
+                        title="Decrease"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="font-black text-sm">{cartQty}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateQuantity(ci.id, cartQty + 1);
+                        }}
+                        className="w-5 h-5 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90"
+                        title="Increase"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(p.variantId, 1);
+                    }}
+                    className="w-full py-1.5 rounded-full border border-emerald-800 text-emerald-800 hover:bg-emerald-800 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{t('addToCart')}</span>
+                  </button>
+                );
+              })()}
             </div>
           </div>
         ))}
