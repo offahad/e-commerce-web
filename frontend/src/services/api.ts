@@ -61,6 +61,18 @@ export const api = {
   getSuggestions: (q: string) => request<any[]>(`/products/suggestions?q=${encodeURIComponent(q)}`),
 
   getCategories: () => request<any[]>('/categories'),
+  createCategory: (data: { name: string; slug?: string; description?: string }) =>
+    request<any>('/admin/categories', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getTags: () => request<any[]>('/tags'),
+  createTag: (data: { name: string; slug?: string; description?: string }) =>
+    request<any>('/admin/tags', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   getBrands: () => request<any[]>('/brands'),
 

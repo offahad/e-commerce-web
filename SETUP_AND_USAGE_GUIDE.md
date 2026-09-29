@@ -407,6 +407,33 @@ In compliance with Liton Brothers policy, new customer accounts require admin ap
 4. Click **"Publish / Draft"** to instantly toggle banner visibility.
 5. Banners update live across the customer storefront without requiring a page refresh!
 
+### Product Add & Update Workflow (Description-Driven, Unit Presets & Dynamic Taxonomy)
+1. Navigate to the **"Product Add & Update"** tab.
+2. **Description-Driven Creation**:
+   * Paste or type a product description summary (or click any of the 1-click templates: *Teer Soybean Oil*, *Miniket Rice*, *Aarong Ghee*, *Radhuni Turmeric*, *Farm Eggs*).
+   * Click **"Auto-Fill Fields from Description"** to automatically parse name, brand, category, pack size, unit, regular price, sale price, and stock.
+3. **Base Unit Dropdown**:
+   * Select from standardized base units: `Liter`, `Piece`, `KG`, `Gram`, `Pack`, `Box`, `Bottle`, `Dozen`.
+4. **Dependent Quick Variant Size Buttons**:
+   * Based on the selected Base Unit, interactive quick size buttons appear:
+     * **Liter**: `250 ML`, `500 ML`, `1 Ltr`, `2 Ltr`, `3 Ltr`, `5 Ltr`, `8 Ltr`, `10 Ltr`
+     * **KG**: `100 gm`, `250 gm`, `500 gm`, `1 KG`, `2 KG`, `5 KG`, `10 KG`, `25 KG`
+     * **Piece**: `1 Piece`, `4 Pieces (Hali)`, `6 Pieces`, `12 Pieces (Dozen)`, `24 Pieces`, `30 Pieces (Tray)`, `1 Pack`, `1 Box`
+     * **Gram**: `50 gm`, `100 gm`, `200 gm`, `250 gm`, `500 gm`, `1000 gm`
+   * Click any button to instantly apply it to **Variant Display (Size/Pack)**.
+5. **Dynamic Category Creation (`+ Add Category`)**:
+   * Click the **"+ Add Category"** button right next to the Category label.
+   * Enter the Category Name (e.g. *"Organic Honey"*, *"Frozen Foods"*); the slug is automatically generated.
+   * On save, the new category is saved to the database/state, immediately selected in the dropdown, and synced across the storefront.
+6. **Smart Tag Dropdown & Autocomplete (`+ Add Tag`)**:
+   * Selected tags are displayed as responsive removable chips (`#Cooking Oil ✕`).
+   * Type in the tag box to view matching suggestions from the system's tag catalog.
+   * If the typed tag does not match any existing tag, an **"+ Add '<typed>' as New Tag"** button appears directly in the dropdown.
+   * Click it (or press `Enter` / `,`) to add the tag to the product and save it into the available tags catalog for future suggestions!
+   * Click the **"+ Add Tag"** button beside the label to create new tags via modal.
+7. **Live Storefront Card Preview**:
+   * The live card preview on the right instantly reflects the product title, brand, variant size, prices, stock, image, and tags before publishing!
+
 ---
 
 ## 10. REST API Documentation & Testing (Swagger UI / Postman)

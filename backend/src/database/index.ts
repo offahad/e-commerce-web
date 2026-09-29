@@ -633,6 +633,7 @@ export async function seedDatabase(database: Knex): Promise<void> {
   if (moderatorRole) {
     const modPermCodes = [
       'PRODUCT_VIEW',
+      'PRODUCT_CREATE',
       'PRODUCT_UPDATE',
       'ORDER_VIEW',
       'ORDER_UPDATE',

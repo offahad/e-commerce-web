@@ -10,7 +10,7 @@ const controller = new TagsController();
 publicRouter.get('/', controller.list);
 
 adminRouter.use(authGuard);
-adminRouter.use(requireRole('SUPER_ADMIN', 'ADMIN', 'MANAGER'));
+adminRouter.use(requireRole('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MODERATOR'));
 adminRouter.post('/', requirePermission('PRODUCT_CREATE'), controller.create);
 
 export { publicRouter as tagPublicRouter, adminRouter as tagAdminRouter };

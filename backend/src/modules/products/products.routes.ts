@@ -15,7 +15,7 @@ publicRouter.get('/:slug', controller.getBySlug);
 
 // Admin routes
 adminRouter.use(authGuard);
-adminRouter.use(requireRole('SUPER_ADMIN', 'ADMIN', 'MANAGER'));
+adminRouter.use(requireRole('SUPER_ADMIN', 'ADMIN', 'MANAGER', 'MODERATOR'));
 adminRouter.post('/', requirePermission('PRODUCT_CREATE'), controller.create);
 adminRouter.put('/:id', requirePermission('PRODUCT_UPDATE'), controller.update);
 adminRouter.delete('/:id', requirePermission('PRODUCT_DELETE'), controller.delete);
