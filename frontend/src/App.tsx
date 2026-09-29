@@ -265,6 +265,7 @@ const MainContent: React.FC = () => {
             {/* 3. Deals of the Day with Red Clock Timer Badges, Sold: X/Y Progress & Sold Out Overlay */}
             <DealsOfTheDaySection
               onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+              onSeeMore={() => handleOpenCategoryPage('deals', t('dealsTitle') || 'Deals of the Day')}
             />
 
             {/* 4. Other Categories: Dual Mode Catalog Switcher ("By Category" vs "Product by Items") */}
