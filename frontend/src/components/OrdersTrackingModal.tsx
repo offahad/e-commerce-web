@@ -9,13 +9,11 @@ import {
   Home,
   Search,
   AlertCircle,
-  ChevronRight,
-  ChevronDown,
   ArrowLeft,
   Calendar,
-  CreditCard,
   ShoppingBag,
   ExternalLink,
+  RotateCcw,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +27,126 @@ interface OrdersTrackingModalProps {
   onOpenStore?: () => void;
 }
 
+// Safe date/time formatting helper that never throws RangeError
+const safeFormatTime = (ts: any): string => {
+  if (!ts) return '';
+  if (typeof ts === 'string' && (ts.includes('AM') || ts.includes('PM'))) return ts;
+  try {
+    let d = new Date(ts);
+    if (isNaN(d.getTime())) {
+      const isoStr = String(ts).replace(' ', 'T');
+      d = new Date(isoStr);
+    }
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return String(ts);
+  } catch {
+    return String(ts || '');
+  }
+};
+
+// Safe date formatting helper for order headers
+const safeFormatDate = (dateVal: any): string => {
+  if (!dateVal) return new Date().toLocaleDateString();
+  try {
+    let d = new Date(dateVal);
+    if (isNaN(d.getTime())) {
+      const isoStr = String(dateVal).replace(' ', 'T');
+      d = new Date(isoStr);
+    }
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleString([], {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+    return String(dateVal);
+  } catch {
+    return String(dateVal || '');
+  }
+};
+
+// Safe address formatting helper
+const safeFormatAddress = (addr: any): string => {
+  if (!addr) return 'Dhaka Central Express Zone';
+  if (typeof addr === 'string') {
+    try {
+      const parsed = JSON.parse(addr);
+      if (typeof parsed === 'object' && parsed !== null) {
+        return safeFormatAddress(parsed);
+      }
+    } catch {
+      return addr;
+    }
+    return addr;
+  }
+  const line = addr.addressLine || addr.address || '';
+  const area = addr.area || '';
+  const district = addr.district || addr.city || 'Dhaka';
+  const parts = [line, area, district].filter(Boolean);
+  return parts.length > 0 ? parts.join(', ') : 'Dhaka Central Express Zone';
+};
+
+// Canonical demo tracking payload for instant zero-latency preview
+const DEMO_TRACKING_PAYLOAD: OrderTrackingInfo = {
+  orderNumber: 'ORD-2026-DEMO01',
+  trackingNumber: 'TRK-DEMO-2026-001',
+  status: 'OUT_FOR_DELIVERY',
+  statusLabel: 'Out for Doorstep Delivery',
+  paymentMethod: 'bKash Online',
+  paymentStatus: 'PAID',
+  grandTotal: 585,
+  deliverySlot: 'Express 15-Minute Doorstep Delivery',
+  deliveryAddress: {
+    name: 'Approved Demo Customer',
+    phone: '01800000000',
+    address: 'House 42, Road 11, Block C, Dhanmondi',
+    district: 'Dhaka',
+    division: 'Dhaka',
+  },
+  timeline: [
+    {
+      status: 'PENDING',
+      title: 'Order Placed',
+      description: 'Order placed by customer via web portal',
+      completed: true,
+      timestamp: '2:15 PM',
+    },
+    {
+      status: 'CONFIRMED',
+      title: 'Order Confirmed',
+      description: 'Payment verified and order confirmed by sales team',
+      completed: true,
+      timestamp: '2:18 PM',
+    },
+    {
+      status: 'PROCESSING',
+      title: 'Quality Check & Packaging',
+      description: 'Inspected and packed in insulated thermal bag at Tejgaon warehouse',
+      completed: true,
+      timestamp: '2:22 PM',
+    },
+    {
+      status: 'OUT_FOR_DELIVERY',
+      title: 'Out for 15-Minute Doorstep Delivery',
+      description: 'Courier rider Rafiqul Islam is en route on bike (Current: 0.8 km away)',
+      completed: true,
+      timestamp: '2:27 PM',
+    },
+    {
+      status: 'DELIVERED',
+      title: 'Delivered to Doorstep',
+      description: 'Estimated delivery in ~3 minutes',
+      completed: false,
+      timestamp: null,
+    },
+  ],
+};
+
 export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
   isOpen,
   onClose,
@@ -36,7 +154,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
   onOpenStore,
 }) => {
   const { user } = useAuth();
-  const { activeOrderTracking, trackOrderNumber, closeTrackingModal } = useCart();
+  const { activeOrderTracking, closeTrackingModal } = useCart();
 
   // Search & active tracking
   const [searchInput, setSearchInput] = useState('');
@@ -50,7 +168,6 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
   // Orders list
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
   // Load orders when modal opens
   const fetchAllOrders = async () => {
@@ -63,7 +180,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
           remoteOrders = res.data;
         }
       } catch (err) {
-        // Not authenticated or network error; gracefully fallback to local stored orders
+        // Not authenticated or network error; fallback to local stored orders
       }
 
       // Read local storage orders (saved from checkouts in this session)
@@ -75,7 +192,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
         } catch (e) {}
       }
 
-      // Merge avoiding duplicates by id or orderNumber
+      // Merge avoiding duplicates
       const combined = [...localOrders];
       for (const ro of remoteOrders) {
         if (!combined.some((o) => o.id === ro.id || o.orderNumber === ro.orderNumber)) {
@@ -84,7 +201,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
       }
 
       // Sort by creation date descending
-      combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      combined.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       setOrders(combined);
     } finally {
       setLoadingOrders(false);
@@ -104,41 +221,92 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
   }, [isOpen, activeOrderTracking, initialTrackingNumber]);
 
   const fetchTrackingDetails = async (num: string) => {
-    if (!num.trim()) return;
+    const cleanNum = num.trim();
+    if (!cleanNum) return;
+
     setLoadingTracking(true);
     setTrackingError(null);
-    setActiveTrackingNum(num.trim());
+    setActiveTrackingNum(cleanNum);
+
+    // Instant local handling for demo numbers
+    if (cleanNum.toUpperCase().includes('DEMO') || cleanNum === 'TRK-DEMO-2026-001') {
+      setTrackingData(DEMO_TRACKING_PAYLOAD);
+      setLoadingTracking(false);
+      return;
+    }
 
     try {
-      const res = await api.trackOrder(num.trim());
+      const res = await api.trackOrder(cleanNum);
       if (res.success && res.data) {
-        setTrackingData(res.data);
+        // Ensure timeline exists and is well-formed
+        const safeTimeline = Array.isArray(res.data.timeline) && res.data.timeline.length > 0
+          ? res.data.timeline
+          : [
+              {
+                status: 'PENDING',
+                title: 'Order Placed',
+                description: 'Order registered in system',
+                completed: true,
+                timestamp: res.data.createdAt || new Date().toISOString(),
+              },
+              {
+                status: 'CONFIRMED',
+                title: 'Order Confirmed',
+                description: 'Verified by central fulfillment operations',
+                completed: res.data.status !== 'PENDING',
+                timestamp: res.data.createdAt || null,
+              },
+              {
+                status: 'PROCESSING',
+                title: 'Packing & Quality Check',
+                description: 'Packed at warehouse with freshness seal',
+                completed: ['PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(res.data.status),
+                timestamp: null,
+              },
+              {
+                status: 'OUT_FOR_DELIVERY',
+                title: 'Out for 15-Minute Doorstep Delivery',
+                description: 'Courier rider dispatched to delivery address',
+                completed: res.data.status === 'DELIVERED',
+                timestamp: null,
+              },
+              {
+                status: 'DELIVERED',
+                title: 'Delivered',
+                description: 'Package handed over successfully',
+                completed: res.data.status === 'DELIVERED',
+                timestamp: null,
+              },
+            ];
+
+        setTrackingData({
+          ...res.data,
+          timeline: safeTimeline,
+        });
       } else {
-        // Fallback demo timeline for user convenience if number matches order list or demo
+        // Fallback: check if the number matches any order in local list
         const matched = orders.find(
           (o) =>
-            o.trackingNumber === num.trim() ||
-            o.orderNumber === num.trim() ||
-            o.id === num.trim()
+            o.trackingNumber === cleanNum ||
+            o.orderNumber === cleanNum ||
+            o.id === cleanNum
         );
 
         if (matched) {
           setTrackingData({
             orderNumber: matched.orderNumber || matched.id,
-            trackingNumber: matched.trackingNumber || num.trim(),
+            trackingNumber: matched.trackingNumber || cleanNum,
             status: matched.status || 'CONFIRMED',
             statusLabel: matched.status || 'Confirmed',
-            deliveryAddress: typeof matched.deliveryAddress === 'string'
-              ? matched.deliveryAddress
-              : matched.deliveryAddress?.address || 'Dhaka Central Delivery Zone',
-            grandTotal: matched.grandTotal,
+            deliveryAddress: matched.deliveryAddress || 'Dhaka, Bangladesh',
+            grandTotal: matched.grandTotal || 0,
             paymentMethod: matched.paymentMethod || 'COD',
             paymentStatus: matched.paymentStatus || 'PENDING',
             timeline: [
               {
                 status: 'PENDING',
-                title: 'Order Received',
-                description: 'Order placed and authenticated',
+                title: 'Order Placed',
+                description: 'Order received and authenticated',
                 completed: true,
                 timestamp: matched.createdAt,
               },
@@ -152,25 +320,28 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
               {
                 status: 'PROCESSING',
                 title: 'Quality Check & Packing',
-                description: 'Items sorted and packed in insulated thermal bags',
+                description: 'Items sorted and packed in insulated thermal bag',
                 completed: matched.status !== 'CONFIRMED',
+                timestamp: null,
               },
               {
                 status: 'OUT_FOR_DELIVERY',
-                title: 'Express 15-Min Delivery',
+                title: 'Express 15-Minute Delivery',
                 description: 'Rider dispatched to delivery address',
                 completed: matched.status === 'DELIVERED',
+                timestamp: null,
               },
               {
                 status: 'DELIVERED',
                 title: 'Delivered',
                 description: 'Order handed over successfully',
                 completed: matched.status === 'DELIVERED',
+                timestamp: null,
               },
             ],
           });
         } else {
-          setTrackingError(res.message || 'Tracking reference not found');
+          setTrackingError(res.message || `No active shipment found for '${cleanNum}'`);
           setTrackingData(null);
         }
       }
@@ -190,7 +361,9 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
   };
 
   const handleTrackDemo = () => {
-    fetchTrackingDetails('TRK-DEMO-2026-001');
+    setTrackingError(null);
+    setActiveTrackingNum('TRK-DEMO-2026-001');
+    setTrackingData(DEMO_TRACKING_PAYLOAD);
   };
 
   const handleBackToOrdersList = () => {
@@ -219,6 +392,8 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
         return <Clock className="w-4 h-4" />;
     }
   };
+
+  const isTimelineViewActive = Boolean(activeTrackingNum && trackingData);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
@@ -262,7 +437,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value.toUpperCase())}
-                placeholder="Enter Tracking Code (e.g. TRK-DEMO-2026-001) or Order #"
+                placeholder="ENTER TRACKING CODE (E.G. TRK-DEMO-2026-001) OR ORDER #"
                 className="w-full pl-9 pr-3 py-2 text-xs font-mono font-bold uppercase bg-white border border-slate-200 rounded-xl focus:border-emerald-700 focus:outline-none"
               />
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -275,12 +450,29 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
               {loadingTracking ? 'Tracking...' : 'Track Status'}
             </button>
           </form>
+
+          {/* Inline Error Notice */}
+          {trackingError && (
+            <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-semibold flex items-center justify-between gap-2 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{trackingError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleTrackDemo}
+                className="text-[11px] font-bold text-emerald-800 hover:underline shrink-0"
+              >
+                Try Demo Tracker
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Modal Body */}
         <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6">
           {/* VIEW A: SPECIFIC ORDER REAL-TIME TRACKING TIMELINE */}
-          {activeTrackingNum && trackingData ? (
+          {isTimelineViewActive && trackingData ? (
             <div className="space-y-6 animate-fade-in">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <button
@@ -292,7 +484,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                   <span>View All Placed Orders</span>
                 </button>
                 <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                  Ref: {trackingData.orderNumber}
+                  Ref: {trackingData.orderNumber || trackingData.trackingNumber}
                 </span>
               </div>
 
@@ -301,20 +493,14 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-1.5 bg-emerald-700 text-white text-[11px] font-black px-2.5 py-0.5 rounded-full">
                     <span className="w-2 h-2 rounded-full bg-yellow-300 animate-ping" />
-                    <span>STATUS: {trackingData.status}</span>
+                    <span>STATUS: {trackingData.statusLabel || trackingData.status || 'OUT FOR DELIVERY'}</span>
                   </div>
                   <h3 className="text-base font-black text-slate-900">
                     Express 15-Minute Doorstep Fulfillment
                   </h3>
                   <div className="text-xs text-slate-600 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                    <span>
-                      {typeof trackingData.deliveryAddress === 'string'
-                        ? trackingData.deliveryAddress
-                        : trackingData.deliveryAddress
-                        ? `${trackingData.deliveryAddress.address}, ${trackingData.deliveryAddress.district}`
-                        : 'Dhaka Central Delivery Zone'}
-                    </span>
+                    <span>{safeFormatAddress(trackingData.deliveryAddress)}</span>
                   </div>
                 </div>
 
@@ -331,20 +517,25 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
 
               {/* 5-Stage Visual Fulfillment Timeline */}
               <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 mb-5 flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-emerald-800" />
-                  <span>Live Delivery Progress Milestones</span>
-                </h4>
+                <div className="flex items-center justify-between mb-5">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-emerald-800" />
+                    <span>Live Delivery Progress Milestones</span>
+                  </h4>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    ETA: 15-Min Express
+                  </span>
+                </div>
 
                 <div className="space-y-4">
-                  {trackingData.timeline.map((step, idx) => {
+                  {(trackingData.timeline || []).map((step, idx, arr) => {
                     const isCurrent = trackingData.status === step.status;
-                    const isCompleted = step.completed;
+                    const isCompleted = Boolean(step.completed);
 
                     return (
-                      <div key={step.status} className="flex gap-4 relative">
+                      <div key={step.status || idx} className="flex gap-4 relative">
                         {/* Connecting Line */}
-                        {idx < trackingData.timeline.length - 1 && (
+                        {idx < arr.length - 1 && (
                           <div
                             className={`absolute left-4 top-8 -bottom-4 w-0.5 ${
                               isCompleted ? 'bg-emerald-600' : 'bg-slate-200'
@@ -381,10 +572,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                             </span>
                             {step.timestamp && (
                               <span className="text-[10px] font-mono text-slate-400">
-                                {new Date(step.timestamp).toLocaleTimeString([], {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
+                                {safeFormatTime(step.timestamp)}
                               </span>
                             )}
                           </div>
@@ -397,6 +585,24 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                   })}
                 </div>
               </div>
+
+              {/* Status History Log (if provided) */}
+              {Array.isArray(trackingData.statusHistory) && trackingData.statusHistory.length > 0 && (
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs">
+                  <h4 className="font-extrabold uppercase text-[10px] tracking-wider text-slate-500 mb-2">
+                    Operations Log
+                  </h4>
+                  <div className="space-y-1.5 font-mono text-[11px]">
+                    {trackingData.statusHistory.map((h, i) => (
+                      <div key={i} className="flex justify-between text-slate-600">
+                        <span>
+                          [{safeFormatTime(h.createdAt)}] <strong>{h.status}</strong>: {h.comment || 'Status updated'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             /* VIEW B: LIST OF EVERY ORDER GIVEN */
@@ -416,7 +622,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                     onClick={handleTrackDemo}
                     className="text-xs font-bold text-emerald-800 hover:text-emerald-950 underline"
                   >
-                    View Demo Tracker
+                    Preview Demo Tracker
                   </button>
                 )}
               </div>
@@ -439,7 +645,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                     <button
                       type="button"
                       onClick={handleTrackDemo}
-                      className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold rounded-xl transition shadow-xs"
+                      className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold rounded-xl transition shadow-xs hover:border-emerald-700"
                     >
                       Preview Demo Tracker
                     </button>
@@ -461,7 +667,6 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                 /* Cards for every order given */
                 <div className="space-y-4">
                   {orders.map((ord) => {
-                    const isExpanded = expandedOrderId === ord.id;
                     const trackingNo = ord.trackingNumber || ord.orderNumber || ord.id;
 
                     return (
@@ -492,7 +697,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                             </div>
                             <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              <span>{new Date(ord.createdAt).toLocaleString()}</span>
+                              <span>{safeFormatDate(ord.createdAt)}</span>
                             </div>
                           </div>
 
@@ -510,7 +715,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
 
                         {/* Order Line Items */}
                         <div className="space-y-2">
-                          {ord.items && ord.items.length > 0 ? (
+                          {Array.isArray(ord.items) && ord.items.length > 0 ? (
                             ord.items.map((item: any, idx: number) => (
                               <div
                                 key={idx}
@@ -520,7 +725,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                                   {item.imageUrl ? (
                                     <img
                                       src={item.imageUrl}
-                                      alt={item.productName}
+                                      alt={item.productName || item.name || 'Product'}
                                       className="w-9 h-9 rounded-lg object-cover shrink-0 border border-slate-200"
                                     />
                                   ) : (
@@ -530,15 +735,15 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
                                   )}
                                   <div className="min-w-0">
                                     <div className="font-bold text-slate-900 truncate">
-                                      {item.productName}
+                                      {item.productName || item.name || 'Grocery Item'}
                                     </div>
                                     <div className="text-[10px] text-slate-500">
-                                      {item.variantName || 'Standard'} • Qty: {item.quantity}
+                                      {item.variantName || 'Standard'} • Qty: {item.quantity || 1}
                                     </div>
                                   </div>
                                 </div>
                                 <div className="font-bold text-slate-900 shrink-0 ml-2">
-                                  ৳{Number(item.totalPrice || item.price * item.quantity || 0).toFixed(0)}
+                                  ৳{Number(item.totalPrice || (item.price || 0) * (item.quantity || 1) || 0).toFixed(0)}
                                 </div>
                               </div>
                             ))
@@ -551,20 +756,14 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
 
                         {/* Delivery Address & Order Total */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
-                          <div className="text-slate-600 flex items-center gap-1.5">
+                          <div className="text-slate-600 flex items-center gap-1.5 min-w-0">
                             <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="truncate max-w-sm">
-                              {typeof ord.deliveryAddress === 'string'
-                                ? ord.deliveryAddress
-                                : ord.deliveryAddress?.address
-                                ? `${ord.deliveryAddress.address}, ${ord.deliveryAddress.district}`
-                                : ord.shipping_address_snapshot
-                                ? JSON.parse(ord.shipping_address_snapshot).addressLine
-                                : 'Dhaka Central Express Zone'}
+                              {safeFormatAddress(ord.deliveryAddress || ord.shipping_address_snapshot)}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 shrink-0">
                             <span className="text-slate-500 text-[11px]">
                               Payment: <strong>{ord.paymentMethod || 'COD'}</strong>
                             </span>
