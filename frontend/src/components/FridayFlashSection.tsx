@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Flame, Clock, ShoppingCart, Check, Zap, Plus, Minus } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Flame, Clock, ShoppingCart, Check, Zap, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FlashDealCampaign } from '../types';
 import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
@@ -9,26 +9,147 @@ interface FridayFlashSectionProps {
   onOpenProduct?: (product: any) => void;
 }
 
+const DEFAULT_FRIDAY_ITEMS = [
+  {
+    id: 'flash-oil-1',
+    productId: 'p-teer-soybean',
+    variantId: 'v-oil-teer-5l',
+    dealPrice: 790,
+    regularPrice: 850,
+    originalPrice: 850,
+    savings: 60,
+    allocatedStock: 50,
+    soldStock: 12,
+    remainingStock: 38,
+    maxPerCustomer: 2,
+    productName: 'Teer Pure Soybean Oil',
+    productSlug: 'teer-pure-soybean-oil',
+    variantName: '5 Liter',
+    discountPercentage: 7,
+    imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    id: 'flash-rice-1',
+    productId: 'p-miniket-rice',
+    variantId: 'v-rice-miniket-5kg',
+    dealPrice: 330,
+    regularPrice: 390,
+    originalPrice: 390,
+    savings: 60,
+    allocatedStock: 40,
+    soldStock: 8,
+    remainingStock: 32,
+    maxPerCustomer: 2,
+    productName: 'Miniket Premium Rice',
+    productSlug: 'miniket-premium-rice-5kg',
+    variantName: '5 KG',
+    discountPercentage: 15,
+    imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80',
+  },
+];
+
 export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenProductModal, onOpenProduct }) => {
   const { cartItems, addToCart, updateQuantity, removeItem } = useCart();
   const [deal, setDeal] = useState<FlashDealCampaign | null>(null);
-  const [remainingSecs, setRemainingSecs] = useState<number>(0);
+  const [remainingSecs, setRemainingSecs] = useState<number>(86400 * 6 + 3600 * 22 + 60 * 13 + 33);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchDeal = async () => {
+  const loadDeal = async () => {
+    try {
+      let campaignMeta: any = null;
+      let remoteItems: any[] = [];
+
       try {
         const res = await api.getFridayFlashDeal();
         if (res.success && res.data) {
-          setDeal(res.data);
-          setRemainingSecs(res.data.remainingSeconds || 86400 * 3);
+          if (res.data.campaign) {
+            campaignMeta = res.data.campaign;
+            remoteItems = res.data.items || [];
+          } else {
+            campaignMeta = res.data;
+            remoteItems = res.data.items || [];
+          }
         }
-      } catch (err) {
-        console.error('Failed to load flash deals', err);
+      } catch (e) {
+        // Fallback gracefully
       }
-    };
-    fetchDeal();
+
+      // Read admin-added custom items from localStorage
+      let customItems: any[] = [];
+      const saved = localStorage.getItem('lb_custom_flash_items');
+      if (saved) {
+        try {
+          customItems = JSON.parse(saved);
+        } catch (e) {}
+      }
+
+      // Merge items: remote/default base items + admin-added custom items
+      const baseList = remoteItems.length > 0 ? remoteItems : DEFAULT_FRIDAY_ITEMS;
+      const itemMap = new Map<string, any>();
+
+      for (const item of baseList) {
+        const key = item.variantId || item.id || item.productId;
+        itemMap.set(key, {
+          ...item,
+          id: item.id || item.dealItemId || key,
+          variantId: item.variantId || key,
+          savings: item.savings ?? Math.max(0, (item.regularPrice || item.originalPrice || 0) - item.dealPrice),
+          discountPercentage: item.discountPercentage ?? Math.round((((item.regularPrice || item.originalPrice || 1) - item.dealPrice) / (item.regularPrice || item.originalPrice || 1)) * 100),
+          allocatedStock: Number(item.allocatedStock || 50),
+          soldStock: Number(item.soldStock || 0),
+          remainingStock: Number(item.remainingStock ?? (item.allocatedStock - (item.soldStock || 0))),
+          maxPerCustomer: Number(item.maxPerCustomer || 2),
+        });
+      }
+
+      for (const item of customItems) {
+        const key = item.variantId || item.id || item.productId;
+        itemMap.set(key, {
+          ...item,
+          id: item.id || key,
+          variantId: item.variantId || key,
+          savings: item.savings ?? Math.max(0, (item.regularPrice || 0) - item.dealPrice),
+          discountPercentage: item.discountPercentage ?? Math.round((((item.regularPrice || 1) - item.dealPrice) / (item.regularPrice || 1)) * 100),
+          allocatedStock: Number(item.allocatedStock || 50),
+          soldStock: Number(item.soldStock || 0),
+          remainingStock: Number(item.remainingStock ?? item.allocatedStock),
+          maxPerCustomer: Number(item.maxPerCustomer || 2),
+        });
+      }
+
+      const finalItems = Array.from(itemMap.values());
+      const secs =
+        campaignMeta?.secondsRemaining ||
+        campaignMeta?.remainingSeconds ||
+        86400 * 6 + 3600 * 22 + 60 * 13 + 33;
+
+      setDeal({
+        id: campaignMeta?.id || 'mega-friday-campaign',
+        title: campaignMeta?.title || 'Mega Friday Flash Bazaar',
+        slug: campaignMeta?.slug || 'mega-friday-flash-bazaar',
+        description:
+          campaignMeta?.description ||
+          'Strictly limited quantities at subsidized wholesale prices. Allocated directly from Dhaka central warehouse.',
+        status: 'ACTIVE',
+        startTime: campaignMeta?.startTime || new Date().toISOString(),
+        endTime: campaignMeta?.endTime || new Date(Date.now() + secs * 1000).toISOString(),
+        serverTime: new Date().toISOString(),
+        remainingSeconds: secs,
+        items: finalItems,
+      });
+      setRemainingSecs(secs);
+    } catch (err) {
+      console.error('Failed to load flash deals', err);
+    }
+  };
+
+  useEffect(() => {
+    loadDeal();
+    const handleUpdate = () => loadDeal();
+    window.addEventListener('lb_flash_deals_updated', handleUpdate);
+    return () => window.removeEventListener('lb_flash_deals_updated', handleUpdate);
   }, []);
 
   // Tick timer
@@ -39,6 +160,17 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
     }, 1000);
     return () => clearInterval(interval);
   }, [remainingSecs]);
+
+  // Horizontal scroll helper
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = 340;
+      carouselRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   const formatTimer = (seconds: number) => {
     const d = Math.floor(seconds / (3600 * 24));
@@ -70,7 +202,17 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
 
   const handleAddToCart = async (item: any) => {
     setAddingId(item.variantId);
-    const result = await addToCart(item.variantId, 1);
+    const result = await addToCart(item.variantId, 1, {
+      id: item.productId || item.id,
+      productId: item.productId || item.id,
+      name: item.productName,
+      productName: item.productName,
+      variantName: item.variantName,
+      price: item.dealPrice,
+      salePrice: item.dealPrice,
+      basePrice: item.regularPrice || item.originalPrice,
+      imageUrl: item.imageUrl,
+    });
     setAddingId(null);
     if (result.success) {
       setJustAddedId(item.variantId);
@@ -81,7 +223,7 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
   };
 
   return (
-    <section id="friday-flash" className="my-8 scroll-mt-28">
+    <section id="friday-flash" className="my-8 scroll-mt-28 text-left">
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 via-rose-600 to-amber-700 text-white p-6 sm:p-8 shadow-xl shadow-red-500/10">
         {/* Background decorative circles */}
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
@@ -98,77 +240,134 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
               {deal.title}
             </h2>
             <p className="text-white/80 text-sm mt-1 max-w-xl">
-              Strictly limited quantities at subsidized wholesale prices. Allocated directly from Dhaka central warehouse.
+              {deal.description}
             </p>
           </div>
 
-          {/* Countdown Clock */}
-          <div className="bg-black/30 backdrop-blur-md border border-white/20 rounded-2xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1">
-              <Clock className="w-4 h-4" /> Ends In:
+          {/* Right Header Area: Countdown Clock + Carousel Navigation Controls */}
+          <div className="flex items-center flex-wrap gap-3">
+            {/* Countdown Clock */}
+            <div className="bg-black/30 backdrop-blur-md border border-white/20 rounded-2xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 shrink-0 shadow-sm">
+              <div className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1">
+                <Clock className="w-4 h-4" /> Ends In:
+              </div>
+              <div className="flex items-center gap-1.5 font-mono">
+                <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
+                  <span className="text-lg font-black">{timer.days}</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-white/60">Days</span>
+                </div>
+                <span className="text-amber-300 font-bold">:</span>
+                <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
+                  <span className="text-lg font-black">{timer.hours}</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-white/60">Hrs</span>
+                </div>
+                <span className="text-amber-300 font-bold">:</span>
+                <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
+                  <span className="text-lg font-black">{timer.mins}</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-white/60">Min</span>
+                </div>
+                <span className="text-amber-300 font-bold">:</span>
+                <div className="bg-amber-400 text-slate-900 px-2 py-1 rounded-lg text-center min-w-[36px] shadow">
+                  <span className="text-lg font-black">{timer.secs}</span>
+                  <span className="block text-[9px] uppercase tracking-wider font-bold">Sec</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 font-mono">
-              <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
-                <span className="text-lg font-black">{timer.days}</span>
-                <span className="block text-[9px] uppercase tracking-wider text-white/60">Days</span>
-              </div>
-              <span className="text-amber-300 font-bold">:</span>
-              <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
-                <span className="text-lg font-black">{timer.hours}</span>
-                <span className="block text-[9px] uppercase tracking-wider text-white/60">Hrs</span>
-              </div>
-              <span className="text-amber-300 font-bold">:</span>
-              <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
-                <span className="text-lg font-black">{timer.mins}</span>
-                <span className="block text-[9px] uppercase tracking-wider text-white/60">Min</span>
-              </div>
-              <span className="text-amber-300 font-bold">:</span>
-              <div className="bg-amber-400 text-slate-900 px-2 py-1 rounded-lg text-center min-w-[36px] shadow">
-                <span className="text-lg font-black">{timer.secs}</span>
-                <span className="block text-[9px] uppercase tracking-wider font-bold">Sec</span>
-              </div>
+
+            {/* Left and Right Scroll Navigation Arrows */}
+            <div className="flex items-center gap-1 bg-black/20 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 shadow-xs">
+              <button
+                type="button"
+                onClick={() => scrollCarousel('left')}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
+                title="Scroll left"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollCarousel('right')}
+                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
+                title="Scroll right"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Flash Deal Items Grid */}
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Flash Deal Items - Smooth Horizontal Scrollable Row */}
+        <div
+          ref={carouselRef}
+          className="relative z-10 flex gap-5 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth no-scrollbar"
+          style={{
+            scrollbarWidth: 'thin',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {deal.items.map((item) => {
-            const percentageSold = Math.min(100, Math.round((item.soldStock / item.allocatedStock) * 100));
-            const isSoldOut = item.remainingStock <= 0;
+            const percentageSold = Math.min(
+              100,
+              Math.round(((item.soldStock || 0) / Math.max(1, item.allocatedStock || 1)) * 100)
+            );
+            const isSoldOut = (item.remainingStock || 0) <= 0;
 
             return (
               <div
                 key={item.id}
-                className="bg-white text-slate-900 rounded-2xl p-4 shadow-lg hover:shadow-2xl transition duration-300 flex flex-col justify-between group"
+                className="bg-white text-slate-900 rounded-2xl p-4 shadow-lg hover:shadow-2xl transition duration-300 flex flex-col justify-between group w-[280px] sm:w-[320px] shrink-0"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="bg-rose-500 text-white text-[11px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                      <Zap className="w-3 h-3 fill-white" /> -৳{item.savings.toFixed(0)} OFF
+                      <Zap className="w-3 h-3 fill-white" /> -৳{Number(item.savings || 60).toFixed(0)} OFF
                     </span>
                     <span className="text-[11px] font-bold text-slate-400">
-                      Limit {item.maxPerCustomer}/customer
+                      Limit {item.maxPerCustomer || 2}/customer
                     </span>
                   </div>
 
                   {/* Image / Graphic */}
                   <div
-                    onClick={() => onOpenProductModal(item.productSlug)}
-                    className="cursor-pointer bg-slate-50 rounded-xl p-4 flex items-center justify-center text-5xl mb-4 group-hover:scale-105 transition"
+                    onClick={() => {
+                      if (onOpenProduct) {
+                        onOpenProduct(item);
+                      } else if (onOpenProductModal) {
+                        onOpenProductModal(item.productSlug);
+                      }
+                    }}
+                    className="cursor-pointer bg-slate-50 rounded-xl p-4 flex items-center justify-center text-5xl mb-4 group-hover:scale-105 transition h-32 overflow-hidden"
                   >
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.productName} className="h-28 object-contain" />
+                      <img
+                        src={item.imageUrl}
+                        alt={item.productName}
+                        className="h-28 w-auto object-contain rounded-lg"
+                      />
                     ) : item.productName.toLowerCase().includes('oil') ? (
                       '🛢️'
-                    ) : (
+                    ) : item.productName.toLowerCase().includes('rice') ? (
                       '🍚'
+                    ) : item.productName.toLowerCase().includes('egg') ? (
+                      '🥚'
+                    ) : item.productName.toLowerCase().includes('ghee') ? (
+                      '🧈'
+                    ) : (
+                      '⚡'
                     )}
                   </div>
 
                   {/* Title & Variant */}
                   <h3
-                    onClick={() => onOpenProductModal(item.productSlug)}
+                    onClick={() => {
+                      if (onOpenProduct) {
+                        onOpenProduct(item);
+                      } else if (onOpenProductModal) {
+                        onOpenProductModal(item.productSlug);
+                      }
+                    }}
                     className="font-bold text-slate-900 text-sm hover:text-emerald-700 cursor-pointer line-clamp-1"
                   >
                     {item.productName}
@@ -183,14 +382,16 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
                       ৳{item.dealPrice}
                     </span>
                     <span className="text-sm text-slate-400 line-through">
-                      ৳{item.regularPrice}
+                      ৳{item.regularPrice || item.originalPrice}
                     </span>
                   </div>
 
                   {/* Progress Bar */}
                   <div className="mt-3">
                     <div className="flex justify-between text-[11px] font-semibold text-slate-500 mb-1">
-                      <span>Available: <strong className="text-slate-800">{item.remainingStock}</strong> units</span>
+                      <span>
+                        Available: <strong className="text-slate-800">{item.remainingStock}</strong> units
+                      </span>
                       <span className="text-rose-600 font-bold">{percentageSold}% Sold</span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
@@ -265,7 +466,7 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
                     <button
                       disabled={addingId === item.variantId}
                       onClick={() => handleAddToCart(item)}
-                      className={`mt-4 w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition ${
+                      className={`mt-4 w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer ${
                         justAddedId === item.variantId
                           ? 'bg-emerald-600 text-white'
                           : 'bg-slate-900 hover:bg-slate-800 text-white shadow-md hover:shadow-lg'

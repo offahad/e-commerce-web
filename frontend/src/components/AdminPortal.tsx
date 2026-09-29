@@ -10,7 +10,9 @@ import {
   FileText,
   Plus,
   Trash2,
-  Sparkles
+  Sparkles,
+  Flame,
+  Zap,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -20,7 +22,7 @@ interface AdminPortalProps {
 }
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'orders' | 'customers' | 'inventory' | 'prices' | 'banners'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'customers' | 'inventory' | 'prices' | 'banners' | 'friday-deals'>('orders');
 
   // Hero Banners CMS State
   const [banners, setBanners] = useState<any[]>(() => {
@@ -80,6 +82,123 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     setBanners(updated);
     localStorage.setItem('lb_cms_hero_banners', JSON.stringify(updated));
     window.dispatchEvent(new Event('lb_banners_updated'));
+  };
+
+  // Friday Flash Deals CMS State
+  const [flashItems, setFlashItems] = useState<any[]>(() => {
+    const saved = localStorage.getItem('lb_custom_flash_items');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      {
+        id: 'flash-oil-1',
+        productName: 'Teer Pure Soybean Oil',
+        productSlug: 'teer-pure-soybean-oil',
+        variantName: '5 Liter',
+        regularPrice: 850,
+        dealPrice: 790,
+        allocatedStock: 50,
+        soldStock: 12,
+        remainingStock: 38,
+        maxPerCustomer: 2,
+        savings: 60,
+        discountPercentage: 7,
+        imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80',
+      },
+      {
+        id: 'flash-rice-1',
+        productName: 'Miniket Premium Rice',
+        productSlug: 'miniket-premium-rice-5kg',
+        variantName: '5 KG',
+        regularPrice: 390,
+        dealPrice: 330,
+        allocatedStock: 40,
+        soldStock: 8,
+        remainingStock: 32,
+        maxPerCustomer: 2,
+        savings: 60,
+        discountPercentage: 15,
+        imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80',
+      },
+    ];
+  });
+
+  const [flashForm, setFlashForm] = useState({
+    productName: '',
+    variantName: '',
+    regularPrice: '',
+    dealPrice: '',
+    allocatedStock: '50',
+    maxPerCustomer: '2',
+    imageUrl: '',
+  });
+
+  const handleAddFlashDealItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!flashForm.productName.trim() || !flashForm.variantName.trim()) return;
+
+    const regPrice = Number(flashForm.regularPrice) || 500;
+    const dlPrice = Number(flashForm.dealPrice) || Math.round(regPrice * 0.85);
+    const savings = Math.max(0, regPrice - dlPrice);
+    const discountPercentage = Math.round((savings / Math.max(1, regPrice)) * 100);
+    const allocated = Number(flashForm.allocatedStock) || 50;
+    const maxCust = Number(flashForm.maxPerCustomer) || 2;
+
+    const newItem = {
+      id: 'flash-' + Date.now(),
+      productId: 'p-' + Date.now(),
+      variantId: 'v-' + Date.now(),
+      productName: flashForm.productName.trim(),
+      productSlug: flashForm.productName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      variantName: flashForm.variantName.trim(),
+      regularPrice: regPrice,
+      dealPrice: dlPrice,
+      savings,
+      discountPercentage,
+      allocatedStock: allocated,
+      soldStock: 0,
+      remainingStock: allocated,
+      maxPerCustomer: maxCust,
+      imageUrl: flashForm.imageUrl.trim() || null,
+    };
+
+    const updated = [...flashItems, newItem];
+    setFlashItems(updated);
+    localStorage.setItem('lb_custom_flash_items', JSON.stringify(updated));
+    window.dispatchEvent(new Event('lb_flash_deals_updated'));
+
+    setFlashForm({
+      productName: '',
+      variantName: '',
+      regularPrice: '',
+      dealPrice: '',
+      allocatedStock: '50',
+      maxPerCustomer: '2',
+      imageUrl: '',
+    });
+  };
+
+  const handleDeleteFlashDealItem = (id: string) => {
+    const updated = flashItems.filter((it) => it.id !== id);
+    setFlashItems(updated);
+    localStorage.setItem('lb_custom_flash_items', JSON.stringify(updated));
+    window.dispatchEvent(new Event('lb_flash_deals_updated'));
+  };
+
+  const handleQuickAddFlashPreset = (preset: any) => {
+    const newItem = {
+      ...preset,
+      id: 'flash-' + Date.now(),
+      productId: 'p-' + Date.now(),
+      variantId: 'v-' + Date.now(),
+      soldStock: 0,
+      remainingStock: preset.allocatedStock,
+    };
+    const updated = [...flashItems, newItem];
+    setFlashItems(updated);
+    localStorage.setItem('lb_custom_flash_items', JSON.stringify(updated));
+    window.dispatchEvent(new Event('lb_flash_deals_updated'));
   };
 
   // KPI Metrics
@@ -363,6 +482,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
             }`}
           >
             <Sparkles className="w-4 h-4" /> Hero Banners CMS ({banners.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('friday-deals')}
+            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition ${
+              activeTab === 'friday-deals'
+                ? 'border-rose-600 text-rose-700 font-black'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Flame className="w-4 h-4 text-rose-600" /> Friday Flash Offers ({flashItems.length})
           </button>
         </div>
 
@@ -674,6 +803,264 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                         onClick={() => handleDeleteBanner(b.id)}
                         className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                         title="Delete Slide"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mega Friday Flash Offers CMS Tab */}
+          {activeTab === 'friday-deals' && (
+            <div className="space-y-6 text-left">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <h3 className="font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-1.5 text-sm">
+                    <Flame className="w-4 h-4 text-rose-600" /> Mega Friday Flash Bazaar Offers Management
+                  </h3>
+                  <p className="text-slate-500 text-[11px]">
+                    Add, edit, or delete subsidized flash deals. When multiple items are added, the homepage section automatically scrolls horizontally!
+                  </p>
+                </div>
+                <span className="text-[11px] font-bold bg-rose-50 text-rose-700 px-3 py-1 rounded-full border border-rose-200">
+                  {flashItems.length} Active Flash Deals
+                </span>
+              </div>
+
+              {/* One-Click Quick Presets */}
+              <div className="bg-rose-50/60 border border-rose-100 rounded-2xl p-4">
+                <span className="text-[11px] font-black uppercase text-rose-800 tracking-wider block mb-2 flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5 text-rose-600" /> One-Click Flash Deal Presets (Test Horizontal Scroll):
+                </span>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleQuickAddFlashPreset({
+                        productName: 'Rupchanda Fortified Soybean Oil',
+                        productSlug: 'rupchanda-fortified-soybean-oil-5l',
+                        variantName: '5 Liter',
+                        regularPrice: 870,
+                        dealPrice: 810,
+                        savings: 60,
+                        discountPercentage: 7,
+                        allocatedStock: 45,
+                        maxPerCustomer: 2,
+                        imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80',
+                      })
+                    }
+                    className="px-3 py-1.5 bg-white hover:bg-rose-100 border border-rose-200 rounded-xl font-bold text-rose-900 transition shadow-xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> + Rupchanda Oil 5L (-৳60)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleQuickAddFlashPreset({
+                        productName: 'Aarong Dairy Pure Ghee',
+                        productSlug: 'aarong-dairy-pure-ghee-900g',
+                        variantName: '900 gm Jar',
+                        regularPrice: 1450,
+                        dealPrice: 1290,
+                        savings: 160,
+                        discountPercentage: 11,
+                        allocatedStock: 30,
+                        maxPerCustomer: 1,
+                        imageUrl: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=400&q=80',
+                      })
+                    }
+                    className="px-3 py-1.5 bg-white hover:bg-rose-100 border border-rose-200 rounded-xl font-bold text-rose-900 transition shadow-xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> + Aarong Ghee 900g (-৳160)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleQuickAddFlashPreset({
+                        productName: 'Fresh Chinigura Aromatic Rice',
+                        productSlug: 'fresh-chinigura-aromatic-rice-1kg',
+                        variantName: '1 KG Pack',
+                        regularPrice: 175,
+                        dealPrice: 145,
+                        savings: 30,
+                        discountPercentage: 17,
+                        allocatedStock: 60,
+                        maxPerCustomer: 3,
+                        imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80',
+                      })
+                    }
+                    className="px-3 py-1.5 bg-white hover:bg-rose-100 border border-rose-200 rounded-xl font-bold text-rose-900 transition shadow-xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> + Chinigura Rice 1KG (-৳30)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleQuickAddFlashPreset({
+                        productName: 'Farm Fresh Brown Eggs',
+                        productSlug: 'farm-fresh-brown-eggs-30pcs',
+                        variantName: '30 Pieces (Tray)',
+                        regularPrice: 395,
+                        dealPrice: 345,
+                        savings: 50,
+                        discountPercentage: 13,
+                        allocatedStock: 75,
+                        maxPerCustomer: 2,
+                        imageUrl: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=400&q=80',
+                      })
+                    }
+                    className="px-3 py-1.5 bg-white hover:bg-rose-100 border border-rose-200 rounded-xl font-bold text-rose-900 transition shadow-xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> + Farm Eggs 30-Tray (-৳50)
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Custom Flash Deal Form */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <h4 className="text-xs font-black text-slate-800 mb-3 flex items-center gap-1.5">
+                  <Plus className="w-4 h-4 text-rose-600" /> Add Custom Product to Friday Flash Bazaar
+                </h4>
+                <form onSubmit={handleAddFlashDealItem} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Product Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={flashForm.productName}
+                      onChange={(e) => setFlashForm({ ...flashForm, productName: e.target.value })}
+                      placeholder="e.g. Pure Deshi Ghee / Miniket Rice"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Variant / Unit Size</label>
+                    <input
+                      type="text"
+                      required
+                      value={flashForm.variantName}
+                      onChange={(e) => setFlashForm({ ...flashForm, variantName: e.target.value })}
+                      placeholder="e.g. 5 Liter / 10 KG / 500 gm"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Regular Price (৳)</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={flashForm.regularPrice}
+                      onChange={(e) => setFlashForm({ ...flashForm, regularPrice: e.target.value })}
+                      placeholder="e.g. 850"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Friday Deal Price (৳)</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={flashForm.dealPrice}
+                      onChange={(e) => setFlashForm({ ...flashForm, dealPrice: e.target.value })}
+                      placeholder="e.g. 790"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Allocated Warehouse Stock</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={flashForm.allocatedStock}
+                      onChange={(e) => setFlashForm({ ...flashForm, allocatedStock: e.target.value })}
+                      placeholder="e.g. 50"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Max Per Customer</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={flashForm.maxPerCustomer}
+                      onChange={(e) => setFlashForm({ ...flashForm, maxPerCustomer: e.target.value })}
+                      placeholder="e.g. 2"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 md:col-span-3">
+                    <label className="font-bold text-slate-700 block mb-1">Product Image URL (Optional)</label>
+                    <input
+                      type="url"
+                      value={flashForm.imageUrl}
+                      onChange={(e) => setFlashForm({ ...flashForm, imageUrl: e.target.value })}
+                      placeholder="https://images.unsplash.com/... (Leave empty for automatic grocery icon)"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 md:col-span-3 pt-1 flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition shadow-sm text-xs flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" /> Add Item to Friday Flash Offer
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Active Friday Flash Deal Items List */}
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-slate-700 block">
+                  Active Friday Flash Deal Items ({flashItems.length})
+                </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {flashItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 p-3.5 bg-white rounded-2xl border border-slate-200 shadow-sm relative group hover:border-rose-200 transition"
+                    >
+                      <div className="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 text-3xl overflow-hidden">
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.productName} className="w-full h-full object-cover" />
+                        ) : item.productName.toLowerCase().includes('oil') ? (
+                          '🛢️'
+                        ) : item.productName.toLowerCase().includes('rice') ? (
+                          '🍚'
+                        ) : item.productName.toLowerCase().includes('egg') ? (
+                          '🥚'
+                        ) : item.productName.toLowerCase().includes('ghee') ? (
+                          '🧈'
+                        ) : (
+                          '⚡'
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 pr-8">
+                        <div className="font-bold text-slate-900 text-xs truncate">{item.productName}</div>
+                        <div className="text-[11px] text-slate-500">{item.variantName}</div>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <span className="font-black text-rose-600 text-sm">৳{item.dealPrice}</span>
+                          <span className="text-[11px] text-slate-400 line-through">৳{item.regularPrice}</span>
+                          <span className="text-[10px] font-bold bg-rose-50 text-rose-600 px-1.5 py-0.2 rounded">
+                            -৳{item.savings || Math.max(0, item.regularPrice - item.dealPrice)} OFF
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          Stock: {item.remainingStock ?? item.allocatedStock} units • Limit {item.maxPerCustomer}/customer
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteFlashDealItem(item.id)}
+                        className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        title="Remove Flash Deal"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
