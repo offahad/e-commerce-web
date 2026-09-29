@@ -1,6 +1,8 @@
 # Liton Brothers — Full-Stack E-Commerce Platform
 
-Production-ready, multi-channel e-commerce ecosystem built with Node.js, TypeScript, Next.js, and PostgreSQL.
+Production-ready, multi-channel e-commerce ecosystem built with Node.js, TypeScript, React 19, and SQLite/PostgreSQL.
+
+> 📖 **Comprehensive Setup & Operations Manual**: For full step-by-step instructions on running the Backend, Database, Storefront UI, Admin Portal, testing workflows, and API Swagger docs, see [**`SETUP_AND_USAGE_GUIDE.md`**](./SETUP_AND_USAGE_GUIDE.md).
 
 ---
 
