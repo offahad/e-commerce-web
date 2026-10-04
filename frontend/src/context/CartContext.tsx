@@ -58,7 +58,11 @@ export const normalizeCartItem = (raw: any): CartItem => {
   const pName = raw.productName || raw.name || raw.title || 'Grocery Item';
   const vName = raw.variantName || raw.variant_name || raw.unit || raw.unitSubtitle || 'Standard Pack';
   const uPrice = Number(raw.unitPrice ?? raw.price ?? raw.salePrice ?? raw.basePrice ?? 100);
-  const qty = Number(raw.quantity ?? 1);
+  let qty = Number(raw.quantity ?? 1);
+  const maxLimit = raw.maxPerCustomer != null ? Number(raw.maxPerCustomer) : raw.max_per_customer != null ? Number(raw.max_per_customer) : undefined;
+  if (maxLimit && qty > maxLimit) {
+    qty = maxLimit;
+  }
   const tPrice = Number(raw.totalPrice ?? raw.lineTotal ?? (uPrice * qty));
   const origPrice = Number(raw.originalPrice ?? raw.basePrice ?? raw.regularPrice ?? uPrice);
   const img = raw.imageUrl || raw.image_url || raw.thumbnailUrl || raw.primaryImage || '';
@@ -83,6 +87,8 @@ export const normalizeCartItem = (raw: any): CartItem => {
     thumbnailUrl: img,
     stockQuantity: Number(raw.stockQuantity ?? raw.availableStock ?? 100),
     isOutOfStock: Boolean(raw.isOutOfStock),
+    maxPerCustomer: maxLimit,
+    isFlashDeal: Boolean(raw.isFlashDeal || raw.is_flash_deal),
   };
 };
 
@@ -94,7 +100,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map(normalizeCartItem);
+          return parsed.map((item: any) => {
+            const normalized = normalizeCartItem(item);
+            if (normalized.maxPerCustomer && normalized.quantity > normalized.maxPerCustomer) {
+              normalized.quantity = normalized.maxPerCustomer;
+            }
+            return normalized;
+          });
         }
       }
     } catch (e) {}
@@ -192,24 +204,55 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addToCart = async (variantId: string, quantity = 1, itemMetadata?: any) => {
     setIsLoading(true);
 
+    const maxLimit = itemMetadata?.maxPerCustomer;
+    const existing = cartItems.find(
+      (i) =>
+        (variantId && i.variantId === variantId) ||
+        (itemMetadata?.id && (i.productId === itemMetadata.id || i.id === itemMetadata.id)) ||
+        (itemMetadata?.name && (i.name || i.productName)?.toLowerCase().trim() === itemMetadata.name.toLowerCase().trim())
+    );
+
+    const effectiveMax = maxLimit || existing?.maxPerCustomer;
+    if (effectiveMax && existing && (existing.quantity + quantity) > effectiveMax) {
+      setIsLoading(false);
+      return {
+        success: false,
+        message: `Maximum limit of ${effectiveMax} units per customer for this deal item.`,
+      };
+    }
+
     // Optimistically update local cart immediately with 0ms UI lag
     setCartItems((prev) => {
-      const existing = prev.find(
+      const match = prev.find(
         (i) =>
           (variantId && i.variantId === variantId) ||
           (itemMetadata?.id && (i.productId === itemMetadata.id || i.id === itemMetadata.id)) ||
           (itemMetadata?.name && (i.name || i.productName)?.toLowerCase().trim() === itemMetadata.name.toLowerCase().trim())
       );
       let updated: CartItem[];
-      if (existing) {
+      if (match) {
+        const itemMax = maxLimit || match.maxPerCustomer;
+        let newQty = match.quantity + quantity;
+        if (itemMax && newQty > itemMax) {
+          newQty = itemMax;
+        }
         updated = prev.map((i) =>
-          i.id === existing.id
-            ? normalizeCartItem({ ...i, quantity: i.quantity + quantity })
+          i.id === match.id
+            ? normalizeCartItem({
+                ...i,
+                quantity: newQty,
+                maxPerCustomer: itemMax,
+                isFlashDeal: Boolean(itemMetadata?.isFlashDeal || i.isFlashDeal),
+              })
             : i
         );
       } else {
         const pName = itemMetadata?.name || itemMetadata?.productName || 'Fresh Grocery Item';
         const uPrice = Number(itemMetadata?.price ?? itemMetadata?.salePrice ?? 100);
+        let initialQty = quantity;
+        if (maxLimit && initialQty > maxLimit) {
+          initialQty = maxLimit;
+        }
         const newItem: CartItem = normalizeCartItem({
           id: 'cart-item-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
           variantId,
@@ -217,7 +260,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           productName: pName,
           name: pName,
           variantName: itemMetadata?.unit || itemMetadata?.unitSubtitle || itemMetadata?.variantName || '1 pack',
-          quantity,
+          quantity: initialQty,
           unitPrice: uPrice,
           price: uPrice,
           salePrice: uPrice,
@@ -226,6 +269,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           imageUrl: itemMetadata?.imageUrl || itemMetadata?.thumbnailUrl || '',
           thumbnailUrl: itemMetadata?.imageUrl || itemMetadata?.thumbnailUrl || '',
           stockQuantity: 100,
+          maxPerCustomer: maxLimit,
+          isFlashDeal: Boolean(itemMetadata?.isFlashDeal),
         });
         updated = [...prev, newItem];
       }
@@ -272,14 +317,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       setCartItems((prev) => {
-        const updated = prev.map((i) =>
-          i.id === itemId ||
-          i.variantId === itemId ||
-          (i.productId && i.productId === itemId) ||
-          ((i.name || i.productName) && String(itemId).toLowerCase().trim() === (i.name || i.productName).toLowerCase().trim())
-            ? normalizeCartItem({ ...i, quantity })
-            : i
-        );
+        const updated = prev.map((i) => {
+          const isMatch =
+            i.id === itemId ||
+            i.variantId === itemId ||
+            (i.productId && i.productId === itemId) ||
+            ((i.name || i.productName) && String(itemId).toLowerCase().trim() === (i.name || i.productName).toLowerCase().trim());
+          if (!isMatch) return i;
+
+          let targetQty = quantity;
+          if (i.maxPerCustomer && targetQty > i.maxPerCustomer) {
+            targetQty = i.maxPerCustomer;
+          }
+          return normalizeCartItem({ ...i, quantity: targetQty });
+        });
         try {
           localStorage.setItem('lb_cart_items', JSON.stringify(updated));
         } catch (e) {}

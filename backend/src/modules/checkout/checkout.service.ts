@@ -32,14 +32,16 @@ export class CheckoutService {
           'flash_deal_items.variant_id',
           'flash_deal_items.deal_price',
           'flash_deal_items.allocated_stock',
-          'flash_deal_items.sold_stock'
+          'flash_deal_items.sold_stock',
+          'flash_deal_items.max_per_customer'
         );
 
-      const flashMap = new Map<string, { dealPrice: number; remainingStock: number }>();
+      const flashMap = new Map<string, { dealPrice: number; remainingStock: number; maxPerCustomer: number }>();
       for (const fd of activeFlashDeals) {
         flashMap.set(fd.variant_id, {
           dealPrice: Number(fd.deal_price),
           remainingStock: Math.max(0, fd.allocated_stock - fd.sold_stock),
+          maxPerCustomer: Number(fd.max_per_customer || 2),
         });
       }
 
@@ -68,8 +70,15 @@ export class CheckoutService {
         let unitPrice = variant.sale_price != null ? Number(variant.sale_price) : originalPrice;
 
         const flashInfo = flashMap.get(variant.variant_id);
-        if (flashInfo && flashInfo.remainingStock > 0) {
-          unitPrice = Math.min(unitPrice, flashInfo.dealPrice);
+        if (flashInfo) {
+          if (item.quantity > flashInfo.maxPerCustomer) {
+            throw new Error(
+              `Order quantity for flash deal item '${variant.product_name}' exceeds the limit of ${flashInfo.maxPerCustomer} per customer`
+            );
+          }
+          if (flashInfo.remainingStock > 0) {
+            unitPrice = Math.min(unitPrice, flashInfo.dealPrice);
+          }
         }
 
         const availableStock = Number(variant.stock_quantity);

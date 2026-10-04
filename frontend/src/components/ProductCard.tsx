@@ -207,6 +207,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
           const cartQty = cartItem ? cartItem.quantity : 0;
 
           if (cartQty > 0 && cartItem) {
+            const itemLimit = cartItem.maxPerCustomer || (product as any).maxPerCustomer;
+            const isLimitReached = Boolean(itemLimit && cartQty >= itemLimit);
+            const canIncrease = cartQty < currentStock && !isLimitReached;
+
             return (
               <div
                 onClick={(e) => e.stopPropagation()}
@@ -219,7 +223,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
                     if (cartQty > 1) updateQuantity(cartItem.id, cartQty - 1);
                     else removeItem(cartItem.id);
                   }}
-                  className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90"
+                  className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90 cursor-pointer"
                   title="Decrease"
                 >
                   <Minus className="w-3.5 h-3.5" />
@@ -227,13 +231,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
                 <span className="font-black text-xs sm:text-sm px-1.5">{cartQty} in Basket</span>
                 <button
                   type="button"
-                  disabled={cartQty >= currentStock}
+                  disabled={!canIncrease}
                   onClick={(e) => {
                     e.stopPropagation();
-                    updateQuantity(cartItem.id, cartQty + 1);
+                    if (canIncrease) {
+                      updateQuantity(cartItem.id, cartQty + 1);
+                    }
                   }}
-                  className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90 disabled:opacity-40"
-                  title="Increase"
+                  className="w-6 h-6 rounded-full bg-emerald-900 hover:bg-emerald-950 flex items-center justify-center transition active:scale-90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  title={isLimitReached ? `Limit of ${itemLimit} reached per customer` : "Increase"}
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>

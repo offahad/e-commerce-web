@@ -160,6 +160,8 @@ export interface CartItemDto {
   availableStock: number;
   isOutOfStock: boolean;
   imageUrl?: string | null;
+  maxPerCustomer?: number | null;
+  isFlashDeal?: boolean;
 }
 
 export interface CartSummaryDto {

@@ -175,6 +175,13 @@ export class OrdersService {
         // Flash Deal Check
         const flashItem = flashMap.get(variant.variant_id);
         if (flashItem) {
+          const maxAllowed = Number(flashItem.max_per_customer || 2);
+          if (item.quantity > maxAllowed) {
+            throw new Error(
+              `Order quantity for flash deal item '${variant.product_name}' exceeds the maximum allowed limit of ${maxAllowed} units per customer`
+            );
+          }
+
           const remainingFlash = flashItem.allocated_stock - flashItem.sold_stock;
           if (remainingFlash >= item.quantity) {
             unitPrice = Math.min(unitPrice, Number(flashItem.deal_price));

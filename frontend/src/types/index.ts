@@ -59,6 +59,7 @@ export interface Product {
   variants: ProductVariant[];
   images: ProductImage[];
   tags: string[];
+  maxPerCustomer?: number;
 }
 
 export interface Category {
@@ -126,6 +127,8 @@ export interface CartItem {
   stockQuantity?: number;
   availableStock?: number;
   isOutOfStock?: boolean;
+  maxPerCustomer?: number;
+  isFlashDeal?: boolean;
 }
 
 export interface OrderTimelineStep {

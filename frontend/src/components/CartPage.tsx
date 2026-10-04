@@ -269,6 +269,13 @@ export const CartPage: React.FC<CartPageProps> = ({
                             {vName}
                           </span>
 
+                          {/* Flash Deal Limit Badge */}
+                          {item.maxPerCustomer && (
+                            <span className="text-[10px] sm:text-[11px] font-black text-rose-600 bg-rose-50 px-1.5 sm:px-2 py-0.5 rounded-md border border-rose-200">
+                              Limit {item.maxPerCustomer}/customer
+                            </span>
+                          )}
+
                           {/* Unit price */}
                           <span className="text-[11px] sm:text-xs font-semibold text-slate-400">
                             ৳{unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each
@@ -286,31 +293,51 @@ export const CartPage: React.FC<CartPageProps> = ({
                     {/* Stepper [-] Qty [+] & Line Total Price */}
                     <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 shrink-0 pt-1 sm:pt-0 border-t border-slate-50 sm:border-0">
                       {/* Interactive Stepper Pill */}
-                      <div className="flex items-center bg-slate-100 rounded-full px-2 py-1 border border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (quantity > 1) updateQuantity(item.id, quantity - 1);
-                            else removeItem(item.id);
-                          }}
-                          className="w-6 h-6 rounded-full bg-white text-slate-700 hover:text-slate-950 hover:bg-slate-200 flex items-center justify-center transition shadow-xs font-bold cursor-pointer"
-                          title={quantity === 1 ? 'Remove from cart' : 'Decrease quantity'}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center bg-slate-100 rounded-full px-2 py-1 border border-slate-200">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (quantity > 1) updateQuantity(item.id, quantity - 1);
+                              else removeItem(item.id);
+                            }}
+                            className="w-6 h-6 rounded-full bg-white text-slate-700 hover:text-slate-950 hover:bg-slate-200 flex items-center justify-center transition shadow-xs font-bold cursor-pointer"
+                            title={quantity === 1 ? 'Remove from cart' : 'Decrease quantity'}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
 
-                        <span className="text-xs font-black text-slate-900 min-w-[28px] text-center px-1">
-                          {quantity}
-                        </span>
+                          <span className="text-xs font-black text-slate-900 min-w-[28px] text-center px-1">
+                            {quantity}
+                          </span>
 
-                        <button
-                          type="button"
-                          onClick={() => updateQuantity(item.id, quantity + 1)}
-                          className="w-6 h-6 rounded-full bg-[#14532d] text-white hover:bg-emerald-900 flex items-center justify-center transition shadow-xs font-bold cursor-pointer"
-                          title="Increase quantity"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                          <button
+                            type="button"
+                            disabled={Boolean(item.maxPerCustomer && quantity >= item.maxPerCustomer)}
+                            onClick={() => {
+                              if (!item.maxPerCustomer || quantity < item.maxPerCustomer) {
+                                updateQuantity(item.id, quantity + 1);
+                              }
+                            }}
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition shadow-xs font-bold ${
+                              item.maxPerCustomer && quantity >= item.maxPerCustomer
+                                ? 'bg-slate-300 text-slate-400 cursor-not-allowed opacity-50'
+                                : 'bg-[#14532d] text-white hover:bg-emerald-900 cursor-pointer'
+                            }`}
+                            title={
+                              item.maxPerCustomer && quantity >= item.maxPerCustomer
+                                ? `Limit of ${item.maxPerCustomer} reached per customer`
+                                : 'Increase quantity'
+                            }
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        {item.maxPerCustomer && quantity >= item.maxPerCustomer && (
+                          <span className="text-[9px] text-amber-600 font-bold mt-0.5">
+                            Max {item.maxPerCustomer} allowed
+                          </span>
+                        )}
                       </div>
 
                       {/* Line Total in Taka (Never NaN!) */}

@@ -201,6 +201,20 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
   }
 
   const handleAddToCart = async (item: any) => {
+    const maxLimit = item.maxPerCustomer || 2;
+    const existing = cartItems.find((ci) => {
+      if (item.variantId && ci.variantId === item.variantId) return true;
+      if (ci.productId === item.productId || ci.id === item.productId) return true;
+      const cName = (ci.name || '').toLowerCase().trim();
+      const iName = (item.productName || '').toLowerCase().trim();
+      return iName.length > 0 && cName === iName;
+    });
+
+    if (existing && existing.quantity >= maxLimit) {
+      alert(`Limit of ${maxLimit} units per customer for this Friday flash deal.`);
+      return;
+    }
+
     setAddingId(item.variantId);
     const result = await addToCart(item.variantId, 1, {
       id: item.productId || item.id,
@@ -212,15 +226,35 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
       salePrice: item.dealPrice,
       basePrice: item.regularPrice || item.originalPrice,
       imageUrl: item.imageUrl,
+      maxPerCustomer: maxLimit,
+      isFlashDeal: true,
     });
     setAddingId(null);
     if (result.success) {
       setJustAddedId(item.variantId);
       setTimeout(() => setJustAddedId(null), 2000);
     } else {
-      alert(result.message || 'Could not add to cart');
+      alert(result.message || `Limit of ${maxLimit} units per customer.`);
     }
   };
+
+  // Automatically clamp any cart quantities that exceed the flash deal per-customer limit
+  useEffect(() => {
+    if (!deal || !deal.items || deal.items.length === 0) return;
+    for (const item of deal.items) {
+      const maxLimit = item.maxPerCustomer || 2;
+      const cartItem = cartItems.find((ci) => {
+        if (item.variantId && ci.variantId === item.variantId) return true;
+        if (ci.productId === item.productId || ci.id === item.productId) return true;
+        const cName = (ci.name || '').toLowerCase().trim();
+        const iName = (item.productName || '').toLowerCase().trim();
+        return iName.length > 0 && cName === iName;
+      });
+      if (cartItem && cartItem.quantity > maxLimit) {
+        updateQuantity(cartItem.id, maxLimit);
+      }
+    }
+  }, [deal, cartItems]);
 
   return (
     <section id="friday-flash" className="my-6 sm:my-8 scroll-mt-28 text-left">
@@ -413,6 +447,8 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
                     return iName.length > 0 && cName === iName;
                   });
                   const inCartQty = cartItem ? cartItem.quantity : 0;
+                  const maxLimit = item.maxPerCustomer || 2;
+                  const isMaxReached = inCartQty >= maxLimit;
 
                   if (isSoldOut) {
                     return (
@@ -427,44 +463,58 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
 
                   if (inCartQty > 0 && cartItem) {
                     return (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-4 w-full py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-between px-3 shadow-md"
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (inCartQty > 1) {
-                              updateQuantity(cartItem.id, inCartQty - 1);
-                            } else {
-                              removeItem(cartItem.id);
-                            }
-                          }}
-                          className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition active:scale-90"
-                          title="Decrease"
+                      <div className="mt-4 flex flex-col gap-1">
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-between px-3 shadow-md"
                         >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="font-black text-sm px-2 text-center min-w-[20px]">{inCartQty}</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateQuantity(cartItem.id, inCartQty + 1);
-                          }}
-                          className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition active:scale-90"
-                          title="Increase"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (inCartQty > 1) {
+                                updateQuantity(cartItem.id, inCartQty - 1);
+                              } else {
+                                removeItem(cartItem.id);
+                              }
+                            }}
+                            className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition active:scale-90 cursor-pointer"
+                            title="Decrease"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="font-black text-sm px-2 text-center min-w-[20px]">{inCartQty}</span>
+                          <button
+                            type="button"
+                            disabled={isMaxReached}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isMaxReached) {
+                                updateQuantity(cartItem.id, inCartQty + 1);
+                              }
+                            }}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center transition active:scale-90 ${
+                              isMaxReached
+                                ? 'bg-slate-800/40 text-slate-500 cursor-not-allowed opacity-40'
+                                : 'bg-slate-800 hover:bg-slate-700 text-white cursor-pointer'
+                            }`}
+                            title={isMaxReached ? `Limit of ${maxLimit} reached per customer` : "Increase"}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        {isMaxReached && (
+                          <div className="text-[10px] text-amber-600 font-bold text-center">
+                            Maximum limit of {maxLimit} reached
+                          </div>
+                        )}
                       </div>
                     );
                   }
 
                   return (
                     <button
-                      disabled={addingId === item.variantId}
+                      disabled={addingId === item.variantId || isMaxReached}
                       onClick={() => handleAddToCart(item)}
                       className={`mt-4 w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer ${
                         justAddedId === item.variantId

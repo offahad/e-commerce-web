@@ -63,6 +63,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
       basePrice: currentBasePrice,
       imageUrl: product.images?.[0]?.imageUrl || product.primaryImage,
       thumbnailUrl: product.images?.[0]?.imageUrl || product.primaryImage,
+      maxPerCustomer: product.maxPerCustomer,
     });
     setAdding(false);
     if (res.success) {
@@ -87,6 +88,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
       basePrice: currentBasePrice,
       imageUrl: product.images?.[0]?.imageUrl || product.primaryImage,
       thumbnailUrl: product.images?.[0]?.imageUrl || product.primaryImage,
+      maxPerCustomer: product.maxPerCustomer,
     });
     if (res.success) {
       onClose();
@@ -252,8 +254,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
                         {quantity}
                       </span>
                       <button
-                        onClick={() => setQuantity((q) => Math.min(currentStock, q + 1))}
-                        className="px-3 py-1.5 text-slate-600 hover:bg-slate-200 font-bold transition"
+                        disabled={Boolean(product.maxPerCustomer && quantity >= product.maxPerCustomer)}
+                        onClick={() =>
+                          setQuantity((q) => {
+                            const max = product.maxPerCustomer ? Math.min(currentStock, product.maxPerCustomer) : currentStock;
+                            return Math.min(max, q + 1);
+                          })
+                        }
+                        className="px-3 py-1.5 text-slate-600 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition"
+                        title={product.maxPerCustomer && quantity >= product.maxPerCustomer ? `Limit of ${product.maxPerCustomer} reached` : 'Increase'}
                       >
                         +
                       </button>

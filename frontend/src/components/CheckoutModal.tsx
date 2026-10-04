@@ -95,6 +95,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       return;
     }
 
+    // Enforce maxPerCustomer flash deal limits
+    for (const item of cartItems) {
+      if (item.maxPerCustomer && item.quantity > item.maxPerCustomer) {
+        setError(`Item '${item.name}' exceeds the maximum allowed limit of ${item.maxPerCustomer} units per customer for this deal. Please adjust your basket quantity.`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setError(null);
 

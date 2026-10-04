@@ -117,14 +117,16 @@ export class CartService {
         'flash_deal_items.variant_id',
         'flash_deal_items.deal_price',
         'flash_deal_items.allocated_stock',
-        'flash_deal_items.sold_stock'
+        'flash_deal_items.sold_stock',
+        'flash_deal_items.max_per_customer'
       );
 
-    const flashMap = new Map<string, { dealPrice: number; remainingStock: number }>();
+    const flashMap = new Map<string, { dealPrice: number; remainingStock: number; maxPerCustomer: number }>();
     for (const fd of activeFlashDeals) {
       flashMap.set(fd.variant_id, {
         dealPrice: Number(fd.deal_price),
         remainingStock: Math.max(0, fd.allocated_stock - fd.sold_stock),
+        maxPerCustomer: Number(fd.max_per_customer || 2),
       });
     }
 
@@ -175,6 +177,8 @@ export class CartService {
         availableStock,
         isOutOfStock,
         imageUrl: primaryImage?.image_url || null,
+        maxPerCustomer: flashInfo?.maxPerCustomer || null,
+        isFlashDeal: Boolean(flashInfo && flashInfo.remainingStock > 0),
       });
 
       subtotal += totalPrice;
@@ -211,9 +215,27 @@ export class CartService {
       .where({ cart_id: cartId, product_variant_id: variantId })
       .first();
 
+    const targetQty = existingItem ? existingItem.quantity + quantity : quantity;
+
+    // Check flash deal max_per_customer limit
+    const now = new Date();
+    const flashDealItem = await db('flash_deals')
+      .join('flash_deal_items', 'flash_deals.id', 'flash_deal_items.flash_deal_id')
+      .where('flash_deals.is_active', true)
+      .where('flash_deals.status', 'ACTIVE')
+      .where('flash_deals.start_time', '<=', now)
+      .where('flash_deals.end_time', '>=', now)
+      .where('flash_deal_items.variant_id', variantId)
+      .select('flash_deal_items.max_per_customer')
+      .first();
+
+    const maxLimit = flashDealItem ? Number(flashDealItem.max_per_customer || 2) : null;
+    if (maxLimit != null && targetQty > maxLimit) {
+      throw new Error(`Limit of ${maxLimit} units per customer for this flash deal`);
+    }
+
     if (existingItem) {
-      const newQty = existingItem.quantity + quantity;
-      if (variant.stock_quantity < newQty) {
+      if (variant.stock_quantity < targetQty) {
         throw new Error(
           `Cannot add more. You already have ${existingItem.quantity} in cart and available stock is ${variant.stock_quantity}`
         );
@@ -222,7 +244,7 @@ export class CartService {
       await db('cart_items')
         .where({ id: existingItem.id })
         .update({
-          quantity: newQty,
+          quantity: targetQty,
           updated_at: db.fn.now(),
         });
     } else {
@@ -255,6 +277,23 @@ export class CartService {
       const variant = await db('product_variants').where({ id: item.product_variant_id }).first();
       if (!variant) {
         throw new Error('Product variant no longer exists');
+      }
+
+      // Check flash deal max_per_customer limit
+      const now = new Date();
+      const flashDealItem = await db('flash_deals')
+        .join('flash_deal_items', 'flash_deals.id', 'flash_deal_items.flash_deal_id')
+        .where('flash_deals.is_active', true)
+        .where('flash_deals.status', 'ACTIVE')
+        .where('flash_deals.start_time', '<=', now)
+        .where('flash_deals.end_time', '>=', now)
+        .where('flash_deal_items.variant_id', item.product_variant_id)
+        .select('flash_deal_items.max_per_customer')
+        .first();
+
+      const maxLimit = flashDealItem ? Number(flashDealItem.max_per_customer || 2) : null;
+      if (maxLimit != null && quantity > maxLimit) {
+        throw new Error(`Limit of ${maxLimit} units per customer for this flash deal`);
       }
 
       if (variant.stock_quantity < quantity) {

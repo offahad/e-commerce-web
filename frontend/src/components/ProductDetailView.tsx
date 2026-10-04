@@ -81,6 +81,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       basePrice: selectedVariant?.compareAtPrice,
       imageUrl: images[0],
       thumbnailUrl: images[0],
+      maxPerCustomer: product.maxPerCustomer,
     });
   };
 
@@ -244,8 +245,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   {displayQuantityText}
                 </span>
                 <button
-                  onClick={() => setQuantity((prev) => prev + 1)}
-                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 font-bold transition cursor-pointer active:scale-95"
+                  disabled={Boolean(product.maxPerCustomer && quantity >= product.maxPerCustomer)}
+                  onClick={() => setQuantity((prev) => (product.maxPerCustomer ? Math.min(prev + 1, product.maxPerCustomer) : prev + 1))}
+                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center text-slate-700 font-bold transition cursor-pointer active:scale-95"
+                  title={product.maxPerCustomer && quantity >= product.maxPerCustomer ? `Limit of ${product.maxPerCustomer} reached` : "Increase"}
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
