@@ -340,10 +340,40 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     return DEFAULT_TAGS;
   });
 
-  // Modal states for adding Category & Tag
+  const DEFAULT_ITEMS = [
+    { name: 'Oil', slug: 'cooking-oil', icon: '🫒' },
+    { name: 'Rice', slug: 'rice', icon: '🍚' },
+    { name: 'Vegetables', slug: 'vegetables', icon: '🥦' },
+    { name: 'Fruits', slug: 'fruits', icon: '🍎' },
+    { name: 'Drinks', slug: 'beverages', icon: '🥤' },
+    { name: 'Flour', slug: 'flour-atta', icon: '🌾' },
+    { name: 'Sugar', slug: 'sugar', icon: '🍬' },
+    { name: 'Salt', slug: 'salt', icon: '🧂' },
+    { name: 'Dal & Pulses', slug: 'dal-pulses', icon: '🫘' },
+    { name: 'Noodles & Pasta', slug: 'noodles-pasta', icon: '🍜' },
+    { name: 'Spices', slug: 'spices', icon: '🌶️' },
+    { name: 'Dairy & Eggs', slug: 'dairy', icon: '🥛' },
+    { name: 'Meat & Fish', slug: 'meat-fish', icon: '🥩' },
+  ];
+
+  const [itemsList, setItemsList] = useState<Array<{ name: string; slug: string; icon?: string }>>(() => {
+    const saved = localStorage.getItem('lb_custom_items');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return DEFAULT_ITEMS;
+  });
+
+  // Modal states for adding Category, Item & Tag
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryDesc, setNewCategoryDesc] = useState('');
+
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemIcon, setNewItemIcon] = useState('📦');
 
   const [showAddTagModal, setShowAddTagModal] = useState(false);
   const [newTagName, setNewTagName] = useState('');
@@ -360,6 +390,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     description: '',
     name: '',
     category: 'cooking-oil',
+    itemType: 'Oil',
+    isDealOfTheDay: false,
     brand: 'Teer',
     variantName: '5 Liter',
     unit: 'Liter',
@@ -415,6 +447,35 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     setShowAddCategoryModal(false);
     setNewCategoryName('');
     setNewCategoryDesc('');
+  };
+
+  // Item Save Handler
+  const handleSaveNewItem = () => {
+    const name = newItemName.trim();
+    if (!name) return;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    let updated = [...itemsList];
+    if (!updated.some((it) => it.slug === slug || it.name.toLowerCase() === name.toLowerCase())) {
+      const newItem = { name, slug, icon: newItemIcon || '📦' };
+      updated = [...updated, newItem];
+      setItemsList(updated);
+      localStorage.setItem('lb_custom_items', JSON.stringify(updated));
+    }
+
+    setProductForm((prev) => ({ ...prev, itemType: name }));
+    if (editProductModal) {
+      setEditProductModal((prev: any) => ({
+        ...prev,
+        itemType: name,
+        itemSlug: slug,
+      }));
+    }
+
+    window.dispatchEvent(new Event('lb_items_updated'));
+    setShowAddItemModal(false);
+    setNewItemName('');
+    setNewItemIcon('📦');
   };
 
   // Tag Add / Select Handler
@@ -580,11 +641,42 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       }
     }
 
+    // Detect Item (Product by Item)
+    let detectedItemType = productForm.itemType;
+    if (lower.includes('oil') || lower.includes('soybean') || lower.includes('mustard')) {
+      detectedItemType = 'Oil';
+    } else if (lower.includes('rice') || lower.includes('miniket') || lower.includes('chinigura')) {
+      detectedItemType = 'Rice';
+    } else if (lower.includes('tomato') || lower.includes('onion') || lower.includes('potato') || lower.includes('vegetable')) {
+      detectedItemType = 'Vegetables';
+    } else if (lower.includes('apple') || lower.includes('orange') || lower.includes('banana') || lower.includes('fruit')) {
+      detectedItemType = 'Fruits';
+    } else if (lower.includes('drink') || lower.includes('juice') || lower.includes('beverage') || lower.includes('coke') || lower.includes('sprite')) {
+      detectedItemType = 'Drinks';
+    } else if (lower.includes('flour') || lower.includes('atta') || lower.includes('suji') || lower.includes('maida')) {
+      detectedItemType = 'Flour';
+    } else if (lower.includes('sugar')) {
+      detectedItemType = 'Sugar';
+    } else if (lower.includes('salt')) {
+      detectedItemType = 'Salt';
+    } else if (lower.includes('dal') || lower.includes('lentil') || lower.includes('chickpea')) {
+      detectedItemType = 'Dal & Pulses';
+    } else if (lower.includes('noodle') || lower.includes('pasta') || lower.includes('maggi') || lower.includes('spaghetti')) {
+      detectedItemType = 'Noodles & Pasta';
+    } else if (lower.includes('spice') || lower.includes('turmeric') || lower.includes('chilli') || lower.includes('masala')) {
+      detectedItemType = 'Spices';
+    } else if (lower.includes('milk') || lower.includes('egg') || lower.includes('ghee') || lower.includes('dairy')) {
+      detectedItemType = 'Dairy & Eggs';
+    } else if (lower.includes('meat') || lower.includes('beef') || lower.includes('chicken') || lower.includes('fish')) {
+      detectedItemType = 'Meat & Fish';
+    }
+
     setProductForm((prev) => ({
       ...prev,
       description: text,
       name: detectedName || prev.name,
       category: detectedCategory,
+      itemType: detectedItemType,
       brand: detectedBrand,
       variantName: detectedVariant,
       unit: detectedUnit,
@@ -622,15 +714,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   };
 
   // Add Product Submit Handler
-  // Condition: Depends on product description (min 15 chars)
-  const isDescriptionValid = productForm.description.trim().length >= 15;
+  // User requested: "In the Admin Dashboard, don't make this required. Make it Optional."
+  const isDescriptionValid = true;
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isDescriptionValid) {
-      alert('Product creation depends on providing a valid product description (at least 15 characters).');
-      return;
-    }
     if (!productForm.name.trim()) {
       alert('Please provide a product title.');
       return;
@@ -640,11 +728,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     const sPrice = Number(productForm.salePrice) || regPrice;
     const stock = Number(productForm.stockQuantity) || 20;
 
+    const itemSlug = (productForm.itemType || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
     const newProd = {
       id: 'prod-' + Date.now(),
       name: productForm.name.trim(),
       slug: productForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-      description: productForm.description.trim(),
+      description: productForm.description.trim() || undefined,
       basePrice: regPrice,
       salePrice: sPrice,
       price: sPrice,
@@ -653,9 +746,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       primaryImage: productForm.imageUrl,
       images: [{ imageUrl: productForm.imageUrl }],
       category: { slug: productForm.category, name: productForm.category },
-      brand: { name: productForm.brand },
-      tags: productForm.tags.split(',').map((t) => t.trim()),
+      categorySlug: productForm.category,
+      itemType: productForm.itemType || undefined,
+      itemSlug: itemSlug || undefined,
+      isDealOfTheDay: Boolean(productForm.isDealOfTheDay),
       isFeatured: true,
+      brand: { name: productForm.brand },
+      tags: productForm.tags.split(',').map((t) => t.trim()).filter(Boolean),
       variants: [
         {
           id: 'v-' + Date.now(),
@@ -707,6 +804,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       description: '',
       name: '',
       category: 'cooking-oil',
+      itemType: 'Oil',
+      isDealOfTheDay: false,
       brand: 'Teer',
       variantName: '5 Liter',
       unit: 'Liter',
@@ -725,12 +824,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     e.preventDefault();
     if (!editProductModal) return;
 
+    const itemSlug = (editProductModal.itemType || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
     const updatedItem = {
       ...editProductModal,
+      description: editProductModal.description ? editProductModal.description.trim() : undefined,
       basePrice: Number(editProductModal.basePrice),
       salePrice: Number(editProductModal.salePrice),
       price: Number(editProductModal.salePrice),
       stockQuantity: Number(editProductModal.stockQuantity),
+      itemType: editProductModal.itemType || undefined,
+      itemSlug: itemSlug || undefined,
+      isDealOfTheDay: Boolean(editProductModal.isDealOfTheDay),
     };
 
     // Update in localStorage catalog
@@ -1510,39 +1618,30 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                     </div>
 
                     <form onSubmit={handleAddProduct} className="space-y-4 text-xs">
-                      {/* Product Description Field (Primary Dependency) */}
+                      {/* Product Description Field (Optional) */}
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <label className="font-extrabold text-slate-800 flex items-center gap-1">
+                          <label className="font-extrabold text-slate-800 flex items-center gap-1.5">
                             <span>Product Description</span>
-                            <span className="text-rose-500">* (Required)</span>
+                            <span className="text-slate-400 font-semibold text-xs">(Optional)</span>
                           </label>
-                          <span
-                            className={`text-[10px] font-mono font-bold ${
-                              isDescriptionValid ? 'text-emerald-700' : 'text-slate-400'
-                            }`}
-                          >
-                            {productForm.description.trim().length}/15 min chars
+                          <span className="text-[10px] font-mono font-bold text-slate-400">
+                            {productForm.description.trim().length} chars
                           </span>
                         </div>
                         <textarea
-                          rows={4}
-                          required
+                          rows={3}
                           value={productForm.description}
                           onChange={(e) => {
                             const val = e.target.value;
                             setProductForm({ ...productForm, description: val });
                           }}
-                          placeholder="Describe the product (e.g. Pure Teer Fortified Soybean Oil 5 Liter Can. Cholesterol-free, enriched with vitamins. Regular price 850 BDT, sale 790 BDT, stock 50 units. Category: Cooking Oil, Brand: Teer)..."
-                          className={`w-full p-3 border rounded-2xl focus:outline-none transition text-xs font-sans ${
-                            isDescriptionValid
-                              ? 'border-emerald-300 focus:border-emerald-600 bg-white'
-                              : 'border-slate-300 focus:border-emerald-500 bg-white'
-                          }`}
+                          placeholder="Optional: Describe the product (e.g. Pure Teer Fortified Soybean Oil 5 Liter Can. Cholesterol-free, enriched with vitamins. Regular price 850 BDT, sale 790 BDT, stock 50 units)..."
+                          className="w-full p-3 border border-slate-300 rounded-2xl focus:outline-none focus:border-emerald-600 transition text-xs font-sans bg-white"
                         />
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mt-1.5">
                           <p className="text-[11px] text-slate-400">
-                            Creation is dependent on providing a meaningful product description.
+                            Optional: You can type a description or click Auto-Fill to populate product details automatically.
                           </p>
                           <button
                             type="button"
@@ -1558,7 +1657,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                       {/* Auto-filled Form Fields */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
                         <div className="sm:col-span-2">
-                          <label className="font-bold text-slate-700 block mb-1">Product Title / Name</label>
+                          <label className="font-bold text-slate-700 block mb-1">Product Title / Name *</label>
                           <input
                             type="text"
                             required
@@ -1593,6 +1692,76 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                               </option>
                             ))}
                           </select>
+                        </div>
+
+                        {/* 1b. Item (Product by Item) with + Add Item Button */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="font-bold text-slate-700 block text-xs">Item (Product by Item) *</label>
+                            <button
+                              type="button"
+                              onClick={() => setShowAddItemModal(true)}
+                              className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1 transition cursor-pointer"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Add Item</span>
+                            </button>
+                          </div>
+                          <select
+                            value={productForm.itemType}
+                            onChange={(e) => setProductForm({ ...productForm, itemType: e.target.value })}
+                            className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:border-emerald-700 focus:outline-none bg-white font-semibold text-xs"
+                          >
+                            <option value="">-- None / General --</option>
+                            {itemsList.map((it) => (
+                              <option key={it.slug || it.name} value={it.name}>
+                                {it.icon ? `${it.icon} ` : ''}{it.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Placement & Display Settings */}
+                        <div className="sm:col-span-2 p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-2">
+                          <label className="font-extrabold text-slate-800 block text-xs">Product Placement & Display Options</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-emerald-200">
+                              <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                              <div>
+                                <span className="font-bold text-slate-800 block">Category Section</span>
+                                <span className="text-[10px] text-slate-500">
+                                  Appears under "{categoriesList.find((c) => c.slug === productForm.category)?.name || productForm.category}"
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-emerald-200">
+                              <span className={`w-2 h-2 rounded-full ${productForm.itemType ? 'bg-emerald-600' : 'bg-slate-300'}`}></span>
+                              <div>
+                                <span className="font-bold text-slate-800 block">Item Section</span>
+                                <span className="text-[10px] text-slate-500">
+                                  {productForm.itemType
+                                    ? `Appears in "${productForm.itemType}" item section`
+                                    : 'Select an Item above to display in item section'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <label className="sm:col-span-2 flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50/80 border border-amber-200 cursor-pointer hover:bg-amber-100/50 transition">
+                              <input
+                                type="checkbox"
+                                checked={productForm.isDealOfTheDay}
+                                onChange={(e) => setProductForm({ ...productForm, isDealOfTheDay: e.target.checked })}
+                                className="w-4 h-4 text-amber-600 rounded accent-amber-600 cursor-pointer"
+                              />
+                              <div>
+                                <span className="font-extrabold text-amber-950 block">Feature in "Deals of the Day" 🔥</span>
+                                <span className="text-[10px] text-amber-800">
+                                  Displays this product in the Deals of the Day homepage carousel and dedicated deals catalog with daily deal badge.
+                                </span>
+                              </div>
+                            </label>
+                          </div>
                         </div>
 
                         {/* 2. Brand Name */}
@@ -1882,23 +2051,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
                       {/* Submit Action */}
                       <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <div>
-                          {!isDescriptionValid && (
-                            <span className="text-[11px] font-bold text-rose-600 flex items-center gap-1">
-                              <AlertCircle className="w-3.5 h-3.5" />
-                              <span>Must enter product description first</span>
-                            </span>
-                          )}
+                        <div className="text-[11px] text-slate-400">
+                          Ready to upload to Category, Item & Deals placements
                         </div>
 
                         <button
                           type="submit"
-                          disabled={!isDescriptionValid}
-                          className={`px-6 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-sm ${
-                            isDescriptionValid
-                              ? 'bg-[#14532d] hover:bg-[#0f3f22] text-white cursor-pointer active:scale-95'
-                              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                          }`}
+                          className="px-6 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-sm bg-[#14532d] hover:bg-[#0f3f22] text-white cursor-pointer active:scale-95"
                         >
                           <Plus className="w-4 h-4" />
                           <span>Publish Product to Storefront</span>
@@ -1931,6 +2090,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                               -{Math.round((((Number(productForm.basePrice) - Number(productForm.salePrice)) / (Number(productForm.basePrice) || 1)) * 100))}% OFF
                             </span>
                           )}
+                          {productForm.isDealOfTheDay && (
+                            <span className="absolute bottom-2 left-2 bg-amber-500 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                              <span>🔥 Deal of the Day</span>
+                            </span>
+                          )}
                         </div>
 
                         <div className="font-black text-slate-900 text-sm truncate">
@@ -1953,7 +2117,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                       </div>
 
                       <div className="mt-4 p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500 border border-slate-100">
-                        <strong>Rule Enforced:</strong> As specified, adding a product depends directly on a descriptive summary. The description parser generates all parameters and links them into both the search catalog and category feeds.
+                        <strong>Placement Summary:</strong> Product description is optional. The product will be indexed in its selected Category, Item section, and Deals of the Day (if enabled).
                       </div>
                     </div>
                   </div>
@@ -2522,12 +2686,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">Product Description</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="font-bold text-slate-700 block text-xs">
+                      Product Description <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                  </div>
                   <textarea
                     rows={3}
                     value={editProductModal.description || ''}
                     onChange={(e) => setEditProductModal({ ...editProductModal, description: e.target.value })}
-                    className="w-full p-2.5 border border-slate-300 rounded-xl"
+                    placeholder="Optional: Enter product description..."
+                    className="w-full p-2.5 border border-slate-300 rounded-xl text-xs"
                   />
                 </div>
 
@@ -2569,6 +2738,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                     />
                   </div>
                   <div>
+                    <label className="font-bold text-slate-700 block mb-1 text-xs">Brand Name</label>
+                    <input
+                      type="text"
+                      value={editProductModal.brand?.name || editProductModal.brand || ''}
+                      onChange={(e) =>
+                        setEditProductModal({
+                          ...editProductModal,
+                          brand: { name: e.target.value },
+                        })
+                      }
+                      placeholder="e.g. Teer, Aarong"
+                      className="w-full p-2.5 border border-slate-300 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="font-bold text-slate-700 block text-xs">Category</label>
                       <button
@@ -2599,7 +2786,61 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                       ))}
                     </select>
                   </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-slate-700 block text-xs">Item (Product by Item)</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddItemModal(true)}
+                        className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 cursor-pointer"
+                      >
+                        + Add
+                      </button>
+                    </div>
+                    <select
+                      value={editProductModal.itemType || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const itm = itemsList.find((i) => i.name === val);
+                        setEditProductModal({
+                          ...editProductModal,
+                          itemType: val,
+                          itemSlug: itm?.slug || val.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                        });
+                      }}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-xs"
+                    >
+                      <option value="">-- None / General --</option>
+                      {itemsList.map((it) => (
+                        <option key={it.slug || it.name} value={it.name}>
+                          {it.icon ? `${it.icon} ` : ''}{it.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+
+                {/* Display in Deals of the Day toggle */}
+                <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50/80 border border-amber-200 cursor-pointer hover:bg-amber-100/50 transition">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editProductModal.isDealOfTheDay)}
+                    onChange={(e) =>
+                      setEditProductModal({
+                        ...editProductModal,
+                        isDealOfTheDay: e.target.checked,
+                      })
+                    }
+                    className="w-4 h-4 text-amber-600 rounded accent-amber-600 cursor-pointer"
+                  />
+                  <div>
+                    <span className="font-extrabold text-amber-950 block text-xs">Feature in "Deals of the Day" 🔥</span>
+                    <span className="text-[10px] text-amber-800">
+                      Display on homepage Deals of the Day carousel and category deals tab.
+                    </span>
+                  </div>
+                </label>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -2903,6 +3144,90 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                     className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition cursor-pointer"
                   >
                     Save & Select Category
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* MODAL: ADD ITEM (PRODUCT BY ITEM) */}
+        {/* ========================================================= */}
+        {showAddItemModal && (
+          <div className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
+            <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-emerald-700" />
+                  <span>Add New Item (Product by Item)</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddItemModal(false);
+                    setNewItemName('');
+                    setNewItemIcon('📦');
+                  }}
+                  className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-xs">Item Name *</label>
+                  <input
+                    type="text"
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    placeholder="e.g. Rice, Oil, Vegetables, Spices, Dairy"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:border-emerald-700 focus:outline-none"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-xs">Item Slug (Identifier)</label>
+                  <input
+                    type="text"
+                    value={newItemName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}
+                    disabled
+                    className="w-full px-3 py-2 border border-slate-200 bg-slate-50 text-slate-500 rounded-xl text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1 text-xs">Item Icon / Emoji</label>
+                  <input
+                    type="text"
+                    value={newItemIcon}
+                    onChange={(e) => setNewItemIcon(e.target.value)}
+                    placeholder="e.g. 🍚, 🫒, 🥦, 🍎, 📦"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:border-emerald-700 focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddItemModal(false);
+                      setNewItemName('');
+                      setNewItemIcon('📦');
+                    }}
+                    className="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!newItemName.trim()}
+                    onClick={handleSaveNewItem}
+                    className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                  >
+                    Save & Select Item
                   </button>
                 </div>
               </div>

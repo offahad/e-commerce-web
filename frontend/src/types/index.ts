@@ -56,6 +56,10 @@ export interface Product {
     name: string;
     slug: string;
   } | null;
+  categorySlug?: string;
+  itemType?: string;
+  itemSlug?: string;
+  isDealOfTheDay?: boolean;
   variants: ProductVariant[];
   images: ProductImage[];
   tags: string[];

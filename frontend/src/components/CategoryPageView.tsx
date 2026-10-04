@@ -792,6 +792,150 @@ export const CATEGORY_CATALOG_DATABASE: Record<
       },
     ],
   },
+  'cooking-oil': {
+    title: 'Cooking Oil',
+    icon: '🫒',
+    description: 'Fortified edible oils, pure mustard oil, and sunflower oil from top certified refineries.',
+    products: [
+      {
+        id: 'oil-teer-5',
+        name: 'Teer Pure Fortified Soybean Oil',
+        slug: 'teer-pure-soybean-oil-5l',
+        price: 790,
+        regularPrice: 850,
+        unit: '5 Liter',
+        rating: 4.9,
+        reviewsCount: 520,
+        discountPercentage: 7,
+        imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-oil-teer-5',
+      },
+      {
+        id: 'oil-rup-5',
+        name: 'Rupchanda Fortified Soybean Oil',
+        slug: 'rupchanda-fortified-soybean-oil-5l',
+        price: 810,
+        regularPrice: 860,
+        unit: '5 Liter',
+        rating: 4.8,
+        reviewsCount: 430,
+        discountPercentage: 6,
+        imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-oil-rup-5',
+      },
+    ],
+  },
+  'flour-atta': {
+    title: 'Flour & Atta',
+    icon: '🌾',
+    description: 'Whole wheat atta, premium maida, and suji for nutritious roti, paratha, and baking.',
+    products: [
+      {
+        id: 'flour-teer-2',
+        name: 'Teer Whole Wheat Atta',
+        slug: 'teer-whole-wheat-atta-2kg',
+        price: 135,
+        regularPrice: 150,
+        unit: '2 KG',
+        rating: 4.8,
+        reviewsCount: 310,
+        discountPercentage: 10,
+        imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-flour-teer-2',
+      },
+      {
+        id: 'flour-fresh-5',
+        name: 'Fresh Premium Maida',
+        slug: 'fresh-premium-maida-5kg',
+        price: 320,
+        regularPrice: 350,
+        unit: '5 KG',
+        rating: 4.7,
+        reviewsCount: 220,
+        imageUrl: 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-flour-fresh-5',
+      },
+    ],
+  },
+  'dal-pulses': {
+    title: 'Dal & Pulses',
+    icon: '🫘',
+    description: 'Cleaned and sorted masoor dal, moong dal, chhola, and yellow lentils.',
+    products: [
+      {
+        id: 'dal-masoor-1',
+        name: 'Deshi Masoor Dal (Red Lentil)',
+        slug: 'deshi-masoor-dal-1kg',
+        price: 145,
+        regularPrice: 160,
+        unit: '1 KG',
+        rating: 4.9,
+        reviewsCount: 410,
+        discountPercentage: 9,
+        imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-dal-masoor-1',
+      },
+    ],
+  },
+  'noodles-pasta': {
+    title: 'Noodles & Pasta',
+    icon: '🍜',
+    description: 'Instant noodles, egg noodles, macaroni, and durum wheat pasta.',
+    products: [
+      {
+        id: 'noodle-maggi-8',
+        name: 'Maggi 2-Minute Masala Noodles',
+        slug: 'maggi-masala-noodles-8pack',
+        price: 160,
+        regularPrice: 180,
+        unit: '8 Pack (560g)',
+        rating: 4.9,
+        reviewsCount: 950,
+        discountPercentage: 11,
+        imageUrl: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-noodle-maggi-8',
+      },
+    ],
+  },
+  'meat-fish': {
+    title: 'Meat & Fish',
+    icon: '🍗',
+    description: 'Fresh dressed broiler chicken, beef cuts, and fresh river and sea fish.',
+    products: [
+      {
+        id: 'meat-beef-1',
+        name: 'Fresh Beef (Curry Cut with Bone)',
+        slug: 'fresh-beef-curry-cut-1kg',
+        price: 750,
+        regularPrice: 780,
+        unit: '1 KG',
+        rating: 4.9,
+        reviewsCount: 310,
+        imageUrl: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-meat-beef-1',
+      },
+    ],
+  },
+  spices: {
+    title: 'Spices & Seasonings',
+    icon: '🌶️',
+    description: 'Aromatic whole and ground spices, curry powders, and seasoning blends.',
+    products: [
+      {
+        id: 'spice-radhuni-turmeric',
+        name: 'Radhuni Pure Turmeric Powder',
+        slug: 'radhuni-pure-turmeric-powder-500g',
+        price: 200,
+        regularPrice: 220,
+        unit: '500 Gram',
+        rating: 4.8,
+        reviewsCount: 340,
+        discountPercentage: 9,
+        imageUrl: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=500&q=80',
+        variantId: 'v-deal-turmeric-500',
+      },
+    ],
+  },
 };
 
 export const CategoryPageView: React.FC<CategoryPageProps> = ({
@@ -807,6 +951,62 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
 
   const [searchFilter, setSearchFilter] = useState('');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured');
+
+  // Custom products from local storage synced with Admin Portal
+  const [customCatalogProducts, setCustomCatalogProducts] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('lb_custom_catalog_products');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // Custom categories from local storage
+  const [customCategories, setCustomCategories] = useState<Array<{ name: string; slug: string }>>(() => {
+    try {
+      const saved = localStorage.getItem('lb_custom_categories');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // Custom items from local storage
+  const [customItems, setCustomItems] = useState<Array<{ name: string; slug: string; icon?: string }>>(() => {
+    try {
+      const saved = localStorage.getItem('lb_custom_items');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const pSaved = localStorage.getItem('lb_custom_catalog_products');
+        if (pSaved) setCustomCatalogProducts(JSON.parse(pSaved));
+      } catch (e) {}
+      try {
+        const cSaved = localStorage.getItem('lb_custom_categories');
+        if (cSaved) setCustomCategories(JSON.parse(cSaved));
+      } catch (e) {}
+      try {
+        const iSaved = localStorage.getItem('lb_custom_items');
+        if (iSaved) setCustomItems(JSON.parse(iSaved));
+      } catch (e) {}
+    };
+
+    window.addEventListener('lb_products_updated', handleSync);
+    window.addEventListener('lb_categories_updated', handleSync);
+    window.addEventListener('lb_items_updated', handleSync);
+    return () => {
+      window.removeEventListener('lb_products_updated', handleSync);
+      window.removeEventListener('lb_categories_updated', handleSync);
+      window.removeEventListener('lb_items_updated', handleSync);
+    };
+  }, []);
 
   // Normalize slug to find category info
   const normalizedSlug = categorySlug.toLowerCase().trim();
@@ -825,36 +1025,89 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
       (normalizedSlug.includes('dal') && k === 'dal-pulses') ||
       (normalizedSlug.includes('noodle') && k === 'noodles-pasta') ||
       (normalizedSlug.includes('meat') && k === 'meat-fish') ||
-      (normalizedSlug.includes('dairy') && k === 'dairy')
-  ) || 'all';
+      (normalizedSlug.includes('dairy') && k === 'dairy') ||
+      (normalizedSlug.includes('spice') && k === 'spices')
+  ) || normalizedSlug;
 
-  const categoryMeta = CATEGORY_CATALOG_DATABASE[catKey] || CATEGORY_CATALOG_DATABASE.all;
+  const categoryMeta = CATEGORY_CATALOG_DATABASE[catKey] || {
+    title: categoryTitle || normalizedSlug.replace(/-/g, ' ').toUpperCase(),
+    icon: '📦',
+    description: `Browse all products in ${categoryTitle || normalizedSlug}.`,
+    products: [],
+  };
 
-  // Combine database products with any matching backend API products
+  // Combine database products with any matching backend API products + custom admin products
   const displayProducts = useMemo(() => {
     const list = [...categoryMeta.products];
 
-    if (Array.isArray(apiProducts) && apiProducts.length > 0) {
-      for (const p of apiProducts) {
-        const matchesCat =
-          p.category?.slug === categorySlug ||
-          p.category?.slug === catKey ||
-          (p.tags && p.tags.some((t: string) => t.toLowerCase().includes(catKey)));
+    // Merge candidates from custom admin uploads and backend API
+    const allCandidates = [...customCatalogProducts, ...apiProducts];
 
-        if (matchesCat && !list.some((existing) => existing.id === p.id || existing.slug === p.slug)) {
-          list.push({
-            id: p.id,
-            name: p.name,
-            slug: p.slug,
-            price: p.salePrice || p.basePrice || 100,
-            regularPrice: p.basePrice,
-            unit: p.unit || p.variants?.[0]?.displayName || '1 Pack',
-            rating: 4.8,
-            reviewsCount: 120,
-            imageUrl: p.primaryImage || p.images?.[0]?.imageUrl || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=80',
-            variantId: p.variants?.[0]?.id,
-          });
-        }
+    for (const p of allCandidates) {
+      let matches = false;
+
+      if (catKey === 'all' || normalizedSlug === 'all') {
+        matches = true;
+      } else if (catKey === 'deals' || normalizedSlug === 'deals') {
+        matches = Boolean(p.isDealOfTheDay || p.category?.slug === 'deals' || p.categorySlug === 'deals');
+      } else {
+        const pCatSlug = (p.categorySlug || p.category?.slug || '').toLowerCase();
+        const pCatName = (p.category?.name || '').toLowerCase();
+        const pItemType = (p.itemType || '').toLowerCase();
+        const pItemSlug = (p.itemSlug || '').toLowerCase();
+
+        // 1. Direct Category Matching
+        const catMatch =
+          pCatSlug === normalizedSlug ||
+          pCatSlug === catKey ||
+          pCatName === normalizedSlug ||
+          pCatName === catKey;
+
+        // 2. Item Section Matching (e.g. Rice, Oil, Vegetables, Fruits, etc.)
+        const itemMatch =
+          pItemType === normalizedSlug ||
+          pItemType === catKey ||
+          pItemSlug === normalizedSlug ||
+          pItemSlug === catKey ||
+          (catKey === 'cooking-oil' && pItemType.includes('oil')) ||
+          (catKey === 'rice' && pItemType.includes('rice')) ||
+          (catKey === 'vegetables' && pItemType.includes('veg')) ||
+          (catKey === 'fruits' && pItemType.includes('fruit')) ||
+          (catKey === 'beverages' && (pItemType.includes('drink') || pItemType.includes('beverag'))) ||
+          (catKey === 'flour-atta' && (pItemType.includes('flour') || pItemType.includes('atta'))) ||
+          (catKey === 'sugar' && pItemType.includes('sugar')) ||
+          (catKey === 'salt' && pItemType.includes('salt')) ||
+          (catKey === 'dal-pulses' && pItemType.includes('dal')) ||
+          (catKey === 'noodles-pasta' && (pItemType.includes('noodle') || pItemType.includes('pasta'))) ||
+          (catKey === 'meat-fish' && (pItemType.includes('meat') || pItemType.includes('fish') || pItemType.includes('beef') || pItemType.includes('chicken'))) ||
+          (catKey === 'dairy' && (pItemType.includes('dairy') || pItemType.includes('milk') || pItemType.includes('egg'))) ||
+          (catKey === 'spices' && pItemType.includes('spice'));
+
+        // 3. Tag Matching
+        const tagMatch =
+          p.tags &&
+          Array.isArray(p.tags) &&
+          p.tags.some((t: string) => typeof t === 'string' && (t.toLowerCase().includes(catKey) || t.toLowerCase().includes(normalizedSlug)));
+
+        matches = catMatch || itemMatch || tagMatch;
+      }
+
+      if (matches && !list.some((existing) => existing.id === p.id || existing.slug === p.slug)) {
+        list.unshift({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          price: Number(p.salePrice || p.price || p.basePrice || 100),
+          regularPrice: Number(p.basePrice || p.regularPrice || Math.round((p.salePrice || p.price || 100) * 1.15)),
+          unit: p.unit || p.variantName || p.variants?.[0]?.displayName || '1 Pack',
+          rating: 4.8,
+          reviewsCount: 120,
+          imageUrl:
+            p.primaryImage ||
+            p.images?.[0]?.imageUrl ||
+            (typeof p.images?.[0] === 'string' ? p.images[0] : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=80'),
+          variantId: p.variants?.[0]?.id || `v-${p.id}`,
+        });
       }
     }
 
@@ -876,9 +1129,10 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
     }
 
     return filtered;
-  }, [categoryMeta, apiProducts, categorySlug, catKey, searchFilter, sortBy]);
+  }, [categoryMeta, apiProducts, customCatalogProducts, categorySlug, catKey, normalizedSlug, searchFilter, sortBy]);
 
-  const CATEGORY_TABS = [
+  // Standard category and item tabs matching Screenshot 2
+  const BASE_CATEGORY_TABS = [
     { key: 'all', label: 'All Items', icon: '🛒' },
     { key: 'deals', label: 'Deals of the Day', icon: '⚡' },
     { key: 'cooking-oil', label: 'Cooking Oil', icon: '🫒' },
@@ -894,6 +1148,33 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
     { key: 'meat-fish', label: 'Meat & Fish', icon: '🍗' },
     { key: 'dairy', label: 'Dairy & Eggs', icon: '🧀' },
   ];
+
+  // Dynamic category tabs merging standard tabs + custom categories & items
+  const CATEGORY_TABS = useMemo(() => {
+    const tabs = [...BASE_CATEGORY_TABS];
+
+    for (const c of customCategories) {
+      if (!tabs.some((t) => t.key === c.slug)) {
+        tabs.push({
+          key: c.slug,
+          label: c.name,
+          icon: '🏷️',
+        });
+      }
+    }
+
+    for (const it of customItems) {
+      if (!tabs.some((t) => t.key === it.slug || t.label.toLowerCase() === it.name.toLowerCase())) {
+        tabs.push({
+          key: it.slug,
+          label: it.name,
+          icon: it.icon || '📦',
+        });
+      }
+    }
+
+    return tabs;
+  }, [customCategories, customItems]);
 
   return (
     <div className="text-left my-2 sm:my-4 max-w-7xl mx-auto px-2 sm:px-4">

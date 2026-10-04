@@ -25,7 +25,7 @@ export interface PastelItem {
   iconText: string;
 }
 
-const PASTEL_ITEMS: PastelItem[] = [
+const DEFAULT_PASTEL_ITEMS: PastelItem[] = [
   {
     id: 'item-oil',
     name: 'Oil',
@@ -43,10 +43,26 @@ const PASTEL_ITEMS: PastelItem[] = [
     iconText: '🍚',
   },
   {
+    id: 'item-veg',
+    name: 'Vegetables',
+    slug: 'vegetables',
+    bgColor: 'bg-emerald-50 border-emerald-100',
+    imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
+    iconText: '🥦',
+  },
+  {
+    id: 'item-fruits',
+    name: 'Fruits',
+    slug: 'fruits',
+    bgColor: 'bg-rose-50 border-rose-100',
+    imageUrl: 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&w=400&q=80',
+    iconText: '🍎',
+  },
+  {
     id: 'item-drinks',
     name: 'Drinks',
     slug: 'beverages',
-    bgColor: 'bg-emerald-50 border-emerald-100',
+    bgColor: 'bg-cyan-50 border-cyan-100',
     imageUrl: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=400&q=80',
     iconText: '🥤',
   },
@@ -90,6 +106,30 @@ const PASTEL_ITEMS: PastelItem[] = [
     imageUrl: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=400&q=80',
     iconText: '🍜',
   },
+  {
+    id: 'item-spices',
+    name: 'Spices',
+    slug: 'spices',
+    bgColor: 'bg-amber-50 border-amber-100',
+    imageUrl: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=400&q=80',
+    iconText: '🌶️',
+  },
+  {
+    id: 'item-dairy',
+    name: 'Dairy & Eggs',
+    slug: 'dairy',
+    bgColor: 'bg-blue-50 border-blue-100',
+    imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=400&q=80',
+    iconText: '🥛',
+  },
+  {
+    id: 'item-meat',
+    name: 'Meat & Fish',
+    slug: 'meat-fish',
+    bgColor: 'bg-rose-50 border-rose-100',
+    imageUrl: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=400&q=80',
+    iconText: '🍗',
+  },
 ];
 
 export const CatalogSection: React.FC<CatalogSectionProps> = ({
@@ -99,6 +139,76 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
   const { t } = useLanguage();
   const { cartItems, addToCart, updateQuantity, removeItem, toggleWishlist, isWishlisted } = useCart();
   const [activeTab, setActiveTab] = useState<'category' | 'items'>('category');
+
+  // Custom items list synced from Admin Portal
+  const [pastelItems, setPastelItems] = useState<PastelItem[]>(() => {
+    let list = [...DEFAULT_PASTEL_ITEMS];
+    try {
+      const saved = localStorage.getItem('lb_custom_items');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        for (const it of parsed) {
+          if (!list.some((existing) => existing.slug === it.slug || existing.name.toLowerCase() === it.name.toLowerCase())) {
+            list.push({
+              id: 'custom-item-' + (it.slug || it.name),
+              name: it.name,
+              slug: it.slug || it.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+              bgColor: 'bg-emerald-50 border-emerald-100',
+              imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80',
+              iconText: it.icon || '📦',
+            });
+          }
+        }
+      }
+    } catch (e) {}
+    return list;
+  });
+
+  // Custom products list synced from Admin Portal
+  const [customCatalogProducts, setCustomCatalogProducts] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('lb_custom_catalog_products');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  React.useEffect(() => {
+    const handleSync = () => {
+      try {
+        const iSaved = localStorage.getItem('lb_custom_items');
+        if (iSaved) {
+          const parsed = JSON.parse(iSaved);
+          let list = [...DEFAULT_PASTEL_ITEMS];
+          for (const it of parsed) {
+            if (!list.some((existing) => existing.slug === it.slug || existing.name.toLowerCase() === it.name.toLowerCase())) {
+              list.push({
+                id: 'custom-item-' + (it.slug || it.name),
+                name: it.name,
+                slug: it.slug || it.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                bgColor: 'bg-emerald-50 border-emerald-100',
+                imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80',
+                iconText: it.icon || '📦',
+              });
+            }
+          }
+          setPastelItems(list);
+        }
+      } catch (e) {}
+      try {
+        const pSaved = localStorage.getItem('lb_custom_catalog_products');
+        if (pSaved) setCustomCatalogProducts(JSON.parse(pSaved));
+      } catch (e) {}
+    };
+
+    window.addEventListener('lb_items_updated', handleSync);
+    window.addEventListener('lb_products_updated', handleSync);
+    return () => {
+      window.removeEventListener('lb_items_updated', handleSync);
+      window.removeEventListener('lb_products_updated', handleSync);
+    };
+  }, []);
 
   // Carousel refs for horizontal scrolling
   const youMightNeedRef = useRef<HTMLDivElement>(null);
@@ -270,6 +380,59 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
       variantId: 'v-frt-4',
     },
   ];
+
+  // Merge custom products into rails
+  const mergedYouMightNeed = React.useMemo(() => {
+    const customList = customCatalogProducts.map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: Number(p.salePrice || p.price || 100),
+      regularPrice: Number(p.basePrice || p.regularPrice),
+      rating: 4.9,
+      reviewsCount: 150,
+      imageUrl: p.primaryImage || p.images?.[0]?.imageUrl || youMightNeedProducts[0].imageUrl,
+      unit: p.unit || p.variantName || '1 Pack',
+      variantId: p.variants?.[0]?.id || `v-${p.id}`,
+    }));
+    return [...customList, ...youMightNeedProducts];
+  }, [customCatalogProducts]);
+
+  const mergedVegetables = React.useMemo(() => {
+    const customVegs = customCatalogProducts
+      .filter((p) => p.categorySlug === 'vegetables' || p.category?.slug === 'vegetables' || p.itemType?.toLowerCase().includes('veg'))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: Number(p.salePrice || p.price || 100),
+        regularPrice: Number(p.basePrice || p.regularPrice),
+        rating: 4.8,
+        reviewsCount: 120,
+        imageUrl: p.primaryImage || p.images?.[0]?.imageUrl || vegetableProducts[0].imageUrl,
+        unit: p.unit || p.variantName || '1 Pack',
+        variantId: p.variants?.[0]?.id || `v-${p.id}`,
+      }));
+    return [...customVegs, ...vegetableProducts];
+  }, [customCatalogProducts]);
+
+  const mergedFruits = React.useMemo(() => {
+    const customFruits = customCatalogProducts
+      .filter((p) => p.categorySlug === 'fruits' || p.category?.slug === 'fruits' || p.itemType?.toLowerCase().includes('fruit'))
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        price: Number(p.salePrice || p.price || 100),
+        regularPrice: Number(p.basePrice || p.regularPrice),
+        rating: 4.9,
+        reviewsCount: 180,
+        imageUrl: p.primaryImage || p.images?.[0]?.imageUrl || fruitProducts[0].imageUrl,
+        unit: p.unit || p.variantName || '1 Pack',
+        variantId: p.variants?.[0]?.id || `v-${p.id}`,
+      }));
+    return [...customFruits, ...fruitProducts];
+  }, [customCatalogProducts]);
 
   const renderProductRail = (
     title: string,
@@ -508,13 +671,13 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
           </div>
 
           {/* Rail 1: You might need */}
-          {renderProductRail(t('youMightNeed'), youMightNeedProducts, youMightNeedRef, 'all')}
+          {renderProductRail(t('youMightNeed'), mergedYouMightNeed, youMightNeedRef, 'all')}
 
           {/* Rail 2: Fresh Vegetables */}
-          {renderProductRail(`🥦 ${t('freshVegetables')}`, vegetableProducts, vegetablesRef, 'vegetables')}
+          {renderProductRail(`🥦 ${t('freshVegetables')}`, mergedVegetables, vegetablesRef, 'vegetables')}
 
           {/* Rail 3: Fresh Fruits */}
-          {renderProductRail(`🍎 ${t('freshFruits')}`, fruitProducts, fruitsRef, 'fruits')}
+          {renderProductRail(`🍎 ${t('freshFruits')}`, mergedFruits, fruitsRef, 'fruits')}
         </div>
       )}
 
@@ -527,7 +690,7 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {PASTEL_ITEMS.map((item) => (
+            {pastelItems.map((item) => (
               <div
                 key={item.id}
                 onClick={() => onFilterByCategory(item.slug, item.name)}

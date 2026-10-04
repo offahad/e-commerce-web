@@ -159,13 +159,14 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Sync with API deals if available
+  // Sync with API deals and custom admin deals marked for "Deals of the Day"
   useEffect(() => {
-    const loadApiDeals = async () => {
+    const loadDeals = async () => {
+      let baseList: DealItem[] = [...DEFAULT_DEAL_ITEMS];
       try {
         const res = await api.getDealsOfTheDay();
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          const mapped: DealItem[] = res.data.map((p: any, idx: number) => {
+          baseList = res.data.map((p: any, idx: number) => {
             const salePrice = Number(p.salePrice || p.basePrice || 100);
             const regularPrice = Number(p.originalPrice || p.basePrice || Math.round(salePrice * 1.15));
             const discountPercentage = Math.round(
@@ -195,13 +196,60 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({
               rawProduct: p,
             };
           });
-          setItems(mapped);
         }
       } catch (err) {
         console.error('Failed to sync api deals', err);
       }
+
+      // Merge custom admin products flagged as Deals of the Day
+      const customSaved = localStorage.getItem('lb_custom_catalog_products');
+      if (customSaved) {
+        try {
+          const customList = JSON.parse(customSaved);
+          const customDeals = customList
+            .filter((p: any) => p.isDealOfTheDay || p.category?.slug === 'deals' || p.categorySlug === 'deals')
+            .map((p: any, idx: number) => {
+              const regPrice = Number(p.basePrice || p.price || 100);
+              const saleP = Number(p.salePrice || p.price || regPrice);
+              const discountPercentage = regPrice > saleP ? Math.round(((regPrice - saleP) / regPrice) * 100) : 12;
+
+              return {
+                id: p.id || `custom-deal-${idx}`,
+                name: p.name,
+                unitSubtitle: p.unit || p.variantName || '1 Pack',
+                imageUrl: p.primaryImage || p.images?.[0]?.imageUrl || DEFAULT_DEAL_ITEMS[0].imageUrl,
+                discountPercentage,
+                salePrice: saleP,
+                regularPrice: regPrice,
+                soldCount: 0,
+                totalStock: Number(p.stockQuantity ?? 50),
+                isSoldOut: Number(p.stockQuantity ?? 50) <= 0,
+                slug: p.slug,
+                variantId: p.variants?.[0]?.id || `v-${p.id}`,
+                rawProduct: p,
+              };
+            });
+
+          if (customDeals.length > 0) {
+            const merged = [...customDeals];
+            for (const it of baseList) {
+              if (!merged.some((m) => m.id === it.id || m.slug === it.slug)) {
+                merged.push(it);
+              }
+            }
+            baseList = merged;
+          }
+        } catch (e) {
+          console.warn('Error reading custom deals from storage', e);
+        }
+      }
+
+      setItems(baseList);
     };
-    loadApiDeals();
+
+    loadDeals();
+    window.addEventListener('lb_products_updated', loadDeals);
+    return () => window.removeEventListener('lb_products_updated', loadDeals);
   }, []);
 
   // Helper to scroll carousel horizontally
