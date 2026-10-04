@@ -26,7 +26,66 @@ import { FavouritesModal } from './components/FavouritesModal';
 import { Footer } from './components/Footer';
 import { Product } from './types';
 import { api } from './services/api';
-import { AlertCircle, SlidersHorizontal, Check } from 'lucide-react';
+import { AlertCircle, SlidersHorizontal, Check, RefreshCw } from 'lucide-react';
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallbackAction?: () => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class StoreErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('StoreErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+    if (this.props.fallbackAction) {
+      this.props.fallbackAction();
+    }
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-[50vh] flex items-center justify-center p-6 text-center">
+          <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl max-w-md w-full">
+            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-800 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-6 h-6 text-emerald-700" />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 mb-2">Notice</h2>
+            <p className="text-xs text-slate-500 mb-6">
+              The page encountered a temporary issue. Click below to return to the homepage.
+            </p>
+            <button
+              onClick={this.handleReset}
+              className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center gap-2 mx-auto transition cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Back to Storefront Home</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 const MainContent: React.FC = () => {
   const { user, isApproved } = useAuth();
@@ -223,77 +282,79 @@ const MainContent: React.FC = () => {
 
       {/* Main Body Switcher: Home vs ProductDetailView vs CartPage vs CategoryPage */}
       <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-24 md:pb-8 w-full">
-        {/* VIEW 1: DEDICATED PRODUCT DETAIL VIEW (Matching Screenshot 6) */}
-        {currentView === 'product-detail' && selectedProduct && (
-          <ProductDetailView
-            product={selectedProduct}
-            onBack={() => setCurrentView('home')}
-            onBuyNow={handleBuyNowFromDetail}
-          />
-        )}
-
-        {/* VIEW 2: DEDICATED SHOPPING CART PAGE (Matching Screenshot 7) */}
-        {currentView === 'cart-page' && (
-          <CartPage
-            onProceedToCheckout={() => setIsCheckoutOpen(true)}
-            onContinueShopping={() => setCurrentView('home')}
-            onOpenAccountAddresses={() => handleOpenAccount('addresses')}
-          />
-        )}
-
-        {/* VIEW 3: DEDICATED CATEGORY & PRODUCT-BY-ITEMS PAGE */}
-        {currentView === 'category-page' && (
-          <CategoryPageView
-            categorySlug={categoryPageViewSlug}
-            categoryTitle={categoryPageViewTitle}
-            onBack={() => setCurrentView('home')}
-            onOpenProduct={(prod) => handleOpenProductDetail(prod)}
-            onSelectCategory={(slug) => handleOpenCategoryPage(slug)}
-            apiProducts={products}
-          />
-        )}
-
-        {/* VIEW 4: HOMEPAGE STOREFRONT (Promotional Hero -> Friday Flash -> Deals of the Day -> Categories & Items -> Promo Poster Banner -> Footer) */}
-        {currentView === 'home' && (
-          <>
-            {/* 1. Hero Promotional Banner with Wave & Auto-advancing CMS Carousel */}
-            <HeroBanner
-              slides={heroSlides}
-              onShopNow={(categorySlug) => {
-                if (categorySlug) {
-                  handleOpenCategoryPage(categorySlug);
-                } else {
-                  handleOpenCategoryPage('all');
-                }
-              }}
+        <StoreErrorBoundary fallbackAction={() => setCurrentView('home')}>
+          {/* VIEW 1: DEDICATED PRODUCT DETAIL VIEW (Matching Screenshot 6) */}
+          {currentView === 'product-detail' && selectedProduct && (
+            <ProductDetailView
+              product={selectedProduct}
+              onBack={() => setCurrentView('home')}
+              onBuyNow={handleBuyNowFromDetail}
             />
+          )}
 
-            {/* 2. Friday Flash Deals (when deal is active it will show products, if not then it will show "Friday deals are closed for today. It will appear on Friday.") */}
-            <FridayFlashSection
-              onOpenProductModal={(slug) => {
-                setActiveProductSlug(slug);
-              }}
+          {/* VIEW 2: DEDICATED SHOPPING CART PAGE (Matching Screenshot 7) */}
+          {currentView === 'cart-page' && (
+            <CartPage
+              onProceedToCheckout={() => setIsCheckoutOpen(true)}
+              onContinueShopping={() => setCurrentView('home')}
+              onOpenAccountAddresses={() => handleOpenAccount('addresses')}
+            />
+          )}
+
+          {/* VIEW 3: DEDICATED CATEGORY & PRODUCT-BY-ITEMS PAGE */}
+          {currentView === 'category-page' && (
+            <CategoryPageView
+              categorySlug={categoryPageViewSlug}
+              categoryTitle={categoryPageViewTitle}
+              onBack={() => setCurrentView('home')}
               onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+              onSelectCategory={(slug) => handleOpenCategoryPage(slug)}
+              apiProducts={products}
             />
+          )}
 
-            {/* 3. Deals of the Day with Red Clock Timer Badges, Sold: X/Y Progress & Sold Out Overlay */}
-            <DealsOfTheDaySection
-              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
-              onSeeMore={() => handleOpenCategoryPage('deals', t('dealsTitle') || 'Deals of the Day')}
-            />
+          {/* VIEW 4: HOMEPAGE STOREFRONT (Promotional Hero -> Friday Flash -> Deals of the Day -> Categories & Items -> Promo Poster Banner -> Footer) */}
+          {currentView === 'home' && (
+            <>
+              {/* 1. Hero Promotional Banner with Wave & Auto-advancing CMS Carousel */}
+              <HeroBanner
+                slides={heroSlides}
+                onShopNow={(categorySlug) => {
+                  if (categorySlug) {
+                    handleOpenCategoryPage(categorySlug);
+                  } else {
+                    handleOpenCategoryPage('all');
+                  }
+                }}
+              />
 
-            {/* 4. Other Categories: Dual Mode Catalog Switcher ("By Category" vs "Product by Items") */}
-            <CatalogSection
-              onOpenProduct={(prod) => handleOpenProductDetail(prod)}
-              onFilterByCategory={(slug, title) => handleOpenCategoryPage(slug, title)}
-            />
+              {/* 2. Friday Flash Deals (when deal is active it will show products, if not then it will show "Friday deals are closed for today. It will appear on Friday.") */}
+              <FridayFlashSection
+                onOpenProductModal={(slug) => {
+                  setActiveProductSlug(slug);
+                }}
+                onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+              />
 
-            {/* 5. Another Promo Item Segment as a Banner or Poster Just Before the Footer */}
-            <PromoPosterBanner
-              onShopDeals={() => handleOpenCategoryPage('all', 'Summer Promo Deals')}
-            />
-          </>
-        )}
+              {/* 3. Deals of the Day with Red Clock Timer Badges, Sold: X/Y Progress & Sold Out Overlay */}
+              <DealsOfTheDaySection
+                onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+                onSeeMore={() => handleOpenCategoryPage('deals', t('dealsTitle') || 'Deals of the Day')}
+              />
+
+              {/* 4. Other Categories: Dual Mode Catalog Switcher ("By Category" vs "Product by Items") */}
+              <CatalogSection
+                onOpenProduct={(prod) => handleOpenProductDetail(prod)}
+                onFilterByCategory={(slug, title) => handleOpenCategoryPage(slug, title)}
+              />
+
+              {/* 5. Another Promo Item Segment as a Banner or Poster Just Before the Footer */}
+              <PromoPosterBanner
+                onShopDeals={() => handleOpenCategoryPage('all', 'Summer Promo Deals')}
+              />
+            </>
+          )}
+        </StoreErrorBoundary>
       </main>
 
       {/* Cart Drawer (Quick slide-out) */}

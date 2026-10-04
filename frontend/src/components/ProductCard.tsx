@@ -17,15 +17,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
     if (variants.length > 0) {
       return variants.find((v) => v.stockQuantity > 0) || variants[0] || null;
     }
+    const fallbackPrice = product.salePrice || (product as any).price || 100;
+    const fallbackBasePrice = product.basePrice || (product as any).price || 100;
     return {
       id: `var-${product.id}`,
       productId: product.id,
       name: product.name,
       displayName: product.unit || 'Standard',
       packSize: product.unit || 'Standard',
-      price: product.salePrice || product.price || 100,
-      salePrice: product.salePrice || product.price || 100,
-      basePrice: product.basePrice || product.price || 100,
+      price: fallbackBasePrice,
+      salePrice: fallbackPrice,
+      basePrice: fallbackBasePrice,
       stockQuantity: product.stockQuantity ?? 50,
       isPrimary: true,
       sku: (product as any).sku || `SKU-${product.id}`,
@@ -36,15 +38,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
     if (product.variants && product.variants.length > 0) {
       setSelectedVariant(product.variants.find((v) => v.stockQuantity > 0) || product.variants[0]);
     } else {
+      const fallbackPrice = product.salePrice || (product as any).price || 100;
+      const fallbackBasePrice = product.basePrice || (product as any).price || 100;
       setSelectedVariant({
         id: `var-${product.id}`,
         productId: product.id,
         name: product.name,
         displayName: product.unit || 'Standard',
         packSize: product.unit || 'Standard',
-        price: product.salePrice || product.price || 100,
-        salePrice: product.salePrice || product.price || 100,
-        basePrice: product.basePrice || product.price || 100,
+        price: fallbackBasePrice,
+        salePrice: fallbackPrice,
+        basePrice: fallbackBasePrice,
         stockQuantity: product.stockQuantity ?? 50,
         isPrimary: true,
         sku: (product as any).sku || `SKU-${product.id}`,

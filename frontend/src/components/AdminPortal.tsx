@@ -43,7 +43,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
   // Role Switcher State: defaults to user.role if MODERATOR, else SUPER_ADMIN (allows live testing)
   const [activeRole, setActiveRole] = useState<AdminRole>(() => {
-    return user?.role === 'MODERATOR' ? 'MODERATOR' : 'SUPER_ADMIN';
+    return (user?.role as any) === 'MODERATOR' ? 'MODERATOR' : 'SUPER_ADMIN';
   });
 
   // Active Navigation Tab

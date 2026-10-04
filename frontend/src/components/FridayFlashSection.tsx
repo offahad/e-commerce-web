@@ -416,7 +416,7 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
                       ৳{item.dealPrice}
                     </span>
                     <span className="text-sm text-slate-400 line-through">
-                      ৳{item.regularPrice || item.originalPrice}
+                      ৳{item.regularPrice || (item as any).originalPrice}
                     </span>
                   </div>
 
