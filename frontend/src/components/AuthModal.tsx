@@ -145,12 +145,12 @@ export const AuthModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-md w-full my-8 shadow-2xl border border-slate-100 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full my-2 sm:my-8 shadow-2xl border border-slate-100 relative overflow-hidden">
         {/* Close */}
         <button
           onClick={closeAuthModal}
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -162,7 +162,7 @@ export const AuthModal: React.FC = () => {
               setTab('login');
               setError(null);
             }}
-            className={`py-3.5 text-xs font-black uppercase tracking-wider transition ${
+            className={`py-2.5 sm:py-3.5 text-[11px] sm:text-xs font-black uppercase tracking-wider transition cursor-pointer ${
               tab === 'login'
                 ? 'bg-white text-emerald-700 border-b-2 border-emerald-600'
                 : 'text-slate-500 hover:text-slate-800'
@@ -175,7 +175,7 @@ export const AuthModal: React.FC = () => {
               setTab('register');
               setError(null);
             }}
-            className={`py-3.5 text-xs font-black uppercase tracking-wider transition ${
+            className={`py-2.5 sm:py-3.5 text-[11px] sm:text-xs font-black uppercase tracking-wider transition cursor-pointer ${
               tab === 'register'
                 ? 'bg-white text-emerald-700 border-b-2 border-emerald-600'
                 : 'text-slate-500 hover:text-slate-800'
@@ -188,7 +188,7 @@ export const AuthModal: React.FC = () => {
               setTab('forgot');
               setError(null);
             }}
-            className={`py-3.5 text-xs font-black uppercase tracking-wider transition ${
+            className={`py-2.5 sm:py-3.5 text-[11px] sm:text-xs font-black uppercase tracking-wider transition cursor-pointer ${
               tab === 'forgot'
                 ? 'bg-white text-emerald-700 border-b-2 border-emerald-600'
                 : 'text-slate-500 hover:text-slate-800'
@@ -198,7 +198,7 @@ export const AuthModal: React.FC = () => {
           </button>
         </div>
 
-        <div className="p-6 sm:p-8 space-y-4">
+        <div className="p-4 sm:p-8 space-y-3.5 sm:space-y-4">
           {error && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-semibold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />

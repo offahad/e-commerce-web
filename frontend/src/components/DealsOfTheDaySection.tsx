@@ -267,70 +267,72 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({
   };
 
   return (
-    <section className="my-10 text-left">
+    <section className="my-6 sm:my-10 text-left">
       {/* Header & Circular Countdown Timer & Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#14532d] tracking-tight">
+          <h2 className="text-xl sm:text-3xl font-extrabold text-[#14532d] tracking-tight">
             {t('dealsTitle')}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 sm:mt-1">
             {t('dealsSubtitle')}
           </p>
         </div>
 
         {/* Right Controls: Timer, See More button, Left/Right Scroll Arrows */}
-        <div className="flex items-center flex-wrap gap-2.5 sm:gap-3">
+        <div className="flex items-center flex-wrap gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
           {/* Top-Right Red Pill Timer with circular red badges */}
-          <div className="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-full shadow-xs">
-            <Clock className="w-4 h-4 text-rose-600 shrink-0" />
+          <div className="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-xs">
+            <Clock className="w-3.5 h-3.5 text-rose-600 shrink-0" />
             <div className="flex items-center gap-1 font-mono text-xs font-bold text-rose-700">
-              <span className="w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-[11px] font-black">
+              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] sm:text-[11px] font-black">
                 {String(timeLeft.hours).padStart(2, '0')}
               </span>
               <span className="text-rose-500">:</span>
-              <span className="w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-[11px] font-black">
+              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] sm:text-[11px] font-black">
                 {String(timeLeft.minutes).padStart(2, '0')}
               </span>
               <span className="text-rose-500">:</span>
-              <span className="w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-[11px] font-black">
+              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-[10px] sm:text-[11px] font-black">
                 {String(timeLeft.seconds).padStart(2, '0')}
               </span>
             </div>
           </div>
 
-          {/* See More Button */}
-          {onSeeMore && (
-            <button
-              type="button"
-              onClick={onSeeMore}
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3.5 py-1.5 rounded-full transition-all shadow-xs group cursor-pointer"
-            >
-              <span>{t('seeMore')}</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* See More Button */}
+            {onSeeMore && (
+              <button
+                type="button"
+                onClick={onSeeMore}
+                className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition-all shadow-xs group cursor-pointer"
+              >
+                <span>{t('seeMore')}</span>
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            )}
 
-          {/* Horizontal Scroll Navigation Arrows */}
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => scrollCarousel('left')}
-              className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 flex items-center justify-center text-slate-700 transition shadow-xs active:scale-90 cursor-pointer"
-              title="Scroll left"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollCarousel('right')}
-              className="w-8 h-8 rounded-full border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 flex items-center justify-center text-slate-700 transition shadow-xs active:scale-90 cursor-pointer"
-              title="Scroll right"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            {/* Horizontal Scroll Navigation Arrows */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => scrollCarousel('left')}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 flex items-center justify-center text-slate-700 transition shadow-xs active:scale-90 cursor-pointer"
+                title="Scroll left"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollCarousel('right')}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 flex items-center justify-center text-slate-700 transition shadow-xs active:scale-90 cursor-pointer"
+                title="Scroll right"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -338,7 +340,7 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({
       {/* Horizontally Scrollable Cards Container */}
       <div
         ref={carouselRef}
-        className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth no-scrollbar"
+        className="flex gap-3.5 sm:gap-5 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth no-scrollbar"
         style={{
           scrollbarWidth: 'thin',
           WebkitOverflowScrolling: 'touch',
@@ -352,18 +354,18 @@ export const DealsOfTheDaySection: React.FC<DealsOfTheDaySectionProps> = ({
             <div
               key={item.id}
               onClick={() => onOpenProduct(item.rawProduct || item)}
-              className="group cursor-pointer bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden w-[260px] sm:w-[280px] shrink-0"
+              className="group cursor-pointer bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden w-[230px] sm:w-[280px] shrink-0"
             >
               {/* Top Discount Tag (Matching Screenshot: -8%, -11%, DAILY DEAL) */}
               <div className="flex items-center justify-between mb-2">
-                <span className="bg-rose-600 text-white text-[11px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
+                <span className="bg-rose-600 text-white text-[10px] sm:text-[11px] font-black px-2 sm:px-2.5 py-0.5 rounded-full shadow-sm">
                   -{item.discountPercentage}%
                 </span>
-                <span className="text-[10px] text-slate-400 font-semibold uppercase">Daily Deal</span>
+                <span className="text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase">Daily Deal</span>
               </div>
 
               {/* Product Image with Sold Out Overlay */}
-              <div className="relative w-full h-44 rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden mb-3">
+              <div className="relative w-full h-36 sm:h-44 rounded-2xl bg-slate-50 flex items-center justify-center overflow-hidden mb-3">
                 <img
                   src={item.imageUrl}
                   alt={item.name}

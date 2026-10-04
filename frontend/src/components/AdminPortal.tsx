@@ -965,39 +965,50 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-slate-900">
-      <div className="bg-white rounded-3xl max-w-6xl w-full h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-2 md:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-slate-900">
+      <div className="bg-white rounded-none sm:rounded-3xl max-w-6xl w-full h-full sm:h-[92vh] flex flex-col shadow-2xl overflow-hidden border-0 sm:border border-slate-200">
         {/* ========================================================= */}
         {/* RECONSTRUCTED ADMIN HEADER WITH ROLE SWITCHER & BADGES */}
         {/* ========================================================= */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-slate-200 bg-slate-900 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight">
-                  Liton Brothers Enterprise Control Center
-                </h2>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
-                  v2.4
-                </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3.5 sm:p-5 border-b border-slate-200 bg-slate-900 text-white shrink-0">
+          <div className="flex items-center justify-between sm:justify-start gap-2.5 sm:gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <p className="text-xs text-slate-300">
-                Centralized fulfillment, catalog, inventory, and promotions portal
-              </p>
+              <div>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h2 className="text-sm sm:text-lg font-black tracking-tight truncate">
+                    Enterprise Control Center
+                  </h2>
+                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                    v2.4
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-300 hidden xs:block">
+                  Centralized fulfillment, catalog, inventory & promotions
+                </p>
+              </div>
             </div>
+
+            {/* Mobile-only Close button in title row */}
+            <button
+              onClick={onClose}
+              className="sm:hidden p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer"
+              title="Close Dashboard"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Role Switcher Pill & Actions */}
-          <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
             {/* Live Role Selector */}
-            <div className="bg-slate-800 p-1 rounded-2xl border border-slate-700 flex items-center gap-1 text-xs font-bold">
+            <div className="bg-slate-800 p-1 rounded-2xl border border-slate-700 flex items-center gap-1 text-[11px] sm:text-xs font-bold w-full sm:w-auto justify-center">
               <button
                 type="button"
                 onClick={() => setActiveRole('SUPER_ADMIN')}
-                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+                className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl transition flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
                   activeRole === 'SUPER_ADMIN'
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-white'
@@ -1009,7 +1020,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
               <button
                 type="button"
                 onClick={() => setActiveRole('MODERATOR')}
-                className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+                className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl transition flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
                   activeRole === 'MODERATOR'
                     ? 'bg-amber-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-white'
@@ -1022,7 +1033,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer"
+              className="hidden sm:flex p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer shrink-0"
               title="Close Dashboard"
             >
               <X className="w-5 h-5" />
@@ -1031,43 +1042,43 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Role Permissions Notification Bar */}
-        <div className="px-5 py-2.5 bg-slate-100 border-b border-slate-200 text-xs flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="px-3 sm:px-5 py-2 sm:py-2.5 bg-slate-100 border-b border-slate-200 text-xs flex flex-wrap items-center justify-between gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <span
-              className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase ${
+              className={`px-2 py-0.5 rounded-md font-black text-[9px] sm:text-[10px] uppercase shrink-0 ${
                 activeRole === 'SUPER_ADMIN'
                   ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                   : 'bg-amber-100 text-amber-800 border border-amber-300'
               }`}
             >
-              Active Role: {activeRole === 'SUPER_ADMIN' ? 'Super Administrator' : 'Moderator'}
+              {activeRole === 'SUPER_ADMIN' ? 'Super Administrator' : 'Moderator'}
             </span>
-            <span className="text-slate-600 text-[11px]">
+            <span className="text-slate-600 text-[11px] truncate hidden md:inline">
               {activeRole === 'SUPER_ADMIN'
-                ? 'Full Root Privileges: All modules, customer KYC approvals, catalog creation, flash deals, stock management, and financial tax invoices enabled.'
-                : 'Restricted Moderator Role: Authorized to Add Products (Description-driven), Update Products, Add Hero Banners, View Inventory Alerts, View Pending Orders, Decline Orders, and Update Order Tracking.'}
+                ? 'Full Root Privileges: All modules, customer KYC approvals, catalog creation, flash deals & stock management.'
+                : 'Restricted Moderator Role: Authorized to Add/Update Products, Hero Banners, View Alerts, Fulfill Orders.'}
             </span>
           </div>
 
           <button
             onClick={loadData}
             disabled={loading}
-            className="text-[11px] font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
+            className="text-[11px] font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1 cursor-pointer shrink-0 ml-auto"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh Data</span>
+            <span>Refresh</span>
           </button>
         </div>
 
         {/* Real-Time Operational KPI Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 border-b border-slate-200">
-          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider">Total Sales</span>
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-2.5 sm:p-4 bg-slate-50 border-b border-slate-200 shrink-0">
+          <div className="p-2 sm:p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-400 mb-0.5 sm:mb-1">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider">Total Sales</span>
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
             </div>
-            <div className="text-lg font-black text-slate-900">৳{totalRevenue.toFixed(0)}</div>
-            <div className="text-[10px] text-slate-500">{orders.length} total orders recorded</div>
+            <div className="text-base sm:text-lg font-black text-slate-900">৳{totalRevenue.toFixed(0)}</div>
+            <div className="text-[9px] sm:text-[10px] text-slate-500 truncate">{orders.length} orders</div>
           </div>
 
           <div
@@ -1075,63 +1086,66 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
               setActiveTab('orders');
               setOrderStatusFilter('PENDING');
             }}
-            className="p-3 bg-white hover:bg-blue-50/50 rounded-xl border border-blue-200 shadow-xs cursor-pointer transition"
+            className="p-2 sm:p-3 bg-white hover:bg-blue-50/50 rounded-xl border border-blue-200 shadow-xs cursor-pointer transition"
           >
-            <div className="flex items-center justify-between text-blue-500 mb-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider">Pending Orders</span>
-              <Clock className="w-4 h-4 text-blue-600" />
+            <div className="flex items-center justify-between text-blue-500 mb-0.5 sm:mb-1">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider">Pending Orders</span>
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
             </div>
-            <div className="text-lg font-black text-blue-700">{pendingOrdersCount}</div>
-            <div className="text-[10px] text-blue-600 font-bold">Needs confirmation/decline →</div>
+            <div className="text-base sm:text-lg font-black text-blue-700">{pendingOrdersCount}</div>
+            <div className="text-[9px] sm:text-[10px] text-blue-600 font-bold truncate">Needs action →</div>
           </div>
 
           <div
             onClick={() => {
               if (activeRole === 'SUPER_ADMIN') setActiveTab('customers');
             }}
-            className={`p-3 bg-white rounded-xl border border-slate-200 shadow-xs ${
+            className={`p-2 sm:p-3 bg-white rounded-xl border border-slate-200 shadow-xs ${
               activeRole === 'SUPER_ADMIN' ? 'cursor-pointer hover:bg-amber-50/50' : 'opacity-70'
             }`}
           >
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider">Pending Customers</span>
-              <Users className="w-4 h-4 text-amber-600" />
+            <div className="flex items-center justify-between text-slate-400 mb-0.5 sm:mb-1">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider">Pending Users</span>
+              <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
             </div>
-            <div className="text-lg font-black text-amber-700">{pendingCustomers}</div>
-            <div className="text-[10px] text-slate-500">
-              {activeRole === 'SUPER_ADMIN' ? 'Requires Super Admin KYC' : 'Super Admin Only 🔒'}
+            <div className="text-base sm:text-lg font-black text-amber-700">{pendingCustomers}</div>
+            <div className="text-[9px] sm:text-[10px] text-slate-500 truncate">
+              {activeRole === 'SUPER_ADMIN' ? 'KYC Approval' : 'Admin Only 🔒'}
             </div>
           </div>
 
           <div
             onClick={() => setActiveTab('inventory')}
-            className="p-3 bg-white hover:bg-rose-50/50 rounded-xl border border-slate-200 shadow-xs cursor-pointer transition"
+            className="p-2 sm:p-3 bg-white hover:bg-rose-50/50 rounded-xl border border-slate-200 shadow-xs cursor-pointer transition"
           >
-            <div className="flex items-center justify-between text-slate-400 mb-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider">Stock Alerts</span>
-              <AlertTriangle className="w-4 h-4 text-rose-600" />
+            <div className="flex items-center justify-between text-slate-400 mb-0.5 sm:mb-1">
+              <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider">Stock Alerts</span>
+              <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-600" />
             </div>
-            <div className="text-lg font-black text-rose-600">{alerts.length}</div>
-            <div className="text-[10px] text-slate-500">Items low or depleted</div>
+            <div className="text-base sm:text-lg font-black text-rose-600">{alerts.length}</div>
+            <div className="text-[9px] sm:text-[10px] text-slate-500 truncate">Low / Out stock</div>
           </div>
         </div>
 
         {/* Tab Navigation (Role-aware) */}
-        <div className="flex border-b border-slate-200 bg-white px-5 text-xs font-bold overflow-x-auto no-scrollbar">
+        <div
+          className="flex border-b border-slate-200 bg-white px-2 sm:px-5 text-xs font-bold overflow-x-auto no-scrollbar shrink-0"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {/* 1. Orders & Tracking (Super Admin & Moderator) */}
           <button
             onClick={() => setActiveTab('orders')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap cursor-pointer text-[11px] sm:text-xs shrink-0 ${
               activeTab === 'orders'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <Package className="w-4 h-4" />
-            <span>Orders & Live Tracking ({orders.length})</span>
+            <span>Orders & Tracking ({orders.length})</span>
             {pendingOrdersCount > 0 && (
-              <span className="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full text-[10px] font-black">
-                {pendingOrdersCount} Pending
+              <span className="bg-amber-500 text-slate-950 px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-black">
+                {pendingOrdersCount}
               </span>
             )}
           </button>
@@ -1139,7 +1153,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {/* 2. Product Management (Add & Update Product - Super Admin & Moderator) */}
           <button
             onClick={() => setActiveTab('products')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap cursor-pointer text-[11px] sm:text-xs shrink-0 ${
               activeTab === 'products'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -1158,7 +1172,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                 alert('Access Restricted: Customer KYC approvals require Super Admin privileges.');
               }
             }}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap cursor-pointer text-[11px] sm:text-xs shrink-0 ${
               activeTab === 'customers'
                 ? 'border-emerald-600 text-emerald-700'
                 : activeRole === 'MODERATOR'
@@ -1174,7 +1188,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {/* 4. Inventory Alerts & Ledger (Super Admin & Moderator) */}
           <button
             onClick={() => setActiveTab('inventory')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap cursor-pointer text-[11px] sm:text-xs shrink-0 ${
               activeTab === 'inventory'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -1187,7 +1201,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {/* 5. Hero Banners CMS (Super Admin & Moderator) */}
           <button
             onClick={() => setActiveTab('banners')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap cursor-pointer text-[11px] sm:text-xs shrink-0 ${
               activeTab === 'banners'
                 ? 'border-emerald-600 text-emerald-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -1200,7 +1214,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {/* 6. Friday Flash Bazaar Offers (Super Admin & Moderator) */}
           <button
             onClick={() => setActiveTab('friday-deals')}
-            className={`py-3 px-4 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-3 sm:px-4 border-b-2 flex items-center gap-1.5 sm:gap-2 transition whitespace-nowrap cursor-pointer text-[11px] sm:text-xs shrink-0 ${
               activeTab === 'friday-deals'
                 ? 'border-rose-600 text-rose-700'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -1212,32 +1226,32 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         </div>
 
         {/* Tab Content Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 text-slate-900 bg-slate-50/50">
+        <div className="p-3 sm:p-6 overflow-y-auto flex-1 text-slate-900 bg-slate-50/50">
           {/* ========================================================= */}
           {/* TAB 1: ORDERS FULFILLMENT, PENDING ORDERS & TRACKING */}
           {/* ========================================================= */}
           {activeTab === 'orders' && (
             <div className="space-y-4 text-left">
               {/* Order Status Filter Pills */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-3.5 rounded-2xl border border-slate-200">
-                <div className="flex items-center gap-1.5 flex-wrap text-xs font-bold">
-                  <span className="text-slate-500 mr-1 flex items-center gap-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-3 bg-white p-2.5 sm:p-3.5 rounded-2xl border border-slate-200">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 sm:pb-0 sm:flex-wrap text-[11px] sm:text-xs font-bold w-full sm:w-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  <span className="text-slate-500 mr-1 flex items-center gap-1 shrink-0">
                     <Filter className="w-3.5 h-3.5" /> Filter:
                   </span>
                   {[
-                    { key: 'ALL', label: `All Orders (${orders.length})` },
-                    { key: 'PENDING', label: `Pending Orders (${pendingOrdersCount})`, alert: pendingOrdersCount > 0 },
+                    { key: 'ALL', label: `All (${orders.length})` },
+                    { key: 'PENDING', label: `Pending (${pendingOrdersCount})`, alert: pendingOrdersCount > 0 },
                     { key: 'CONFIRMED', label: 'Confirmed' },
                     { key: 'PROCESSING', label: 'Processing' },
-                    { key: 'OUT_FOR_DELIVERY', label: 'Dispatched / In Transit' },
+                    { key: 'OUT_FOR_DELIVERY', label: 'Dispatched' },
                     { key: 'DELIVERED', label: 'Delivered' },
-                    { key: 'CANCELLED', label: 'Declined / Cancelled' },
+                    { key: 'CANCELLED', label: 'Declined' },
                   ].map((f) => (
                     <button
                       key={f.key}
                       type="button"
                       onClick={() => setOrderStatusFilter(f.key)}
-                      className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl transition cursor-pointer shrink-0 whitespace-nowrap ${
                         orderStatusFilter === f.key
                           ? f.alert
                             ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
@@ -1252,16 +1266,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   ))}
                 </div>
 
-                <div className="text-xs text-slate-500 font-semibold">
+                <div className="text-[11px] sm:text-xs text-slate-500 font-semibold shrink-0">
                   Showing <strong>{filteredOrders.length}</strong> orders
                 </div>
               </div>
 
               {filteredOrders.length === 0 ? (
-                <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
-                  <Package className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-600 font-bold text-sm">No orders matching selected filter</p>
-                  <p className="text-slate-400 text-xs mt-1">
+                <div className="p-8 sm:p-12 text-center bg-white rounded-2xl border border-slate-200">
+                  <Package className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 mx-auto mb-2 sm:mb-3" />
+                  <p className="text-slate-600 font-bold text-xs sm:text-sm">No orders matching selected filter</p>
+                  <p className="text-slate-400 text-[11px] sm:text-xs mt-1">
                     New customer checkouts will appear here instantly.
                   </p>
                 </div>
@@ -1274,7 +1288,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                     return (
                       <div
                         key={ord.id}
-                        className={`p-4 bg-white rounded-2xl border transition shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${
+                        className={`p-3.5 sm:p-4 bg-white rounded-2xl border transition shadow-xs flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4 ${
                           isPending
                             ? 'border-amber-300 bg-amber-50/30'
                             : isCancelled
@@ -1282,13 +1296,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 w-full">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-mono font-black text-slate-900 text-sm">
                               #{ord.orderNumber || ord.id.slice(0, 8)}
                             </span>
                             <span
-                              className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                              className={`text-[9px] sm:text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
                                 isPending
                                   ? 'bg-amber-500 text-slate-950 animate-pulse'
                                   : ord.status === 'CONFIRMED'
@@ -1304,12 +1318,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                             >
                               {ord.status}
                             </span>
-                            <span className="text-slate-400 text-xs font-mono">
+                            <span className="text-slate-400 text-[11px] sm:text-xs font-mono">
                               Tracking: <strong>{ord.trackingNumber || 'TRK-2026-DEMO'}</strong>
                             </span>
                           </div>
 
-                          <div className="text-xs text-slate-600 mt-1 flex items-center gap-2 flex-wrap">
+                          <div className="text-[11px] sm:text-xs text-slate-600 mt-1 flex items-center gap-1.5 sm:gap-2 flex-wrap">
                             <span>Recipient: <strong>{ord.deliveryAddress?.name || ord.customerName || 'Customer'}</strong> ({ord.deliveryAddress?.phone || ord.customerPhone || 'Phone'})</span>
                             <span>•</span>
                             <span>Slot: <strong>{ord.deliverySlot || 'Express 15-Min'}</strong></span>
@@ -1319,19 +1333,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
                           {/* Line item snippets */}
                           {Array.isArray(ord.items) && ord.items.length > 0 && (
-                            <div className="text-[11px] text-slate-500 mt-1 truncate">
+                            <div className="text-[10px] sm:text-[11px] text-slate-500 mt-1 truncate">
                               Items: {ord.items.map((i: any) => `${i.productName || i.name} (x${i.quantity})`).join(', ')}
                             </div>
                           )}
                         </div>
 
                         {/* Order Total & Actions */}
-                        <div className="flex items-center gap-3 shrink-0 flex-wrap">
-                          <div className="text-right">
-                            <div className="text-base font-black text-slate-900">
+                        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 shrink-0 flex-wrap w-full lg:w-auto pt-2 lg:pt-0 border-t lg:border-0 border-slate-100">
+                          <div className="text-left sm:text-right">
+                            <div className="text-sm sm:text-base font-black text-slate-900">
                               ৳{Number(ord.grandTotal || ord.grand_total || 0).toFixed(0)}
                             </div>
-                            <div className="text-[10px] text-slate-400">
+                            <div className="text-[9px] sm:text-[10px] text-slate-400">
                               {new Date(ord.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
                           </div>
@@ -1342,9 +1356,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                               <button
                                 type="button"
                                 onClick={() => handleQuickConfirmOrder(ord.id, ord.orderNumber || ord.id.slice(0, 8))}
-                                className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition cursor-pointer shadow-xs"
+                                className="px-2.5 sm:px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition cursor-pointer shadow-xs"
                               >
-                                Confirm Order
+                                Confirm
                               </button>
                               <button
                                 type="button"
@@ -1354,9 +1368,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                                     orderNumber: ord.orderNumber || ord.id.slice(0, 8),
                                   })
                                 }
-                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-xl text-xs transition cursor-pointer"
+                                className="px-2.5 sm:px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-xl text-xs transition cursor-pointer"
                               >
-                                Decline Order
+                                Decline
                               </button>
                             </div>
                           )}
@@ -1369,10 +1383,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                                 setTrackingModal({ order: ord });
                                 setTrackingStatus(ord.status === 'PENDING' ? 'CONFIRMED' : ord.status);
                               }}
-                              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 cursor-pointer shadow-xs"
+                              className="px-2.5 sm:px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 cursor-pointer shadow-xs"
                             >
                               <Truck className="w-3.5 h-3.5" />
-                              <span>Update Tracking</span>
+                              <span>Tracking</span>
                             </button>
                           )}
 
@@ -1438,9 +1452,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
               {/* SUB-VIEW A: ADD PRODUCT (DESCRIPTION DRIVEN) */}
               {productSubTab === 'add' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                   {/* Form Column (2 Cols) */}
-                  <div className="lg:col-span-2 space-y-5 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+                  <div className="lg:col-span-2 space-y-4 sm:space-y-5 bg-white p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm">
                     <div>
                       <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-emerald-700" />
@@ -1452,11 +1466,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                     </div>
 
                     {/* Quick Sample Description Templates */}
-                    <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-3.5">
-                      <span className="text-[11px] font-black uppercase text-emerald-900 tracking-wider block mb-2">
+                    <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-3 sm:p-3.5">
+                      <span className="text-[10px] sm:text-[11px] font-black uppercase text-emerald-900 tracking-wider block mb-1.5">
                         Load Quick Sample Description Templates:
                       </span>
-                      <div className="flex flex-wrap gap-2 text-xs">
+                      <div className="flex flex-wrap gap-1.5 text-xs">
                         <button
                           type="button"
                           onClick={() => handleLoadDescriptionTemplate('oil')}
@@ -1526,14 +1540,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                               : 'border-slate-300 focus:border-emerald-500 bg-white'
                           }`}
                         />
-                        <div className="flex items-center justify-between mt-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mt-1.5">
                           <p className="text-[11px] text-slate-400">
                             Creation is dependent on providing a meaningful product description.
                           </p>
                           <button
                             type="button"
                             onClick={() => parseDescriptionAndAutoFill(productForm.description)}
-                            className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl font-bold text-[11px] transition flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-1 cursor-pointer w-full sm:w-auto"
                           >
                             <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
                             <span>✨ Auto-Fill Fields from Description</span>
@@ -2052,7 +2066,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                         const isPending = c.status === 'PENDING_APPROVAL';
 
                         return (
-                          <div key={c.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                          <div key={c.id} className="p-3.5 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-3">
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-slate-900 text-xs">{c.name || 'New Customer'}</span>
@@ -2067,12 +2081,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                               <div className="text-[11px] text-slate-500 font-mono mt-0.5">Phone: {c.phone}</div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
                               {isPending ? (
                                 <button
                                   type="button"
                                   onClick={() => handleApproveCustomer(c.id)}
-                                  className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition cursor-pointer"
+                                  className="w-full sm:w-auto px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition cursor-pointer text-center"
                                 >
                                   Approve Customer
                                 </button>
@@ -2114,7 +2128,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   {alerts.map((a: any, i: number) => (
                     <div
                       key={i}
-                      className="p-3.5 bg-white rounded-2xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
+                      className="p-3 sm:p-3.5 bg-white rounded-2xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-3"
                     >
                       <div>
                         <div className="font-bold text-slate-900 text-xs">
@@ -2123,7 +2137,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                         <div className="text-[11px] text-slate-400 font-mono">SKU: {a.sku}</div>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                         <span className="text-xs font-black text-rose-600">
                           Remaining: {a.stockQuantity ?? a.stock_quantity} units
                         </span>
@@ -2348,8 +2362,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         {/* MODAL 1: DECLINE PENDING ORDER (Moderator & Super Admin) */}
         {/* ========================================================= */}
         {declineModal && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
+            <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200">
               <div className="flex items-center gap-2 text-rose-600 mb-2">
                 <AlertCircle className="w-5 h-5" />
                 <h3 className="font-black text-slate-900 text-base">Decline Pending Order</h3>
@@ -2398,8 +2412,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         {/* MODAL 2: UPDATE ORDER TRACKING (Moderator & Super Admin) */}
         {/* ========================================================= */}
         {trackingModal && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
+            <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200">
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
                   <Truck className="w-5 h-5 text-emerald-800" />
@@ -2409,7 +2423,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                 </div>
                 <button
                   onClick={() => setTrackingModal(null)}
-                  className="p-1 text-slate-400 hover:text-slate-700"
+                  className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2480,8 +2494,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         {/* MODAL 3: EDIT EXISTING PRODUCT */}
         {/* ========================================================= */}
         {editProductModal && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
-            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
+            <div className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 max-h-[92vh] sm:max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-black text-slate-900 text-base flex items-center gap-2">
                   <Edit3 className="w-5 h-5 text-emerald-800" />
@@ -2489,7 +2503,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                 </h3>
                 <button
                   onClick={() => setEditProductModal(null)}
-                  className="p-1 text-slate-400 hover:text-slate-700"
+                  className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2816,8 +2830,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         {/* MODAL: ADD CATEGORY */}
         {/* ========================================================= */}
         {showAddCategoryModal && (
-          <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+          <div className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
+            <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
                   <Plus className="w-4 h-4 text-emerald-700" />
@@ -2900,8 +2914,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         {/* MODAL: ADD TAG */}
         {/* ========================================================= */}
         {showAddTagModal && (
-          <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+          <div className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in text-left">
+            <div className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
                   <Plus className="w-4 h-4 text-emerald-700" />
@@ -2965,8 +2979,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         {/* MODAL 4: PRINTABLE TAX INVOICE (Super Admin Only) */}
         {/* ========================================================= */}
         {activeInvoice && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-fade-in text-left">
-            <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-fade-in text-left">
+            <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-8 shadow-2xl relative max-h-[92vh] sm:max-h-[90vh] overflow-y-auto">
               <button
                 onClick={() => setActiveInvoice(null)}
                 className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
@@ -2974,17 +2988,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                 <X className="w-5 h-5" />
               </button>
 
-              <div id="printable-invoice" className="space-y-6 text-xs text-slate-800">
-                <div className="flex justify-between items-start border-b border-slate-200 pb-4">
+              <div id="printable-invoice" className="space-y-4 sm:space-y-6 text-xs text-slate-800">
+                <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-4 gap-2">
                   <div>
-                    <h2 className="text-xl font-black text-slate-900">LITON BROTHERS</h2>
+                    <h2 className="text-lg sm:text-xl font-black text-slate-900">LITON BROTHERS</h2>
                     <p className="text-slate-500 text-[11px] mt-0.5">
                       Tejgaon Central Grocery Hub, Dhaka-1208, Bangladesh
                     </p>
                     <p className="text-slate-500 text-[11px]">Hotline: +880 1700-000000 | info@litonbrothers.com</p>
                   </div>
-                  <div className="text-right">
-                    <span className="text-lg font-black text-emerald-700 block">TAX INVOICE</span>
+                  <div className="text-left sm:text-right">
+                    <span className="text-base sm:text-lg font-black text-emerald-700 block">TAX INVOICE</span>
                     <span className="font-mono text-slate-500 text-[11px] block">
                       #{activeInvoice.invoice?.invoiceNumber || 'INV-2026-001'}
                     </span>
@@ -2994,7 +3008,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-200">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Billed & Shipped To:</span>
                     <div className="font-bold text-slate-900">{activeInvoice.customer?.name}</div>
@@ -3012,7 +3026,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                 <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
                   <button
                     onClick={() => window.print()}
-                    className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Printer className="w-4 h-4" /> Print Tax Invoice
                   </button>

@@ -311,13 +311,14 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
       {/* Horizontal Carousel */}
       <div
         ref={ref}
-        className="flex gap-4 overflow-x-auto scrollbar-none pb-3 scroll-smooth"
+        className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none pb-3 scroll-smooth no-scrollbar"
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {products.map((p) => (
           <div
             key={p.id}
             onClick={() => onOpenProduct(p)}
-            className="group shrink-0 w-52 sm:w-56 bg-white rounded-3xl p-3.5 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer"
+            className="group shrink-0 w-44 sm:w-56 bg-white rounded-3xl p-3 sm:p-3.5 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer"
           >
             <div>
               {/* Image & Wishlist Button */}

@@ -20,27 +20,27 @@ export const FavouritesModal: React.FC = () => {
   if (!isFavouritesOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-2xl w-full my-8 shadow-2xl border border-slate-100 relative overflow-hidden text-left flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full my-2 sm:my-8 shadow-2xl border border-slate-100 relative overflow-hidden text-left flex flex-col max-h-[92vh] sm:max-h-[90vh]">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-xs">
-              <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-xs shrink-0">
+              <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-rose-500 text-rose-500" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-slate-900">My Favourite Items</h2>
-                <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-100">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h2 className="text-sm sm:text-base font-black text-slate-900">My Favourite Items</h2>
+                <span className="text-[10px] sm:text-xs font-bold text-rose-600 bg-rose-50 px-2 sm:px-2.5 py-0.5 rounded-full border border-rose-100">
                   {favouriteItems.length} {favouriteItems.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
-              <p className="text-xs text-slate-500">Your personalized wishlist for quick reordering</p>
+              <p className="text-[11px] sm:text-xs text-slate-500">Your personalized wishlist for quick reordering</p>
             </div>
           </div>
           <button
             onClick={closeFavourites}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
+            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

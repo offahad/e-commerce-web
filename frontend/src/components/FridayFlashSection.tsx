@@ -223,63 +223,63 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
   };
 
   return (
-    <section id="friday-flash" className="my-8 scroll-mt-28 text-left">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 via-rose-600 to-amber-700 text-white p-6 sm:p-8 shadow-xl shadow-red-500/10">
+    <section id="friday-flash" className="my-6 sm:my-8 scroll-mt-28 text-left">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 via-rose-600 to-amber-700 text-white p-4 sm:p-8 shadow-xl shadow-red-500/10">
         {/* Background decorative circles */}
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 -mb-10 w-48 h-48 bg-amber-400/20 rounded-full blur-xl pointer-events-none" />
 
         {/* Section Header */}
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-white/20 pb-6">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-6 border-b border-white/20 pb-5">
           <div>
-            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider mb-2">
-              <Flame className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
+            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[11px] sm:text-xs font-extrabold uppercase tracking-wider mb-2">
+              <Flame className="w-3.5 h-3.5 text-amber-300 fill-amber-300 animate-pulse" />
               <span>Mega Friday Flash Bazaar</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+            <h2 className="text-xl sm:text-3xl font-black tracking-tight">
               {deal.title}
             </h2>
-            <p className="text-white/80 text-sm mt-1 max-w-xl">
+            <p className="text-white/80 text-xs sm:text-sm mt-1 max-w-xl">
               {deal.description}
             </p>
           </div>
 
           {/* Right Header Area: Countdown Clock + Carousel Navigation Controls */}
-          <div className="flex items-center flex-wrap gap-3">
+          <div className="flex items-center flex-wrap gap-2 sm:gap-3">
             {/* Countdown Clock */}
-            <div className="bg-black/30 backdrop-blur-md border border-white/20 rounded-2xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 shrink-0 shadow-sm">
-              <div className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1">
-                <Clock className="w-4 h-4" /> Ends In:
+            <div className="bg-black/30 backdrop-blur-md border border-white/20 rounded-2xl p-2 sm:p-3.5 flex items-center gap-1.5 sm:gap-3 shrink-0 shadow-sm">
+              <div className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Ends In:</span>
               </div>
-              <div className="flex items-center gap-1.5 font-mono">
-                <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
-                  <span className="text-lg font-black">{timer.days}</span>
-                  <span className="block text-[9px] uppercase tracking-wider text-white/60">Days</span>
+              <div className="flex items-center gap-1 sm:gap-1.5 font-mono">
+                <div className="bg-white/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-center min-w-[30px] sm:min-w-[36px]">
+                  <span className="text-sm sm:text-lg font-black">{timer.days}</span>
+                  <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider text-white/60">Days</span>
                 </div>
                 <span className="text-amber-300 font-bold">:</span>
-                <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
-                  <span className="text-lg font-black">{timer.hours}</span>
-                  <span className="block text-[9px] uppercase tracking-wider text-white/60">Hrs</span>
+                <div className="bg-white/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-center min-w-[30px] sm:min-w-[36px]">
+                  <span className="text-sm sm:text-lg font-black">{timer.hours}</span>
+                  <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider text-white/60">Hrs</span>
                 </div>
                 <span className="text-amber-300 font-bold">:</span>
-                <div className="bg-white/10 px-2 py-1 rounded-lg text-center min-w-[36px]">
-                  <span className="text-lg font-black">{timer.mins}</span>
-                  <span className="block text-[9px] uppercase tracking-wider text-white/60">Min</span>
+                <div className="bg-white/10 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-center min-w-[30px] sm:min-w-[36px]">
+                  <span className="text-sm sm:text-lg font-black">{timer.mins}</span>
+                  <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider text-white/60">Min</span>
                 </div>
                 <span className="text-amber-300 font-bold">:</span>
-                <div className="bg-amber-400 text-slate-900 px-2 py-1 rounded-lg text-center min-w-[36px] shadow">
-                  <span className="text-lg font-black">{timer.secs}</span>
-                  <span className="block text-[9px] uppercase tracking-wider font-bold">Sec</span>
+                <div className="bg-amber-400 text-slate-900 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-center min-w-[30px] sm:min-w-[36px] shadow">
+                  <span className="text-sm sm:text-lg font-black">{timer.secs}</span>
+                  <span className="block text-[8px] sm:text-[9px] uppercase tracking-wider font-bold">Sec</span>
                 </div>
               </div>
             </div>
 
             {/* Left and Right Scroll Navigation Arrows */}
-            <div className="flex items-center gap-1 bg-black/20 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 shadow-xs">
+            <div className="flex items-center gap-1 bg-black/20 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border border-white/20 shadow-xs">
               <button
                 type="button"
                 onClick={() => scrollCarousel('left')}
-                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
                 title="Scroll left"
                 aria-label="Scroll left"
               >
@@ -288,7 +288,7 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
               <button
                 type="button"
                 onClick={() => scrollCarousel('right')}
-                className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 hover:bg-white/30 text-white flex items-center justify-center transition active:scale-90 cursor-pointer"
                 title="Scroll right"
                 aria-label="Scroll right"
               >
@@ -301,7 +301,7 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
         {/* Flash Deal Items - Smooth Horizontal Scrollable Row */}
         <div
           ref={carouselRef}
-          className="relative z-10 flex gap-5 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth no-scrollbar"
+          className="relative z-10 flex gap-3.5 sm:gap-5 overflow-x-auto pb-4 pt-1 px-1 scroll-smooth no-scrollbar"
           style={{
             scrollbarWidth: 'thin',
             WebkitOverflowScrolling: 'touch',
@@ -317,7 +317,7 @@ export const FridayFlashSection: React.FC<FridayFlashSectionProps> = ({ onOpenPr
             return (
               <div
                 key={item.id}
-                className="bg-white text-slate-900 rounded-2xl p-4 shadow-lg hover:shadow-2xl transition duration-300 flex flex-col justify-between group w-[280px] sm:w-[320px] shrink-0"
+                className="bg-white text-slate-900 rounded-2xl p-3.5 sm:p-4 shadow-lg hover:shadow-2xl transition duration-300 flex flex-col justify-between group w-[250px] sm:w-[320px] shrink-0"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">

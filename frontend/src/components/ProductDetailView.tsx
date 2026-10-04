@@ -113,11 +113,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       </button>
 
       {/* Main Container Card */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden p-6 sm:p-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 shadow-xl overflow-hidden p-4 sm:p-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
           {/* Left Column: Image Gallery with 4 Thumbnails (Matching Screenshot 6) */}
-          <div className="space-y-4">
-            <div className="relative aspect-square w-full rounded-3xl bg-slate-50 overflow-hidden border border-slate-100 shadow-inner flex items-center justify-center">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="relative aspect-square w-full rounded-2xl sm:rounded-3xl bg-slate-50 overflow-hidden border border-slate-100 shadow-inner flex items-center justify-center">
               <img
                 src={images[selectedImageIndex] || images[0]}
                 alt={product.name}
@@ -126,11 +126,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               <button
                 type="button"
                 onClick={handleWishlistToggle}
-                className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-md text-slate-500 hover:text-rose-500 transition"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-md text-slate-500 hover:text-rose-500 transition cursor-pointer"
                 title="Add to Favourites"
               >
                 <Heart
-                  className={`w-5 h-5 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
                     isWishlisted(product.id) ? 'fill-rose-500 text-rose-500' : ''
                   }`}
                 />
@@ -138,12 +138,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             </div>
 
             {/* Row of 4 Thumbnails */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
               {images.slice(0, 4).map((imgUrl: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImageIndex(idx)}
-                  className={`relative aspect-square rounded-2xl overflow-hidden border-2 transition-all ${
+                  className={`relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${
                     selectedImageIndex === idx
                       ? 'border-emerald-700 ring-2 ring-emerald-100'
                       : 'border-slate-200 opacity-70 hover:opacity-100'
@@ -156,13 +156,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           </div>
 
           {/* Right Column: Product Info & Customize Quantity Box (Matching Screenshot 6) */}
-          <div className="text-left space-y-5">
+          <div className="text-left space-y-4 sm:space-y-5">
             {/* Top Deal Timer Badge */}
             <div className="flex items-center justify-between">
-              <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <div className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
                 Liton Brother grocery
               </div>
-              <div className="inline-flex items-center gap-1 font-mono text-xs font-bold text-slate-700 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+              <div className="inline-flex items-center gap-1 font-mono text-[11px] sm:text-xs font-bold text-slate-700 bg-slate-50 px-2.5 sm:px-3 py-1 rounded-full border border-slate-200">
                 <Clock className="w-3.5 h-3.5 text-emerald-700" />
                 <span>270 : 13 : 10 : 24</span>
               </div>
@@ -170,13 +170,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
             {/* Product Title & Reviews */}
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
+              <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
                 {product.name}
               </h1>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-1.5 sm:mt-2">
                 <div className="flex items-center text-amber-500">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-current" />
+                    <Star key={i} className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                   ))}
                 </div>
                 <span className="text-xs font-bold text-slate-700">4.5 Rating</span>
@@ -185,17 +185,17 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             </div>
 
             {/* Large Bold Price */}
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-black text-slate-900">৳{baseUnitPrice}</span>
+            <div className="flex items-baseline gap-2.5 sm:gap-3">
+              <span className="text-2xl sm:text-3xl font-black text-slate-900">৳{baseUnitPrice}</span>
               {product.basePrice && product.basePrice > baseUnitPrice && (
-                <span className="text-base text-slate-400 line-through font-medium">
+                <span className="text-sm sm:text-base text-slate-400 line-through font-medium">
                   ৳{product.basePrice}
                 </span>
               )}
             </div>
 
             {/* "Customize Quantity" Switcher Box (Matching Screenshot 6) */}
-            <div className="p-4 rounded-3xl bg-slate-50 border border-slate-200/80 space-y-4">
+            <div className="p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200/80 space-y-3 sm:space-y-4">
               <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
                 {t('customizeQuantity')}
               </div>
@@ -208,7 +208,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     setSelectedUnitMode(primaryUnit);
                     setQuantity(1);
                   }}
-                  className={`py-2 rounded-xl text-xs font-extrabold transition ${
+                  className={`py-2 rounded-xl text-xs font-extrabold transition cursor-pointer ${
                     selectedUnitMode === primaryUnit
                       ? 'bg-[#14532d] text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
@@ -222,7 +222,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     setSelectedUnitMode(secondaryUnit);
                     setQuantity(1);
                   }}
-                  className={`py-2 rounded-xl text-xs font-extrabold transition ${
+                  className={`py-2 rounded-xl text-xs font-extrabold transition cursor-pointer ${
                     selectedUnitMode === secondaryUnit
                       ? 'bg-[#14532d] text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
@@ -236,16 +236,16 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-200 p-2">
                 <button
                   onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 font-bold transition"
+                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 font-bold transition cursor-pointer active:scale-95"
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="font-black text-base text-slate-900 tracking-wide">
+                <span className="font-black text-sm sm:text-base text-slate-900 tracking-wide">
                   {displayQuantityText}
                 </span>
                 <button
                   onClick={() => setQuantity((prev) => prev + 1)}
-                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 font-bold transition"
+                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 font-bold transition cursor-pointer active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -254,22 +254,22 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               {/* Sub-bar: Total Price (Matching Screenshot 6) */}
               <div className="flex items-center justify-between pt-1 text-sm font-extrabold text-slate-800">
                 <span className="text-slate-500 font-bold">{t('totalPrice')}:</span>
-                <span className="text-xl font-black text-emerald-800">৳{calculatedTotal}</span>
+                <span className="text-lg sm:text-xl font-black text-emerald-800">৳{calculatedTotal}</span>
               </div>
             </div>
 
             {/* Action Buttons: Add to Cart and Buy Now Side-by-Side (Matching Screenshot 6) */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-2">
               <button
                 onClick={handleAddToCart}
-                className="w-full py-3.5 rounded-full border-2 border-emerald-800 text-emerald-800 hover:bg-emerald-50 font-extrabold text-sm flex items-center justify-center gap-2 transition shadow-sm"
+                className="w-full py-3 sm:py-3.5 rounded-full border-2 border-emerald-800 text-emerald-800 hover:bg-emerald-50 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-sm cursor-pointer"
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>{t('addToCart')}</span>
               </button>
               <button
                 onClick={handleBuyNow}
-                className="w-full py-3.5 rounded-full bg-[#14532d] hover:bg-[#0f3d20] text-white font-extrabold text-sm flex items-center justify-center gap-2 transition shadow-lg hover:shadow-xl"
+                className="w-full py-3 sm:py-3.5 rounded-full bg-[#14532d] hover:bg-[#0f3d20] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg hover:shadow-xl cursor-pointer"
               >
                 <span>{t('buyNow')}</span>
               </button>

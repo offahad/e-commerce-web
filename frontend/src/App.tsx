@@ -222,7 +222,7 @@ const MainContent: React.FC = () => {
       )}
 
       {/* Main Body Switcher: Home vs ProductDetailView vs CartPage vs CategoryPage */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-24 md:pb-8 w-full">
         {/* VIEW 1: DEDICATED PRODUCT DETAIL VIEW (Matching Screenshot 6) */}
         {currentView === 'product-detail' && selectedProduct && (
           <ProductDetailView

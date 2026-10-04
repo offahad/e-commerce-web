@@ -396,24 +396,24 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
   const isTimelineViewActive = Boolean(activeTrackingNum && trackingData);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-3xl w-full my-6 shadow-2xl border border-slate-100 relative overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-3xl w-full my-2 sm:my-6 shadow-2xl border border-slate-100 relative overflow-hidden flex flex-col max-h-[94vh] sm:max-h-[90vh]">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-900 via-[#14532d] to-emerald-950 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 text-yellow-300 flex items-center justify-center shadow-inner">
-              <MapPin className="w-5 h-5 text-emerald-300" />
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-900 via-[#14532d] to-emerald-950 text-white">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 text-yellow-300 flex items-center justify-center shadow-inner shrink-0">
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h2 className="text-sm sm:text-lg font-black tracking-tight">
                   My Orders & Live Status Tracking
                 </h2>
-                <span className="bg-yellow-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">
+                <span className="bg-yellow-400 text-slate-950 text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full">
                   15-Min Live
                 </span>
               </div>
-              <p className="text-xs text-emerald-100/80">
+              <p className="text-[11px] sm:text-xs text-emerald-100/80">
                 Track every order given and monitor real-time delivery progression.
               </p>
             </div>
@@ -422,7 +422,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition"
+            className="p-1.5 sm:p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -430,7 +430,7 @@ export const OrdersTrackingModal: React.FC<OrdersTrackingModalProps> = ({
         </div>
 
         {/* Search Bar for Instant Tracking by Number */}
-        <div className="p-4 bg-slate-50 border-b border-slate-200">
+        <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200">
           <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <input

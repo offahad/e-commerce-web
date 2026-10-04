@@ -87,21 +87,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
   return (
     <div
       onClick={onOpenModal}
-      className="bg-white rounded-2xl border border-slate-200 hover:border-emerald-400 p-4 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer relative"
+      className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 hover:border-emerald-400 p-3 sm:p-4 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer relative"
     >
       <div>
         {/* Top Badges & Wishlist */}
         <div className="flex items-center justify-between mb-2">
           {discountPercentage > 0 ? (
-            <span className="bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
+            <span className="bg-rose-500 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
               -{discountPercentage}% OFF
             </span>
           ) : product.isBestSeller ? (
-            <span className="bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
+            <span className="bg-amber-500 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
               ★ BEST SELLER
             </span>
           ) : (
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wide">
               {product.brand?.name || 'Liton Brothers'}
             </span>
           )}
@@ -115,12 +115,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
             }`}
             title="Add to wishlist"
           >
-            <Heart className={`w-4 h-4 ${wishlisted ? 'fill-rose-500' : ''}`} />
+            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${wishlisted ? 'fill-rose-500' : ''}`} />
           </button>
         </div>
 
         {/* Product Image / Icon */}
-        <div className="h-36 bg-slate-50/80 rounded-xl flex items-center justify-center text-5xl mb-3 overflow-hidden group-hover:scale-105 transition duration-300">
+        <div className="h-32 sm:h-36 bg-slate-50/80 rounded-xl flex items-center justify-center text-4xl sm:text-5xl mb-2.5 sm:mb-3 overflow-hidden group-hover:scale-105 transition duration-300">
           {product.images && product.images.length > 0 && product.images[0].imageUrl ? (
             <img
               src={product.images[0].imageUrl}
@@ -133,25 +133,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
         </div>
 
         {/* Category & Brand info */}
-        <div className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wide">
+        <div className="text-[10px] sm:text-[11px] font-semibold text-emerald-700 uppercase tracking-wide truncate">
           {product.brand?.name || 'Fresh'} • {product.category?.name || 'Grocery'}
         </div>
 
         {/* Title */}
-        <h3 className="font-bold text-slate-900 text-sm mt-0.5 group-hover:text-emerald-700 transition line-clamp-1">
+        <h3 className="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 group-hover:text-emerald-700 transition line-clamp-1">
           {product.name}
         </h3>
 
         {/* Multi-Quantity Variant Selector Pills (Section 15) */}
         {variants.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+          <div className="mt-2 flex flex-wrap gap-1" onClick={(e) => e.stopPropagation()}>
             {variants.map((v) => {
               const isSelected = selectedVariant?.id === v.id;
               return (
                 <button
                   key={v.id}
                   onClick={() => setSelectedVariant(v)}
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-md transition ${
+                  className={`text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md transition ${
                     isSelected
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/60'
@@ -166,16 +166,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
       </div>
 
       {/* Bottom Pricing & Add Action */}
-      <div className="mt-4 pt-3 border-t border-slate-100">
+      <div className="mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100">
         <div className="flex items-baseline justify-between mb-2">
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-lg font-black text-slate-900">৳{currentSalePrice}</span>
+            <div className="flex items-baseline gap-1 sm:gap-1.5">
+              <span className="text-base sm:text-lg font-black text-slate-900">৳{currentSalePrice}</span>
               {currentBasePrice > currentSalePrice && (
-                <span className="text-xs text-slate-400 line-through">৳{currentBasePrice}</span>
+                <span className="text-[11px] sm:text-xs text-slate-400 line-through">৳{currentBasePrice}</span>
               )}
             </div>
-            <div className="text-[10px] text-slate-400">
+            <div className="text-[9px] sm:text-[10px] text-slate-400">
               {selectedVariant ? `Per ${selectedVariant.displayName}` : `Per ${product.unit}`}
             </div>
           </div>
@@ -183,15 +183,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
           {/* Stock Indicator */}
           <div className="text-right">
             {isOutOfStock ? (
-              <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> Stock Out
+              <span className="text-[9px] sm:text-[10px] font-bold text-rose-500 bg-rose-50 px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-1">
+                <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> Stock Out
               </span>
             ) : currentStock <= 5 ? (
-              <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
-                Only {currentStock} left!
+              <span className="text-[9px] sm:text-[10px] font-bold text-amber-600 bg-amber-50 px-1 sm:px-1.5 py-0.5 rounded">
+                {currentStock} left!
               </span>
             ) : (
-              <span className="text-[10px] font-semibold text-emerald-600">
+              <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-600">
                 In Stock
               </span>
             )}
@@ -210,7 +210,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
             return (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="w-full py-2 rounded-xl bg-emerald-800 text-white font-bold text-xs flex items-center justify-between px-3 shadow-md animate-fade-in"
+                className="w-full py-1.5 sm:py-2 rounded-xl bg-emerald-800 text-white font-bold text-xs flex items-center justify-between px-2.5 sm:px-3 shadow-md animate-fade-in"
               >
                 <button
                   type="button"
@@ -224,7 +224,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="font-black text-sm">{cartQty} in Basket</span>
+                <span className="font-black text-xs sm:text-sm px-1.5">{cartQty} in Basket</span>
                 <button
                   type="button"
                   disabled={cartQty >= currentStock}
@@ -248,7 +248,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
               className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition ${
                 isOutOfStock
                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                  : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 active:scale-95'
+                  : 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 active:scale-95 cursor-pointer'
               }`}
             >
               {isOutOfStock ? (

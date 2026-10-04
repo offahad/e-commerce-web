@@ -896,32 +896,32 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
   ];
 
   return (
-    <div className="text-left my-4 max-w-7xl mx-auto px-2 sm:px-4">
+    <div className="text-left my-2 sm:my-4 max-w-7xl mx-auto px-2 sm:px-4">
       {/* Top Back & Breadcrumb Bar */}
-      <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-4 sm:mb-6 border-b border-slate-100 pb-3 sm:pb-4">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#14532d] hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-full transition shadow-xs"
+          className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold text-[#14532d] hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full transition shadow-xs cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span>Back to Home</span>
         </button>
 
-        <div className="text-xs font-semibold text-slate-400">
+        <div className="text-[11px] sm:text-xs font-semibold text-slate-400">
           Home / Catalog / <span className="text-emerald-800 font-bold">{categoryTitle || categoryMeta.title}</span>
         </div>
       </div>
 
       {/* Hero Category Banner Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#14532d] to-[#0f3d20] text-white p-6 sm:p-8 shadow-xl mb-6">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 bg-emerald-800/80 border border-emerald-600/50 px-3 py-1 rounded-full text-xs font-bold text-emerald-200">
-              <span className="text-base">{categoryMeta.icon}</span>
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#14532d] to-[#0f3d20] text-white p-4 sm:p-8 shadow-xl mb-4 sm:mb-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="space-y-1.5 sm:space-y-2">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-emerald-800/80 border border-emerald-600/50 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold text-emerald-200">
+              <span className="text-sm sm:text-base">{categoryMeta.icon}</span>
               <span>Liton Brothers Express Category</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
+            <h1 className="text-xl sm:text-4xl font-black tracking-tight">
               {categoryTitle || categoryMeta.title}
             </h1>
             <p className="text-emerald-100/90 text-xs sm:text-sm max-w-xl">
@@ -929,20 +929,20 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
             </p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center sm:text-right shrink-0">
-            <div className="text-2xl sm:text-3xl font-black text-yellow-300">
-              {displayProducts.length}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-white/20 text-left sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between">
+            <div className="text-xl sm:text-3xl font-black text-yellow-300">
+              {displayProducts.length} <span className="text-xs sm:hidden font-normal text-white">Items</span>
             </div>
-            <div className="text-xs text-emerald-100 font-bold uppercase tracking-wider">
+            <div className="text-[10px] sm:text-xs text-emerald-100 font-bold uppercase tracking-wider hidden sm:block">
               Items Available
             </div>
-            <div className="text-[11px] text-emerald-200 mt-1">15-Min Delivery Available</div>
+            <div className="text-[10px] sm:text-[11px] text-emerald-200">15-Min Delivery</div>
           </div>
         </div>
       </div>
 
       {/* Horizontal Category Switcher Ribbon */}
-      <div className="flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none">
+      <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2.5 mb-4 sm:mb-6 no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
         {CATEGORY_TABS.map((tab) => {
           const isActive = catKey === tab.key;
           return (
@@ -950,7 +950,7 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
               type="button"
               key={tab.key}
               onClick={() => onSelectCategory(tab.key)}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+              className={`shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
                 isActive
                   ? 'bg-[#14532d] text-white shadow-md scale-105'
                   : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
@@ -964,7 +964,7 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
       </div>
 
       {/* Search & Sort Controls Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mb-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-100 shadow-sm mb-4 sm:mb-6">
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
@@ -976,7 +976,7 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2 justify-end">
           <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
             <SlidersHorizontal className="w-3.5 h-3.5" /> Sort:
           </label>
@@ -1004,13 +1004,13 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
           <button
             type="button"
             onClick={() => setSearchFilter('')}
-            className="mt-4 px-5 py-2 bg-emerald-800 text-white rounded-full text-xs font-bold"
+            className="mt-4 px-5 py-2 bg-emerald-800 text-white rounded-full text-xs font-bold cursor-pointer"
           >
             Reset Filters
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-6">
           {displayProducts.map((p) => {
             const ci = cartItems.find((c) => {
               if (p.variantId && c.variantId === p.variantId) return true;
@@ -1026,11 +1026,11 @@ export const CategoryPageView: React.FC<CategoryPageProps> = ({
               <div
                 key={p.id}
                 onClick={() => onOpenProduct(p)}
-                className="group cursor-pointer bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden"
+                className="group cursor-pointer bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden"
               >
                 <div>
                   {/* Thumbnail Image + Heart Wishlist Button */}
-                  <div className="relative w-full h-40 sm:h-44 rounded-2xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center p-2">
+                  <div className="relative w-full h-32 sm:h-44 rounded-xl sm:rounded-2xl bg-slate-50 overflow-hidden mb-2.5 sm:mb-3 flex items-center justify-center p-2">
                     <img
                       src={p.imageUrl}
                       alt={p.name}

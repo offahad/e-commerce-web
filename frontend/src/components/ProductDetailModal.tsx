@@ -97,14 +97,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-3xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 relative">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {loading ? (
@@ -112,10 +112,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
         ) : !product ? (
           <div className="p-12 text-center text-slate-500">Product not found.</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 p-6 sm:p-8 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 p-4 sm:p-8 gap-4 sm:gap-8">
             {/* Left: Product Visuals */}
             <div>
-              <div className="bg-slate-50 rounded-2xl p-8 flex items-center justify-center text-8xl h-64 border border-slate-100">
+              <div className="bg-slate-50 rounded-2xl p-4 sm:p-8 flex items-center justify-center text-6xl sm:text-8xl h-48 sm:h-64 border border-slate-100">
                 {product.images && product.images.length > 0 && product.images[0].imageUrl ? (
                   <img
                     src={product.images[0].imageUrl}

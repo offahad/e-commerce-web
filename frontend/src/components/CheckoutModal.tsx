@@ -180,26 +180,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-2xl w-full my-8 shadow-2xl border border-slate-100 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full my-2 sm:my-8 shadow-2xl border border-slate-100 relative overflow-hidden">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
               <Truck className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900">
+              <h2 className="text-sm sm:text-base font-black text-slate-900">
                 {orderResult ? 'Order Placed Successfully!' : 'Instant Doorstep Checkout'}
               </h2>
-              <span className="text-xs text-slate-500">
+              <span className="text-[11px] sm:text-xs text-slate-500">
                 {orderResult ? 'Liton Brothers Dhaka Central Hub' : 'Server-Authoritative Price Engine'}
               </span>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
+            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -207,13 +207,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
         {/* Success Confirmation View */}
         {orderResult ? (
-          <div className="p-6 sm:p-8 text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl animate-bounce">
-              <CheckCircle2 className="w-10 h-10" />
+          <div className="p-4 sm:p-8 text-center space-y-4 sm:space-y-6">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-2xl sm:text-3xl animate-bounce">
+              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
 
             <div>
-              <h3 className="text-2xl font-black text-slate-900">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900">
                 Thank You for Your Order!
               </h3>
               <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
@@ -222,7 +222,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
 
             {/* Reference details card */}
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 max-w-md mx-auto text-left space-y-2 text-xs">
+            <div className="bg-slate-50 rounded-2xl p-3.5 sm:p-4 border border-slate-200 max-w-md mx-auto text-left space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-500 font-semibold">Order Reference:</span>
                 <span className="font-mono font-bold text-slate-900">{orderResult.orderNumber}</span>
@@ -248,19 +248,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-center max-w-md mx-auto">
               <button
                 onClick={() => {
                   closeCheckout();
                   trackOrderNumber(orderResult.trackingNumber);
                 }}
-                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
               >
                 Track Live Delivery Timeline
               </button>
               <button
                 onClick={closeCheckout}
-                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition"
+                className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition cursor-pointer"
               >
                 Continue Shopping
               </button>
@@ -268,7 +268,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </div>
         ) : (
           /* Checkout Form */
-          <form onSubmit={handleSubmitOrder} className="p-6 sm:p-8 space-y-6">
+          <form onSubmit={handleSubmitOrder} className="p-4 sm:p-8 space-y-4 sm:space-y-6">
             {error && (
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-semibold flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />

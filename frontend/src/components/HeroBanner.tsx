@@ -94,9 +94,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = DEFAULT_SLIDES,
           type="button"
           onClick={handlePrev}
           aria-label="Previous Hero Slide"
-          className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-md transition-all shadow-xl z-30 cursor-pointer active:scale-90 hover:scale-110 border border-white/20"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-md transition-all shadow-xl z-30 cursor-pointer active:scale-90 hover:scale-110 border border-white/20"
         >
-          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
         </button>
       )}
 
@@ -106,43 +106,43 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ slides = DEFAULT_SLIDES,
           type="button"
           onClick={handleNext}
           aria-label="Next Hero Slide"
-          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-md transition-all shadow-xl z-30 cursor-pointer active:scale-90 hover:scale-110 border border-white/20"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 text-white flex items-center justify-center backdrop-blur-md transition-all shadow-xl z-30 cursor-pointer active:scale-90 hover:scale-110 border border-white/20"
         >
-          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
         </button>
       )}
 
-      <div className="relative px-6 py-10 sm:px-14 sm:py-14 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8 z-10">
+      <div className="relative px-4 py-8 sm:px-14 sm:py-14 md:py-16 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 z-10">
         {/* Left Content */}
-        <div className="max-w-xl text-left space-y-4">
-          <div className="inline-flex items-center gap-2 bg-emerald-800/80 border border-emerald-600/50 px-3 py-1 rounded-full text-xs font-semibold text-emerald-200">
+        <div className="max-w-xl text-left space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-emerald-800/80 border border-emerald-600/50 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold text-emerald-200">
             <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
             <span>{currentSlide.badgeText || (language === 'bn' ? 'এক্সপ্রেস ডেলিভারি' : '15-Min Express')}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-white drop-shadow-sm transition-opacity duration-300">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-white drop-shadow-sm transition-opacity duration-300">
             {language === 'bn' && currentIndex === 0 ? t('heroTitle') : currentSlide.headline}
           </h1>
 
-          <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed max-w-lg transition-opacity duration-300">
+          <p className="text-xs sm:text-base text-emerald-100/90 leading-relaxed max-w-lg transition-opacity duration-300">
             {language === 'bn' && currentIndex === 0 ? t('heroSub') : currentSlide.subtext}
           </p>
 
-          <div className="pt-2">
+          <div className="pt-1 sm:pt-2">
             <button
               type="button"
               onClick={() => onShopNow(currentSlide.targetCategory)}
-              className="inline-flex items-center gap-2 bg-white text-[#14532d] hover:bg-emerald-50 px-6 py-3 rounded-full font-bold text-sm sm:text-base shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:scale-95"
+              className="inline-flex items-center gap-2 bg-white text-[#14532d] hover:bg-emerald-50 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-base shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer"
             >
               <span>{language === 'bn' ? t('shopNow') : currentSlide.buttonText}</span>
-              <ArrowRight className="w-4 h-4 text-[#14532d]" />
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#14532d]" />
             </button>
           </div>
         </div>
 
         {/* Right Floating Produce Bag Card */}
         <div className="relative shrink-0 w-full md:w-auto flex justify-center">
-          <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-80 rounded-2xl bg-white p-3 shadow-2xl flex items-center justify-center overflow-hidden">
+          <div className="relative w-full max-w-[260px] sm:w-80 sm:h-80 md:w-96 md:h-80 aspect-square sm:aspect-auto rounded-2xl bg-white p-2.5 sm:p-3 shadow-2xl flex items-center justify-center overflow-hidden">
             <img
               key={currentSlide.id || currentIndex}
               src={currentSlide.imageUrl}
