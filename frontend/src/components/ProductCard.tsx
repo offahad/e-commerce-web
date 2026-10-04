@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Heart, Check, Plus, Minus, AlertCircle } from 'lucide-react';
 import { Product, ProductVariant } from '../types';
 import { useCart } from '../context/CartContext';
@@ -13,9 +13,44 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenModal }
 
   // Selected variant state (defaults to primary variant)
   const variants = product.variants && product.variants.length > 0 ? product.variants : [];
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    variants.find((v) => v.stockQuantity > 0) || variants[0] || null
-  );
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(() => {
+    if (variants.length > 0) {
+      return variants.find((v) => v.stockQuantity > 0) || variants[0] || null;
+    }
+    return {
+      id: `var-${product.id}`,
+      productId: product.id,
+      name: product.name,
+      displayName: product.unit || 'Standard',
+      packSize: product.unit || 'Standard',
+      price: product.salePrice || product.price || 100,
+      salePrice: product.salePrice || product.price || 100,
+      basePrice: product.basePrice || product.price || 100,
+      stockQuantity: product.stockQuantity ?? 50,
+      isPrimary: true,
+      sku: (product as any).sku || `SKU-${product.id}`,
+    } as any;
+  });
+
+  useEffect(() => {
+    if (product.variants && product.variants.length > 0) {
+      setSelectedVariant(product.variants.find((v) => v.stockQuantity > 0) || product.variants[0]);
+    } else {
+      setSelectedVariant({
+        id: `var-${product.id}`,
+        productId: product.id,
+        name: product.name,
+        displayName: product.unit || 'Standard',
+        packSize: product.unit || 'Standard',
+        price: product.salePrice || product.price || 100,
+        salePrice: product.salePrice || product.price || 100,
+        basePrice: product.basePrice || product.price || 100,
+        stockQuantity: product.stockQuantity ?? 50,
+        isPrimary: true,
+        sku: (product as any).sku || `SKU-${product.id}`,
+      } as any);
+    }
+  }, [product]);
 
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);

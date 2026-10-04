@@ -209,8 +209,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ slug, on
                             }`}
                           >
                             <div>
-                              <div className="text-xs">{v.displayName}</div>
-                              <div className="text-[11px] text-slate-500 font-mono">৳{v.salePrice}</div>
+                              <div className="text-xs font-bold">{v.displayName}</div>
+                              <div className="text-[11px] font-mono flex items-center gap-1.5 mt-0.5">
+                                <span className="text-slate-900 font-bold">৳{v.salePrice}</span>
+                                {v.basePrice > v.salePrice && (
+                                  <span className="text-slate-400 line-through text-[10px]">৳{v.basePrice}</span>
+                                )}
+                              </div>
                             </div>
                             {isSelected && (
                               <Check className="w-4 h-4 text-emerald-600 shrink-0" />

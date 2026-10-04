@@ -310,13 +310,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   ];
 
   const UNIT_VARIANT_PRESETS: Record<string, string[]> = {
-    Liter: ['250 ML', '500 ML', '1 Ltr', '2 Ltr', '3 Ltr', '5 Ltr', '8 Ltr', '10 Ltr'],
-    Piece: ['1 Piece', '4 Pieces (Hali)', '6 Pieces', '12 Pieces (Dozen)', '24 Pieces', '30 Pieces (Tray)', '1 Pack', '1 Box'],
-    KG: ['100 gm', '250 gm', '500 gm', '1 KG', '2 KG', '5 KG', '10 KG', '25 KG'],
-    Gram: ['50 gm', '100 gm', '200 gm', '250 gm', '500 gm', '1000 gm'],
+    Liter: ['50 ML', '75 ML', '100 ML', '200 ML', '250 ML', '500 ML', '1 Ltr', '2 Ltr', '3 Ltr', '5 Ltr', '8 Ltr', '10 Ltr'],
+    Piece: ['1 Piece', '2 Pieces', '4 Pieces (Hali)', '6 Pieces', '12 Pieces (Dozen)', '24 Pieces', '30 Pieces (Tray)', '1 Pack', '1 Box'],
+    KG: ['50 gm', '100 gm', '250 gm', '500 gm', '1 KG', '2 KG', '5 KG', '10 KG', '25 KG'],
+    Gram: ['10 gm', '25 gm', '50 gm', '100 gm', '200 gm', '250 gm', '400 gm', '500 gm', '1000 gm'],
     Pack: ['1 Pack', '2 Pack', '3 Pack', '5 Pack', '10 Pack', 'Family Pack'],
     Box: ['1 Box (6 Pcs)', '1 Box (12 Pcs)', '1 Carton (24 Pcs)'],
-    Bottle: ['1 Bottle', '2 Bottles', '1 Case (12 Bottles)'],
+    Bottle: ['50 ML Bottle', '100 ML Bottle', '250 ML Bottle', '500 ML Bottle', '1 Bottle', '2 Bottles', '1 Case (12 Bottles)'],
     Dozen: ['0.5 Dozen', '1 Dozen', '2 Dozen'],
   };
 
@@ -393,14 +393,144 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     itemType: 'Oil',
     isDealOfTheDay: false,
     brand: 'Teer',
-    variantName: '5 Liter',
+    variantName: '50 ML',
     unit: 'Liter',
-    basePrice: '850',
-    salePrice: '790',
+    basePrice: '65',
+    salePrice: '55',
     stockQuantity: '50',
     imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=500&q=80',
     tags: 'Cooking Oil, Soybean, Grocery, Wholesale',
   });
+
+  // Multi-variant rows state (Weight / Size, Regular Price, Sale Price in the same row)
+  const [variantRows, setVariantRows] = useState<Array<{
+    id?: string;
+    displayName: string;
+    price: string;
+    salePrice: string;
+    stockQuantity: string;
+  }>>([
+    { displayName: '50 ML', price: '65', salePrice: '55', stockQuantity: '50' },
+    { displayName: '75 ML', price: '95', salePrice: '85', stockQuantity: '50' },
+    { displayName: '100 ML', price: '120', salePrice: '105', stockQuantity: '50' },
+    { displayName: '250 ML', price: '280', salePrice: '250', stockQuantity: '50' },
+  ]);
+
+  const [previewSelectedVariantIdx, setPreviewSelectedVariantIdx] = useState(0);
+
+  // Multi-variant rows state for edit modal
+  const [editVariantRows, setEditVariantRows] = useState<Array<{
+    id?: string;
+    displayName: string;
+    price: string;
+    salePrice: string;
+    stockQuantity: string;
+  }>>([]);
+
+  const handleUpdateVariantRow = (
+    index: number,
+    field: 'displayName' | 'price' | 'salePrice' | 'stockQuantity',
+    value: string
+  ) => {
+    setVariantRows((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddVariantRow = () => {
+    setVariantRows((prev) => [
+      ...prev,
+      { displayName: '', price: '', salePrice: '', stockQuantity: '50' },
+    ]);
+  };
+
+  const handleRemoveVariantRow = (index: number) => {
+    if (variantRows.length <= 1) return;
+    setVariantRows((prev) => prev.filter((_, i) => i !== index));
+    if (previewSelectedVariantIdx >= index && previewSelectedVariantIdx > 0) {
+      setPreviewSelectedVariantIdx((prev) => prev - 1);
+    }
+  };
+
+  const handleAddPresetVariantRow = (preset: string) => {
+    setVariantRows((prev) => {
+      if (prev.length === 1 && !prev[0].displayName.trim()) {
+        return [{ ...prev[0], displayName: preset }];
+      }
+      if (prev.some((r) => r.displayName.toLowerCase().trim() === preset.toLowerCase().trim())) {
+        return prev;
+      }
+      return [
+        ...prev,
+        { displayName: preset, price: '', salePrice: '', stockQuantity: '50' },
+      ];
+    });
+  };
+
+  const handleUpdateEditVariantRow = (
+    index: number,
+    field: 'displayName' | 'price' | 'salePrice' | 'stockQuantity',
+    value: string
+  ) => {
+    setEditVariantRows((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddEditVariantRow = () => {
+    setEditVariantRows((prev) => [
+      ...prev,
+      { displayName: '', price: '', salePrice: '', stockQuantity: '50' },
+    ]);
+  };
+
+  const handleRemoveEditVariantRow = (index: number) => {
+    if (editVariantRows.length <= 1) return;
+    setEditVariantRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddEditPresetVariantRow = (preset: string) => {
+    setEditVariantRows((prev) => {
+      if (prev.length === 1 && !prev[0].displayName.trim()) {
+        return [{ ...prev[0], displayName: preset }];
+      }
+      if (prev.some((r) => r.displayName.toLowerCase().trim() === preset.toLowerCase().trim())) {
+        return prev;
+      }
+      return [
+        ...prev,
+        { displayName: preset, price: '', salePrice: '', stockQuantity: '50' },
+      ];
+    });
+  };
+
+  const openEditProductModal = (product: any) => {
+    setEditProductModal(product);
+    if (product.variants && Array.isArray(product.variants) && product.variants.length > 0) {
+      setEditVariantRows(
+        product.variants.map((v: any) => ({
+          id: v.id,
+          displayName: v.displayName || v.unit || 'Standard',
+          price: String(v.price || v.basePrice || product.basePrice || 100),
+          salePrice: String(v.salePrice || product.salePrice || 90),
+          stockQuantity: String(v.stockQuantity ?? product.stockQuantity ?? 50),
+        }))
+      );
+    } else {
+      setEditVariantRows([
+        {
+          displayName: product.unit || product.variantName || 'Standard',
+          price: String(product.basePrice || product.price || 100),
+          salePrice: String(product.salePrice || product.price || 90),
+          stockQuantity: String(product.stockQuantity ?? 50),
+        },
+      ]);
+    }
+  };
 
   const [productSearch, setProductSearch] = useState('');
   const [editProductModal, setEditProductModal] = useState<any | null>(null);
@@ -671,6 +801,34 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       detectedItemType = 'Meat & Fish';
     }
 
+    // Detect multiple variant sizes in description (e.g. 50 ML, 75 ML, 100 ML, 250 ML)
+    const detectedSizes: string[] = [];
+    const sizeRegex = /\b(\d+\s*(?:ml|liter|litre|l|kg|gm|gram|g|pcs|pieces|tray|dozen|bottle))\b/gi;
+    let match;
+    while ((match = sizeRegex.exec(text)) !== null) {
+      const s = match[1].trim();
+      if (!detectedSizes.some((d) => d.toLowerCase() === s.toLowerCase())) {
+        detectedSizes.push(s);
+      }
+    }
+
+    if (detectedSizes.length > 0) {
+      const regNum = Number(detectedBasePrice) || 100;
+      const saleNum = Number(detectedSalePrice) || Math.round(regNum * 0.92);
+      const newRows = detectedSizes.map((s, idx) => {
+        const factor = idx === 0 ? 1 : Math.round((idx + 1) * 1.4 * 10) / 10;
+        const rPrice = Math.round(regNum * factor);
+        const sPrice = Math.round(saleNum * factor);
+        return {
+          displayName: s,
+          price: String(rPrice),
+          salePrice: String(sPrice),
+          stockQuantity: detectedStock || '50',
+        };
+      });
+      setVariantRows(newRows);
+    }
+
     setProductForm((prev) => ({
       ...prev,
       description: text,
@@ -693,19 +851,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     let tplText = '';
     switch (templateType) {
       case 'oil':
-        tplText = 'Teer Pure Fortified Soybean Oil 5 Liter Can. Triple refined, cholesterol-free edible oil enriched with Vitamin A and D. Regular price 850 BDT, discounted sale price 790 BDT. Warehouse allocated stock 50 units. Category: Cooking Oil, Brand: Teer.';
+        tplText = 'Teer Pure Fortified Soybean Oil available in 50 ML, 100 ML, 250 ML, 500 ML, and 1 Ltr. Triple refined, cholesterol-free edible oil enriched with Vitamin A and D. Regular price 65 BDT, discounted sale price 55 BDT. Warehouse allocated stock 50 units. Category: Cooking Oil, Brand: Teer.';
         break;
       case 'rice':
-        tplText = 'Miniket Premium Polished Rice 25 KG Sack. Extra long grain, thoroughly sorted white rice with naturally slender texture. Regular price 1850 BDT, wholesale promotional price 1700 BDT. Available stock 60 units. Category: Rice, Brand: Liton Brothers Fresh.';
+        tplText = 'Miniket Premium Polished Rice in 1 KG, 5 KG, 10 KG, and 25 KG Sack. Extra long grain, thoroughly sorted white rice with naturally slender texture. Regular price 85 BDT, wholesale promotional price 78 BDT. Available stock 60 units. Category: Rice, Brand: Liton Brothers Fresh.';
         break;
       case 'ghee':
-        tplText = 'Aarong Dairy Pure Granulated Ghee 900gm Glass Jar. Authentic desi ghee crafted from pure grass-fed cow milk with rich golden aroma. Regular price 1450 BDT, special deal price 1290 BDT. Stock 35 units. Category: Dairy, Brand: Aarong.';
+        tplText = 'Aarong Dairy Pure Granulated Ghee in 100 gm, 200 gm, 500 gm, and 900gm Glass Jar. Authentic desi ghee crafted from pure grass-fed cow milk with rich golden aroma. Regular price 190 BDT, special deal price 170 BDT. Stock 35 units. Category: Dairy, Brand: Aarong.';
         break;
       case 'turmeric':
-        tplText = 'Radhuni Pure Turmeric Powder 500 Gram Foil Pack. Sourced from native ginger-turmeric rhizomes, lab tested for high natural curcumin and zero artificial colors. Regular price 220 BDT, sale price 200 BDT. Stock 80 units. Category: Spices & Salt, Brand: Radhuni.';
+        tplText = 'Radhuni Pure Turmeric Powder in 50 gm, 100 gm, 250 gm, and 500 Gram Foil Pack. Sourced from native ginger-turmeric rhizomes, lab tested for high natural curcumin and zero artificial colors. Regular price 35 BDT, sale price 30 BDT. Stock 80 units. Category: Spices & Salt, Brand: Radhuni.';
         break;
       case 'eggs':
-        tplText = 'Farm Fresh Brown Eggs 30 Pieces Tray. Graded, sanitized, protein-packed farm eggs delivered in protective shock-absorbing tray. Regular price 395 BDT, daily deal 345 BDT. Stock 70 units. Category: Dairy & Eggs, Brand: Farm Fresh.';
+        tplText = 'Farm Fresh Brown Eggs 6 Pieces, 12 Pieces (Dozen), and 30 Pieces Tray. Graded, sanitized, protein-packed farm eggs delivered in protective shock-absorbing tray. Regular price 80 BDT, daily deal 72 BDT. Stock 70 units. Category: Dairy & Eggs, Brand: Farm Fresh.';
         break;
       default:
         break;
@@ -724,25 +882,55 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       return;
     }
 
-    const regPrice = Number(productForm.basePrice) || 100;
-    const sPrice = Number(productForm.salePrice) || regPrice;
-    const stock = Number(productForm.stockQuantity) || 20;
-
     const itemSlug = (productForm.itemType || '')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
+
+    // Validate and build variants from variantRows (multi-pack sizes in same row)
+    const validRows = variantRows.filter((r) => r.displayName.trim() && Number(r.price) > 0);
+    const activeRows = validRows.length > 0 ? validRows : [
+      {
+        displayName: productForm.unit || 'Standard',
+        price: productForm.basePrice || '100',
+        salePrice: productForm.salePrice || '90',
+        stockQuantity: productForm.stockQuantity || '50',
+      },
+    ];
+
+    const builtVariants = activeRows.map((r, idx) => {
+      const reg = Number(r.price) || 100;
+      const sale = Number(r.salePrice) || reg;
+      const st = Number(r.stockQuantity) || 50;
+      return {
+        id: 'v-' + Date.now() + '-' + idx,
+        sku: 'SKU-' + Date.now().toString().slice(-4) + '-' + idx,
+        displayName: r.displayName.trim(),
+        unit: productForm.unit || 'Pack',
+        quantity: 1,
+        price: reg,
+        salePrice: sale,
+        stockQuantity: st,
+      };
+    });
+
+    const primaryVariant = builtVariants[0];
+    const minSalePrice = Math.min(...builtVariants.map((v) => v.salePrice));
+    const primaryBasePrice = primaryVariant.price;
+    const totalStock = builtVariants.reduce((sum, v) => sum + v.stockQuantity, 0);
+    const variantDisplayString = builtVariants.map((v) => v.displayName).join(', ');
 
     const newProd = {
       id: 'prod-' + Date.now(),
       name: productForm.name.trim(),
       slug: productForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       description: productForm.description.trim() || undefined,
-      basePrice: regPrice,
-      salePrice: sPrice,
-      price: sPrice,
-      stockQuantity: stock,
-      unit: productForm.variantName || productForm.unit || '1 Pack',
+      basePrice: primaryBasePrice,
+      salePrice: minSalePrice,
+      price: minSalePrice,
+      stockQuantity: totalStock,
+      unit: builtVariants.length === 1 ? primaryVariant.displayName : variantDisplayString,
+      variantName: primaryVariant.displayName,
       primaryImage: productForm.imageUrl,
       images: [{ imageUrl: productForm.imageUrl }],
       category: { slug: productForm.category, name: productForm.category },
@@ -753,17 +941,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       isFeatured: true,
       brand: { name: productForm.brand },
       tags: productForm.tags.split(',').map((t) => t.trim()).filter(Boolean),
-      variants: [
-        {
-          id: 'v-' + Date.now(),
-          sku: 'SKU-' + Date.now().toString().slice(-6),
-          displayName: productForm.variantName || 'Standard',
-          unit: productForm.unit || 'Pack',
-          price: regPrice,
-          salePrice: sPrice,
-          stockQuantity: stock,
-        },
-      ],
+      variants: builtVariants,
     };
 
     // Save to local custom catalog storage
@@ -784,20 +962,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         sku: newProd.variants[0].sku,
         slug: newProd.slug,
         description: newProd.description,
-        basePrice: regPrice,
-        salePrice: sPrice,
-        stockQuantity: stock,
-        unit: newProd.unit,
+        basePrice: primaryBasePrice,
+        salePrice: minSalePrice,
+        stockQuantity: totalStock,
+        unit: productForm.unit || 'piece',
         thumbnailUrl: newProd.primaryImage,
         images: [newProd.primaryImage],
-        variants: newProd.variants,
+        variants: builtVariants.map((v) => ({
+          sku: v.sku,
+          displayName: v.displayName,
+          unit: v.unit,
+          quantity: 1,
+          price: v.price,
+          salePrice: v.salePrice,
+          stockQuantity: v.stockQuantity,
+        })),
       });
     } catch (err) {
       // Gracefully continue using local catalog
     }
 
     window.dispatchEvent(new Event('lb_products_updated'));
-    alert(`Success! "${newProd.name}" has been added to the catalog and is now available in the customer storefront.`);
+    alert(`Success! "${newProd.name}" (${builtVariants.length} sizes/variants) has been added to the catalog and is now available in the customer storefront.`);
 
     // Reset form
     setProductForm({
@@ -807,14 +993,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       itemType: 'Oil',
       isDealOfTheDay: false,
       brand: 'Teer',
-      variantName: '5 Liter',
+      variantName: '50 ML',
       unit: 'Liter',
-      basePrice: '850',
-      salePrice: '790',
+      basePrice: '65',
+      salePrice: '55',
       stockQuantity: '50',
       imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=500&q=80',
       tags: 'cooking oil, pure, grocery',
     });
+    setVariantRows([
+      { displayName: '50 ML', price: '65', salePrice: '55', stockQuantity: '50' },
+      { displayName: '75 ML', price: '95', salePrice: '85', stockQuantity: '50' },
+      { displayName: '100 ML', price: '120', salePrice: '105', stockQuantity: '50' },
+      { displayName: '250 ML', price: '280', salePrice: '250', stockQuantity: '50' },
+    ]);
 
     await loadData();
   };
@@ -829,16 +1021,48 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
+    const validEditRows = editVariantRows.filter((r) => r.displayName.trim() && Number(r.price) > 0);
+    const activeEditVariants = validEditRows.length > 0 ? validEditRows : [
+      {
+        displayName: editProductModal.unit || 'Standard',
+        price: String(editProductModal.basePrice || 100),
+        salePrice: String(editProductModal.salePrice || 90),
+        stockQuantity: String(editProductModal.stockQuantity || 50),
+      },
+    ];
+
+    const builtEditVariants = activeEditVariants.map((r, idx) => {
+      const reg = Number(r.price) || 100;
+      const sale = Number(r.salePrice) || reg;
+      const st = Number(r.stockQuantity) || 50;
+      return {
+        id: (r as any).id || 'v-' + Date.now() + '-' + idx,
+        sku: 'SKU-' + Date.now().toString().slice(-4) + '-' + idx,
+        displayName: r.displayName.trim(),
+        unit: editProductModal.baseUnit || editProductModal.unit || 'Pack',
+        quantity: 1,
+        price: reg,
+        salePrice: sale,
+        stockQuantity: st,
+      };
+    });
+
+    const primaryEditVar = builtEditVariants[0];
+    const minEditSalePrice = Math.min(...builtEditVariants.map((v) => v.salePrice));
+    const totalEditStock = builtEditVariants.reduce((sum, v) => sum + v.stockQuantity, 0);
+
     const updatedItem = {
       ...editProductModal,
       description: editProductModal.description ? editProductModal.description.trim() : undefined,
-      basePrice: Number(editProductModal.basePrice),
-      salePrice: Number(editProductModal.salePrice),
-      price: Number(editProductModal.salePrice),
-      stockQuantity: Number(editProductModal.stockQuantity),
+      basePrice: primaryEditVar.price,
+      salePrice: minEditSalePrice,
+      price: minEditSalePrice,
+      stockQuantity: totalEditStock,
+      unit: builtEditVariants.length === 1 ? primaryEditVar.displayName : builtEditVariants.map((v) => v.displayName).join(', '),
       itemType: editProductModal.itemType || undefined,
       itemSlug: itemSlug || undefined,
       isDealOfTheDay: Boolean(editProductModal.isDealOfTheDay),
+      variants: builtEditVariants,
     };
 
     // Update in localStorage catalog
@@ -1783,13 +2007,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                             value={productForm.unit}
                             onChange={(e) => {
                               const newUnit = e.target.value;
-                              const presets = UNIT_VARIANT_PRESETS[newUnit] || [];
-                              const defaultVariant = presets[2] || presets[0] || newUnit;
-                              setProductForm({
-                                ...productForm,
+                              setProductForm((prev) => ({
+                                ...prev,
                                 unit: newUnit,
-                                variantName: defaultVariant,
-                              });
+                              }));
                             }}
                             className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:border-emerald-700 focus:outline-none bg-white font-semibold text-xs"
                           >
@@ -1804,96 +2025,186 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                           </select>
                         </div>
 
-                        {/* 4. Variant Display (Size/Pack) with dynamic quick buttons based on Base Unit */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="font-bold text-slate-700 block text-xs">Variant Display (Size/Pack) *</label>
-                            {productForm.unit && (
-                              <span className="text-[10px] text-slate-500 font-semibold">
-                                Presets for <strong className="text-emerald-700">{productForm.unit}</strong>
-                              </span>
-                            )}
-                          </div>
-                          <input
-                            type="text"
-                            required
-                            value={productForm.variantName}
-                            onChange={(e) => setProductForm({ ...productForm, variantName: e.target.value })}
-                            placeholder="e.g. 5 Liter / 25 KG / 500 gm / 30 Pieces"
-                            className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:border-emerald-700 focus:outline-none text-xs"
-                          />
+                        {/* Presets indicator */}
+                        <div className="flex flex-col justify-end">
+                          <span className="text-[11px] text-slate-500 font-semibold mb-1">
+                            Unit Presets Ready:
+                          </span>
+                          <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-200">
+                            Base: {productForm.unit} ({UNIT_VARIANT_PRESETS[productForm.unit]?.length || 0} quick presets ready below)
+                          </span>
+                        </div>
 
-                          {/* Quick Variant Buttons for selected Base Unit */}
+                        {/* 4. Multi-Size/Weight Variants Builder (All in the same row) */}
+                        <div className="sm:col-span-2 p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                            <div>
+                              <label className="font-black text-slate-900 block text-xs flex items-center gap-1.5">
+                                <span>Weight / Size & Price Variants (Multi-Pack)</span>
+                                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                  {variantRows.length} {variantRows.length === 1 ? 'Size' : 'Sizes'}
+                                </span>
+                              </label>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Configure each weight/size (e.g. 50 mL, 75 mL, 100 mL, 250 mL) with its regular price and sale price in the same row.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleAddVariantRow}
+                              className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center gap-1 transition self-start sm:self-auto cursor-pointer shadow-xs active:scale-95"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>+ Add Size/Weight Row</span>
+                            </button>
+                          </div>
+
+                          {/* Quick clickable preset chips for the selected Base Unit */}
                           {UNIT_VARIANT_PRESETS[productForm.unit] && (
-                            <div className="mt-1.5">
-                              <div className="flex flex-wrap gap-1">
-                                {UNIT_VARIANT_PRESETS[productForm.unit].map((size) => {
-                                  const isSelected =
-                                    productForm.variantName === size ||
-                                    (size === '1 Ltr' && (productForm.variantName === '1 Liter' || productForm.variantName === '1 Ltr')) ||
-                                    (size === '5 Ltr' && (productForm.variantName === '5 Liter' || productForm.variantName === '5 Ltr')) ||
-                                    (size === '1 KG' && productForm.variantName === '1 KG') ||
-                                    (size === '1 Piece' && productForm.variantName === '1 Piece');
+                            <div className="pt-2 border-t border-slate-200">
+                              <div className="text-[10px] text-slate-500 font-bold mb-1.5 flex items-center gap-1">
+                                <span>Quick Presets for {productForm.unit} (Click to add as row):</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {UNIT_VARIANT_PRESETS[productForm.unit].map((preset) => {
+                                  const alreadyAdded = variantRows.some(
+                                    (r) => r.displayName.toLowerCase().trim() === preset.toLowerCase().trim()
+                                  );
                                   return (
                                     <button
-                                      key={size}
+                                      key={preset}
                                       type="button"
-                                      onClick={() => setProductForm({ ...productForm, variantName: size })}
-                                      className={`px-2 py-0.5 text-[11px] font-bold rounded-lg border transition cursor-pointer ${
-                                        isSelected
-                                          ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs ring-2 ring-emerald-200'
-                                          : 'bg-slate-100 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 text-slate-700 border-slate-200'
+                                      onClick={() => handleAddPresetVariantRow(preset)}
+                                      className={`px-2.5 py-1 text-[11px] font-bold rounded-lg border transition cursor-pointer flex items-center gap-1 shadow-2xs ${
+                                        alreadyAdded
+                                          ? 'bg-emerald-700 text-white border-emerald-700 ring-2 ring-emerald-200'
+                                          : 'bg-white hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border-slate-200 hover:border-emerald-300'
                                       }`}
                                     >
-                                      {size}
+                                      <span>{alreadyAdded ? '✓' : '+'}</span>
+                                      <span>{preset}</span>
                                     </button>
                                   );
                                 })}
                               </div>
                             </div>
                           )}
-                        </div>
 
-                        {/* 5. Regular Price (৳) */}
-                        <div>
-                          <label className="font-bold text-slate-700 block mb-1 text-xs">Regular Price (৳)</label>
-                          <input
-                            type="number"
-                            required
-                            min="1"
-                            value={productForm.basePrice}
-                            onChange={(e) => setProductForm({ ...productForm, basePrice: e.target.value })}
-                            placeholder="e.g. 850"
-                            className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:border-emerald-700 focus:outline-none text-xs"
-                          />
-                        </div>
+                          {/* Table Header on medium+ screens */}
+                          <div className="hidden sm:grid sm:grid-cols-12 gap-2 text-[11px] font-black text-slate-700 px-1 pt-1">
+                            <div className="sm:col-span-4">Weight / Size Display *</div>
+                            <div className="sm:col-span-3">Regular Price (৳) *</div>
+                            <div className="sm:col-span-3">Sale Price (৳) *</div>
+                            <div className="sm:col-span-2 text-right">Stock / Action</div>
+                          </div>
 
-                        {/* 6. Sale Price (৳) */}
-                        <div>
-                          <label className="font-bold text-slate-700 block mb-1 text-xs">Sale Price (৳)</label>
-                          <input
-                            type="number"
-                            required
-                            min="1"
-                            value={productForm.salePrice}
-                            onChange={(e) => setProductForm({ ...productForm, salePrice: e.target.value })}
-                            placeholder="e.g. 790"
-                            className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:border-emerald-700 focus:outline-none text-xs"
-                          />
-                        </div>
+                          {/* The Variant Rows: Weight, Regular Price, Sale Price in the same row */}
+                          <div className="space-y-2">
+                            {variantRows.map((row, idx) => {
+                              const regP = Number(row.price) || 0;
+                              const saleP = Number(row.salePrice) || 0;
+                              const discount = regP > saleP && regP > 0 ? Math.round(((regP - saleP) / regP) * 100) : 0;
 
-                        {/* 7. Warehouse Stock */}
-                        <div>
-                          <label className="font-bold text-slate-700 block mb-1 text-xs">Warehouse Stock</label>
-                          <input
-                            type="number"
-                            required
-                            min="0"
-                            value={productForm.stockQuantity}
-                            onChange={(e) => setProductForm({ ...productForm, stockQuantity: e.target.value })}
-                            placeholder="e.g. 50"
-                            className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:border-emerald-700 focus:outline-none text-xs"
-                          />
+                              return (
+                                <div
+                                  key={idx}
+                                  className="grid grid-cols-1 sm:grid-cols-12 gap-2 p-2.5 bg-white rounded-xl border border-slate-200 items-center shadow-xs transition hover:border-emerald-300"
+                                >
+                                  {/* Weight / Size */}
+                                  <div className="sm:col-span-4">
+                                    <label className="sm:hidden text-[10px] font-bold text-slate-600 block mb-0.5">
+                                      Weight / Size *
+                                    </label>
+                                    <input
+                                      type="text"
+                                      required
+                                      value={row.displayName}
+                                      onChange={(e) => handleUpdateVariantRow(idx, 'displayName', e.target.value)}
+                                      placeholder="e.g. 50 mL / 100 mL / 1 KG"
+                                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:border-emerald-700 focus:outline-none"
+                                    />
+                                  </div>
+
+                                  {/* Regular Price */}
+                                  <div className="sm:col-span-3">
+                                    <label className="sm:hidden text-[10px] font-bold text-slate-600 block mb-0.5">
+                                      Regular Price (৳) *
+                                    </label>
+                                    <div className="relative">
+                                      <span className="absolute left-2.5 top-1.5 text-xs text-slate-400 font-bold">৳</span>
+                                      <input
+                                        type="number"
+                                        required
+                                        min="1"
+                                        value={row.price}
+                                        onChange={(e) => handleUpdateVariantRow(idx, 'price', e.target.value)}
+                                        placeholder="Regular"
+                                        className="w-full pl-6 pr-2 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold focus:border-emerald-700 focus:outline-none"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Sale Price */}
+                                  <div className="sm:col-span-3">
+                                    <div className="flex items-center justify-between sm:hidden mb-0.5">
+                                      <label className="text-[10px] font-bold text-slate-600">Sale Price (৳) *</label>
+                                      {discount > 0 && (
+                                        <span className="text-[10px] font-black text-rose-600 bg-rose-50 px-1 rounded">
+                                          -{discount}%
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="relative">
+                                      <span className="absolute left-2.5 top-1.5 text-xs text-slate-400 font-bold">৳</span>
+                                      <input
+                                        type="number"
+                                        required
+                                        min="1"
+                                        value={row.salePrice}
+                                        onChange={(e) => handleUpdateVariantRow(idx, 'salePrice', e.target.value)}
+                                        placeholder="Sale"
+                                        className="w-full pl-6 pr-10 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold focus:border-emerald-700 focus:outline-none"
+                                      />
+                                      {discount > 0 && (
+                                        <span className="hidden sm:inline-block absolute right-2 top-2 text-[9px] font-black text-rose-600 bg-rose-50 px-1 rounded">
+                                          -{discount}%
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Stock & Remove */}
+                                  <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-1.5">
+                                    <div className="w-24 sm:w-16">
+                                      <label className="sm:hidden text-[10px] font-bold text-slate-600 block mb-0.5">Stock</label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={row.stockQuantity}
+                                        onChange={(e) => handleUpdateVariantRow(idx, 'stockQuantity', e.target.value)}
+                                        placeholder="Stock"
+                                        title="Warehouse stock for this size"
+                                        className="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs text-center font-semibold focus:border-emerald-700 focus:outline-none"
+                                      />
+                                    </div>
+
+                                    {variantRows.length > 1 ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveVariantRow(idx)}
+                                        className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg border border-transparent hover:border-rose-200 transition cursor-pointer"
+                                        title="Delete this size/weight row"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    ) : (
+                                      <div className="w-7 sm:w-6" />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
 
                         {/* 8. Tags with Chips, Autocomplete Dropdown, and + Add Button */}
@@ -2101,23 +2412,58 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                           {productForm.name || 'Product Title'}
                         </div>
                         <div className="text-xs text-slate-500 mt-0.5">
-                          {productForm.variantName || '5 Liter'} • {productForm.brand || 'Brand'}
+                          {productForm.brand || 'Brand'} • {productForm.unit}
                         </div>
 
-                        <div className="flex items-baseline gap-2 mt-2">
-                          <span className="text-lg font-black text-slate-900">৳{productForm.salePrice || '790'}</span>
-                          {Number(productForm.basePrice) > Number(productForm.salePrice) && (
-                            <span className="text-xs text-slate-400 line-through">৳{productForm.basePrice}</span>
-                          )}
-                        </div>
+                        {/* Interactive multi-variant pills in live preview */}
+                        {variantRows.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {variantRows.map((r, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => setPreviewSelectedVariantIdx(i)}
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-md transition cursor-pointer ${
+                                  previewSelectedVariantIdx === i
+                                    ? 'bg-emerald-700 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/60'
+                                }`}
+                              >
+                                {r.displayName || `Size ${i + 1}`}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {(() => {
+                          const activeRow = variantRows[previewSelectedVariantIdx] || variantRows[0] || {
+                            displayName: '50 ML',
+                            price: '65',
+                            salePrice: '55',
+                            stockQuantity: '50',
+                          };
+                          const reg = Number(activeRow.price) || 0;
+                          const sale = Number(activeRow.salePrice) || reg;
+                          return (
+                            <div className="flex items-baseline gap-2 mt-2">
+                              <span className="text-lg font-black text-slate-900">৳{sale}</span>
+                              {reg > sale && (
+                                <span className="text-xs text-slate-400 line-through">৳{reg}</span>
+                              )}
+                              <span className="text-[10px] text-slate-400">
+                                ({activeRow.displayName || 'Size'})
+                              </span>
+                            </div>
+                          );
+                        })()}
 
                         <div className="mt-2 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-1 rounded-lg">
-                          Warehouse Stock: {productForm.stockQuantity || '50'} units
+                          Total Stock across all sizes: {variantRows.reduce((sum, r) => sum + (Number(r.stockQuantity) || 0), 0)} units
                         </div>
                       </div>
 
                       <div className="mt-4 p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500 border border-slate-100">
-                        <strong>Placement Summary:</strong> Product description is optional. The product will be indexed in its selected Category, Item section, and Deals of the Day (if enabled).
+                        <strong>Placement Summary:</strong> Product description is optional. The product will be indexed in its selected Category, Item section, and Deals of the Day (if enabled). Multi-pack variants appear directly on customer cards and modal.
                       </div>
                     </div>
                   </div>
@@ -2182,11 +2528,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
                             <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
                               <span className="text-[11px] text-slate-500">
-                                Stock: <strong>{p.stockQuantity ?? 50}</strong>
+                                Stock: <strong>{p.stockQuantity ?? 50}</strong> • {p.variants?.length || 1} {p.variants?.length === 1 ? 'size' : 'sizes'}
                               </span>
                               <button
                                 type="button"
-                                onClick={() => setEditProductModal(p)}
+                                onClick={() => openEditProductModal(p)}
                                 className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-[11px] transition flex items-center gap-1 cursor-pointer"
                               >
                                 <Edit3 className="w-3 h-3" />
@@ -2702,60 +3048,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-bold text-slate-700 block mb-1">Regular Price (৳)</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={editProductModal.basePrice || editProductModal.price}
-                      onChange={(e) => setEditProductModal({ ...editProductModal, basePrice: e.target.value })}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Sale Price (৳)</label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={editProductModal.salePrice || editProductModal.price}
-                      onChange={(e) => setEditProductModal({ ...editProductModal, salePrice: e.target.value })}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Warehouse Stock</label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={editProductModal.stockQuantity ?? 50}
-                      onChange={(e) => setEditProductModal({ ...editProductModal, stockQuantity: e.target.value })}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1 text-xs">Brand Name</label>
-                    <input
-                      type="text"
-                      value={editProductModal.brand?.name || editProductModal.brand || ''}
-                      onChange={(e) =>
-                        setEditProductModal({
-                          ...editProductModal,
-                          brand: { name: e.target.value },
-                        })
-                      }
-                      placeholder="e.g. Teer, Aarong"
-                      className="w-full p-2.5 border border-slate-300 rounded-xl text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="font-bold text-slate-700 block text-xs">Category</label>
                       <button
@@ -2777,7 +3069,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                           categorySlug: slug,
                         });
                       }}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-xs"
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-xs font-semibold"
                     >
                       {categoriesList.map((c) => (
                         <option key={c.slug} value={c.slug}>
@@ -2809,7 +3101,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                           itemSlug: itm?.slug || val.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
                         });
                       }}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-xs"
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-xs font-semibold"
                     >
                       <option value="">-- None / General --</option>
                       {itemsList.map((it) => (
@@ -2817,6 +3109,49 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                           {it.icon ? `${it.icon} ` : ''}{it.name}
                         </option>
                       ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 items-center">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1 text-xs">Brand Name</label>
+                    <input
+                      type="text"
+                      value={editProductModal.brand?.name || editProductModal.brand || ''}
+                      onChange={(e) =>
+                        setEditProductModal({
+                          ...editProductModal,
+                          brand: { name: e.target.value },
+                        })
+                      }
+                      placeholder="e.g. Teer, Aarong"
+                      className="w-full p-2.5 border border-slate-300 rounded-xl text-xs font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1 text-xs">Base Unit</label>
+                    <select
+                      value={editProductModal.baseUnit || editProductModal.unit || 'Liter'}
+                      onChange={(e) => {
+                        const unitVal = e.target.value;
+                        setEditProductModal({
+                          ...editProductModal,
+                          baseUnit: unitVal,
+                          unit: unitVal,
+                        });
+                      }}
+                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-xs font-semibold"
+                    >
+                      <option value="Liter">Liter (Ltr / ML)</option>
+                      <option value="Piece">Piece (Pcs / Hali / Dozen)</option>
+                      <option value="KG">KG (Kilogram / Gram)</option>
+                      <option value="Gram">Gram (gm)</option>
+                      <option value="Pack">Pack (Packet / Poly)</option>
+                      <option value="Box">Box (Carton / Box)</option>
+                      <option value="Bottle">Bottle</option>
+                      <option value="Dozen">Dozen</option>
                     </select>
                   </div>
                 </div>
@@ -2842,74 +3177,169 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </label>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1 text-xs">Base Unit</label>
-                    <select
-                      value={editProductModal.baseUnit || 'Liter'}
-                      onChange={(e) => {
-                        const unitVal = e.target.value;
-                        const presets = UNIT_VARIANT_PRESETS[unitVal] || [];
-                        setEditProductModal({
-                          ...editProductModal,
-                          baseUnit: unitVal,
-                          unit: presets[0] || unitVal,
-                        });
-                      }}
-                      className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-xs font-semibold"
+                {/* Multi-Size/Weight Variants Builder for Edit Modal (All in the same row) */}
+                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <div>
+                      <label className="font-black text-slate-900 block text-xs flex items-center gap-1.5">
+                        <span>Sizes / Weights & Pricing (Same Row)</span>
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {editVariantRows.length} {editVariantRows.length === 1 ? 'Size' : 'Sizes'}
+                        </span>
+                      </label>
+                      <p className="text-[10px] text-slate-500">
+                        Weight/Size, Regular Price, and Sale Price configured in the same row.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddEditVariantRow}
+                      className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 transition cursor-pointer shadow-xs active:scale-95"
                     >
-                      <option value="Liter">Liter (Ltr / ML)</option>
-                      <option value="Piece">Piece (Pcs / Hali / Dozen)</option>
-                      <option value="KG">KG (Kilogram / Gram)</option>
-                      <option value="Gram">Gram (gm)</option>
-                      <option value="Pack">Pack (Packet / Poly)</option>
-                      <option value="Box">Box (Carton / Box)</option>
-                      <option value="Bottle">Bottle</option>
-                      <option value="Dozen">Dozen</option>
-                    </select>
+                      <Plus className="w-3 h-3" />
+                      <span>+ Add Row</span>
+                    </button>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="font-bold text-slate-700 block text-xs">Variant Display (Size/Pack)</label>
+                  {/* Quick clickable preset chips for Edit Modal */}
+                  {UNIT_VARIANT_PRESETS[editProductModal.baseUnit || editProductModal.unit || 'Liter'] && (
+                    <div className="pt-1.5 border-t border-slate-200">
+                      <div className="text-[10px] text-slate-500 font-bold mb-1">
+                        Quick Presets for {editProductModal.baseUnit || editProductModal.unit || 'Liter'}:
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {UNIT_VARIANT_PRESETS[editProductModal.baseUnit || editProductModal.unit || 'Liter'].map((size) => {
+                          const alreadyIn = editVariantRows.some(
+                            (r) => r.displayName.toLowerCase().trim() === size.toLowerCase().trim()
+                          );
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => handleAddEditPresetVariantRow(size)}
+                              className={`px-2 py-0.5 text-[10px] font-bold rounded-lg border transition cursor-pointer flex items-center gap-0.5 ${
+                                alreadyIn
+                                  ? 'bg-emerald-700 text-white border-emerald-700 ring-1 ring-emerald-200'
+                                  : 'bg-white hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border-slate-200'
+                              }`}
+                            >
+                              <span>{alreadyIn ? '✓' : '+'}</span>
+                              <span>{size}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <input
-                      type="text"
-                      value={editProductModal.unit || ''}
-                      onChange={(e) => setEditProductModal({ ...editProductModal, unit: e.target.value })}
-                      placeholder="e.g. 5 Liter / 1 KG / 12 Pieces"
-                      className="w-full p-2.5 border border-slate-300 rounded-xl text-xs font-semibold"
-                    />
+                  )}
+
+                  {/* Header */}
+                  <div className="hidden sm:grid sm:grid-cols-12 gap-1.5 text-[10px] font-black text-slate-700 px-1 pt-1">
+                    <div className="sm:col-span-4">Weight / Size *</div>
+                    <div className="sm:col-span-3">Regular Price (৳) *</div>
+                    <div className="sm:col-span-3">Sale Price (৳) *</div>
+                    <div className="sm:col-span-2 text-right">Stock / Action</div>
+                  </div>
+
+                  {/* Variant Rows */}
+                  <div className="space-y-1.5">
+                    {editVariantRows.map((row, idx) => {
+                      const regP = Number(row.price) || 0;
+                      const saleP = Number(row.salePrice) || 0;
+                      const discount = regP > saleP && regP > 0 ? Math.round(((regP - saleP) / regP) * 100) : 0;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="grid grid-cols-1 sm:grid-cols-12 gap-1.5 p-2 bg-white rounded-xl border border-slate-200 items-center shadow-2xs"
+                        >
+                          <div className="sm:col-span-4">
+                            <label className="sm:hidden text-[10px] font-bold text-slate-500 block mb-0.5">Size *</label>
+                            <input
+                              type="text"
+                              required
+                              value={row.displayName}
+                              onChange={(e) => handleUpdateEditVariantRow(idx, 'displayName', e.target.value)}
+                              placeholder="e.g. 50 mL"
+                              className="w-full px-2 py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:border-emerald-700 focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-3">
+                            <label className="sm:hidden text-[10px] font-bold text-slate-500 block mb-0.5">Regular (৳) *</label>
+                            <div className="relative">
+                              <span className="absolute left-2 top-1 text-[11px] text-slate-400 font-bold">৳</span>
+                              <input
+                                type="number"
+                                required
+                                min="1"
+                                value={row.price}
+                                onChange={(e) => handleUpdateEditVariantRow(idx, 'price', e.target.value)}
+                                placeholder="Regular"
+                                className="w-full pl-5 pr-1 py-1 border border-slate-300 rounded-lg text-xs font-semibold focus:border-emerald-700 focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="sm:col-span-3">
+                            <div className="flex items-center justify-between sm:hidden mb-0.5">
+                              <label className="text-[10px] font-bold text-slate-500">Sale (৳) *</label>
+                              {discount > 0 && (
+                                <span className="text-[9px] font-black text-rose-600 bg-rose-50 px-1 rounded">
+                                  -{discount}%
+                                </span>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <span className="absolute left-2 top-1 text-[11px] text-slate-400 font-bold">৳</span>
+                              <input
+                                type="number"
+                                required
+                                min="1"
+                                value={row.salePrice}
+                                onChange={(e) => handleUpdateEditVariantRow(idx, 'salePrice', e.target.value)}
+                                placeholder="Sale"
+                                className="w-full pl-5 pr-8 py-1 border border-slate-300 rounded-lg text-xs font-semibold focus:border-emerald-700 focus:outline-none"
+                              />
+                              {discount > 0 && (
+                                <span className="hidden sm:inline-block absolute right-1.5 top-1.5 text-[9px] font-black text-rose-600 bg-rose-50 px-1 rounded">
+                                  -{discount}%
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-1">
+                            <div className="w-20 sm:w-14">
+                              <label className="sm:hidden text-[10px] font-bold text-slate-500 block mb-0.5">Stock</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={row.stockQuantity}
+                                onChange={(e) => handleUpdateEditVariantRow(idx, 'stockQuantity', e.target.value)}
+                                placeholder="Stock"
+                                title="Stock Quantity"
+                                className="w-full px-1 py-1 border border-slate-300 rounded-lg text-xs text-center font-semibold focus:border-emerald-700 focus:outline-none"
+                              />
+                            </div>
+
+                            {editVariantRows.length > 1 ? (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveEditVariantRow(idx)}
+                                className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                title="Delete row"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            ) : (
+                              <div className="w-5" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-
-                {/* Quick Presets for Base Unit in Edit Modal */}
-                {UNIT_VARIANT_PRESETS[editProductModal.baseUnit || 'Liter'] && (
-                  <div className="p-2 bg-slate-50 rounded-xl border border-slate-200">
-                    <div className="text-[10px] text-slate-500 font-bold mb-1">
-                      Quick Presets for {editProductModal.baseUnit || 'Liter'}:
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {UNIT_VARIANT_PRESETS[editProductModal.baseUnit || 'Liter'].map((size) => {
-                        const isSelected = editProductModal.unit === size;
-                        return (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => setEditProductModal({ ...editProductModal, unit: size })}
-                            className={`px-2 py-0.5 text-[11px] font-bold rounded-lg border transition cursor-pointer ${
-                              isSelected
-                                ? 'bg-emerald-700 text-white border-emerald-700 ring-2 ring-emerald-200'
-                                : 'bg-white hover:bg-emerald-50 hover:text-emerald-800 text-slate-700 border-slate-200'
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
 
                 {/* Tags in Edit Product Modal */}
                 <div>
